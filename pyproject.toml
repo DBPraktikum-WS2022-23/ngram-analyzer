@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "gruppenaufgabe01-gruppe04"
+version = "0.1.0"
+description = ""
+authors = ["Franzi <92818644+franziskavonalbedyll@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "gruppenaufgabe01_gruppe04"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
