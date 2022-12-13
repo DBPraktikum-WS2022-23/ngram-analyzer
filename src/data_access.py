@@ -8,7 +8,7 @@ from psycopg import Connection
 
 @dataclass
 class Ngram:
-    """ Alias for Tuple[Document, Dict[Ngram, int]]. """
+    """ TODO """
 
     def __init__(self):
         pass
@@ -16,8 +16,7 @@ class Ngram:
 
 
 class NgramDB:
-    """ A wrapper around psycopg classes, specifically designed for our
-    purpose. """
+    """ A wrapper around psycopg classes."""
 
     def __init__(self, connection_string: str, schema: str) -> None:
         self.__connection = Connection.connect(
@@ -33,12 +32,6 @@ class NgramDB:
 
     def __enter__(self) -> NgramDB:
         return self
-
-    def __exit__(self,
-                 exc_type: Optional[Type[BaseException]],
-                 exc_val: Optional[BaseException],
-                 exc_tb: Optional[TracebackType]) -> None:
-        self.__del__()
 
     @staticmethod
     def __get_sql_cmds(path: str) -> List[str]:
