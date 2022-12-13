@@ -8,6 +8,7 @@ packages = []
 
 [tool.poetry.dependencies]
 python = "^3.8"
+psycopg = "^3.1.4"
 
 
 [build-system]
