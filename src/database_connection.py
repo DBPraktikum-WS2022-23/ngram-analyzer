@@ -92,7 +92,7 @@ class NgramDBBuilder:
                 cur.execute(f"CREATE DATABASE {name};")
                 return True
         except OperationalError as er:
-            print('Failed to connect to database. Check connection settings.')
+            print('Failed to connect to database. Check login settings.')
             return False
         finally:
             if con:
