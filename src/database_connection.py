@@ -32,16 +32,16 @@ class NgramDB:
                                               )
 
         # TODO: examples from ilias, need to be changed and moved into config file
-        self.__db_url = 'jdbc:postgresql://localhost:5432/googlengram'
-        self.__properties = {"user": "postgres", "password": "postgres"}
-        self.__spark = SparkSession.builder \
-            .master("local") \
-            .appName("NgramDB") \
-            .config("spark.driver.extraClassPath",
-                    "postgresql-42.2.18.jar") \
-            .config("spark.driver.memory", "4g") \
-            .config("spark.executor.memory", "1g") \
-            .getOrCreate()
+        # self.__db_url = 'jdbc:postgresql://localhost:5432/googlengram'
+        # self.__properties = {"user": "postgres", "password": "postgres"}
+        # self.__spark = SparkSession.builder \
+        #     .master("local") \
+        #     .appName("NgramDB") \
+        #     .config("spark.driver.extraClassPath",
+        #             "postgresql-42.2.18.jar") \
+        #     .config("spark.driver.memory", "4g") \
+        #     .config("spark.executor.memory", "1g") \
+        #     .getOrCreate()
 
         self.__create_relations_if_not_exists()
 
