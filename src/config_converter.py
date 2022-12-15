@@ -6,8 +6,8 @@ import os.path
 
 class ConfigConverter:
     def __init__(self, username: str) -> None:
-        config_path = "../settings/config_" + username + ".ini"
-        default_path = "../settings/config_sample.ini"
+        config_path = "./settings/config_" + username + ".ini"
+        default_path = "./settings/config_sample.ini"
         self.config = ConfigParser()
         self.on_generate = False
         if os.path.exists(config_path):
