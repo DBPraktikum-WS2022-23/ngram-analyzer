@@ -26,7 +26,7 @@ class ConfigConverter:
         self.config.set('database', 'user', user)
         self.config.set('database', 'password', password)
         self.config.set('database', 'dbname', dbname)
-        with open("../settings/config_" + user + ".ini", 'w') as configfile:
+        with open("./settings/config_" + user + ".ini", 'w') as configfile:
             self.config.write(configfile)
             #self.config.read("../settings/config_" + user + ".ini")
 
