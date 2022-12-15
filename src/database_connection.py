@@ -60,7 +60,7 @@ class NgramDB:
 
     def __create_relations_if_not_exists(self) -> None:
         # TODO: check if tables are read properly
-        cmds = self.__get_sql_cmds("./src/ressources/db_tables.sql")
+        cmds = self.__get_sql_cmds("../src/ressources/db_tables.sql")
 
         with self.__connection.cursor() as cursor:
             for cmd in cmds:
@@ -91,6 +91,7 @@ class NgramDBBuilder:
 
     # TODO: convert prints to logging info
     def __create_database(self) -> bool:
+        con: Connection = None
         try:
             print("Trying to connect")
             con = Connection.connect(
