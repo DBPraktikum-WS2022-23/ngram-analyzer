@@ -2,9 +2,9 @@ from cmd import Cmd
 from typing import Dict, Optional
 from pyspark.sql import SparkSession
 
-from ..database_connection import NgramDB, NgramDBBuilder
-from ..config_converter import ConfigConverter
-from ..transfer import Transferer
+from src.database_connection import NgramDB, NgramDBBuilder
+from src.config_converter import ConfigConverter
+from src.transfer import Transferer
 
 # TO DO: über pfeiltasten vorherigen befehl holen
 class Prompt(Cmd):

@@ -73,6 +73,7 @@ class NgramDBBuilder:
 
     # TODO: convert prints to logging info
     def __create_database(self) -> bool:
+        con: Connection = None
         try:
             print("Trying to connect")
             con = Connection.connect(
