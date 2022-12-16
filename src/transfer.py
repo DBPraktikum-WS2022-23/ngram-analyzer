@@ -14,19 +14,19 @@ class Transferer:
     def transfer_textFile(self, source_path: str) -> None:
         # split data into word and occurence and make cartesian product on them
         df = self.__spark.read.textFile(source_path) \
-            .withColume("word_and_type", split(col("value"), "\t")[0]) \
-            .withColume("occurence", split(col("value"), "\t")[1:]) \
+            .withColumn("word_and_type", split(col("value"), "\t")[0]) \
+            .withColumn("occurence", split(col("value"), "\t")[1:]) \
             .drop("value") \
-            .select("word", explode("occurence").alias("occurence"))
+            .select("word_and_type", explode("occurence").alias("occurence"))
 
         word_df = df.select("word_and_type") \
             .withColumn("word", split(col("word_and_type"), "_")[0]) \
-            .withColume("type", split(col("word_and_type"), "_")[1]) \
+            .withColumn("type", split(col("word_and_type"), "_")[1]) \
             .drop("word_and_type")
 
-        occurence_df = df.withColume("year", split(col("occurence"), ",")[0]) \
-            .withColume("frequency", split(col("occurence"), ",")[1]) \
-            .withColume("book_count", split(col("occurence"), ",")[2]) \
+        occurence_df = df.withColumn("year", split(col("occurence"), ",")[0]) \
+            .withColumn("frequency", split(col("occurence"), ",")[1]) \
+            .withColumn("book_count", split(col("occurence"), ",")[2]) \
             .drop("occurence")
 
         self.__write(word_df, "word")
