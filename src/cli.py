@@ -14,7 +14,12 @@ class Prompt(Cmd):
     config = ConfigConverter('settings/config.ini')
 
     ngram_db: NgramDB = None
-    spark : SparkSession = None  # TODO: init spark session
+
+    spark = SparkSession.builder.appName("ngram_analyzer").master("local[*]") \
+        .config("spark.driver.memory", "4g") \
+        .config("spark.executor.memory", "1g") \
+        .getOrCreate()
+
     transferer: Transferer = None
 
     def do_db_connect(self, inp):
@@ -46,7 +51,10 @@ class Prompt(Cmd):
             return
         
         if self.transferer is None:
-            self.transferer = Transferer(self.spark, url, properties)  # TODO: url and properties are not defined
+            url =  'jdbc:postgresql://localhost:5432/googlengram'  # TODO: should be get from config converter
+            prop_dict = self.config.get_conn_settings()
+            properties = {'user': prop_dict['user'], 'password': prop_dict['password']}
+            self.transferer = Transferer(self.spark, url, properties)
         
         self.transferer.transfer_textFile(path)
 
@@ -56,6 +64,7 @@ class Prompt(Cmd):
     # overrides class method, is run before cmdloop returns but not in case the shell crashes
     def postloop(self) -> None:
         del self.ngram_db
+        self.spark.stop()
         print('Closed connection')
 
 
