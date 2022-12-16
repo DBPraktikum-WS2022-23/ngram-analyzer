@@ -3,6 +3,7 @@ from typing import Dict, Optional
 
 from ..database_connection import NgramDB, NgramDBBuilder
 from ..config_converter import ConfigConverter
+from ..transfer import Transferer
 
 # TO DO: über pfeiltasten vorherigen befehl holen
 class Prompt(Cmd):
@@ -12,6 +13,7 @@ class Prompt(Cmd):
     config = ConfigConverter('settings/config.ini')
 
     ngram_db: NgramDB = None
+    transferer: Transferer = None
 
     def do_db_connect(self, inp):
         # init db
@@ -30,6 +32,21 @@ class Prompt(Cmd):
         result = self.ngram_db.execute('SELECT version()')
         #
         print(f'PostgreSQL database version: {result}')
+
+    def do_transfer(self, path: str) -> None:
+        """ Transfer data from a file to the database. """
+        if self.ngram_db is None:
+            print("No connection to database. Please connect to a database first.")
+            return
+        
+        if path == '':
+            print("Please provide a path to a file.")
+            return
+        
+        if self.transferer is None:
+            self.transferer = Transferer(self.ngram_db, url, properties)  # TODO: url and properties are not defined
+        
+        self.transferer.transfer_textFile(path)
 
     def do_exit(self, inp):
         return True
