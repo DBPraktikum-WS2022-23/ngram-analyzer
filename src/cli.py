@@ -18,6 +18,7 @@ class Prompt(Cmd):
     ngram_db: Optional[NgramDB] = None
 
     spark = SparkSession.builder.appName("ngram_analyzer").master("local[*]") \
+        .config("spark.driver.extraClassPath", "./resources/postgresql-42.5.1.jar") \
         .config("spark.driver.memory", "4g") \
         .config("spark.executor.memory", "1g") \
         .getOrCreate()
@@ -61,8 +62,11 @@ class Prompt(Cmd):
         if self.transferer is None:
             prop_dict = self.conn_settings
             url = 'jdbc:postgresql://' + prop_dict["host"] + ':' + prop_dict["port"] \
-                  + '/' + prop_dict['dbname']
-            properties: Dict[str, str] = {'user': prop_dict['user'], 'password': prop_dict['password']}
+                  + '/ngram_db'
+            #TODO store name of database
+            print(url)
+            properties: Dict[str, str] = {'user': prop_dict['user'],
+                                          'password': prop_dict['password']}
             self.transferer = Transferer(self.spark, url, properties)
 
         if path == "--":

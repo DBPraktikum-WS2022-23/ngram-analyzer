@@ -1,5 +1,6 @@
-from pyspark.sql import SparkSession, DataFrame
-from  pyspark.sql.functions import split, col, explode
+from pyspark import SQLContext
+from pyspark.sql import SparkSession, DataFrame, DataFrameReader
+from pyspark.sql.functions import split, col, explode
 from typing import Dict, Optional
 
 
@@ -16,22 +17,22 @@ class Transferer:
     def transfer_textFile(self, source_path: str) -> None:
         # split data into word and occurence and make cartesian product on them
         df = self.__spark.read.text(source_path) \
-            .withColumn("word_and_type", split(col("value"), "\t")[0]) \
-            .withColumn("occurence", split(col("value"), "\t")[1:]) \
+            .withColumn("word_and_type", split(col("value"), "\t", 2)[0]) \
+            .withColumn("occurence", split(col("value"), "\t", 2)[1]) \
             .drop("value") \
-            .select("word_and_type", explode("occurence").alias("occurence"))
-
+            #.select("word_and_type", explode("occurence").alias("occurence"))
+        df.show()
         word_df = df.select("word_and_type") \
-            .withColumn("word", split(col("word_and_type"), "_")[0]) \
+            .withColumn("str_rep", split(col("word_and_type"), "_")[0]) \
             .withColumn("type", split(col("word_and_type"), "_")[1]) \
             .drop("word_and_type")
-            
-        occurence_df = df.withColumn("year", split(col("occurence"), ",")[0]) \
-            .withColumn("frequency", split(col("occurence"), ",")[1]) \
-            .withColumn("book_count", split(col("occurence"), ",")[2]) \
-            .drop("occurence")
-
+        word_df.show()
+        #occurence_df = df.withColumn("year", split(col("occurence"), ",")[0]) \
+        #    .withColumn("frequency", split(col("occurence"), ",")[1]) \
+        #    .withColumn("book_count", split(col("occurence"), ",")[2]) \
+        #    .drop("occurence")
+        #occurence_df.show()
         self.__write(word_df, "word")
-        self.__write(occurence_df, "occurence")
+        #self.__write(occurence_df, "occurence")
 
         # TODO: error handling
