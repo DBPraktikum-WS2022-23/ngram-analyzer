@@ -1,8 +1,10 @@
 from pyspark.sql import SparkSession, DataFrame
 from  pyspark.sql.functions import split, col, explode
+from typing import Dict, Optional
+
 
 class Transferer:
-    def __init__(self, spark: SparkSession, db_url: str, properties: str):
+    def __init__(self, spark: SparkSession, db_url: str, properties: Dict[str, str]):
         self.__spark = spark
         self.__db_url = db_url
         self.__properties = properties
