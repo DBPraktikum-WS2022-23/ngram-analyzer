@@ -39,4 +39,8 @@ class ConfigConverter:
                     connection_settings[key] = value
         return connection_settings
 
+    def set_default_path(self, path: str) -> None:
+        self.config.set('database', 'default_filepath', path)
+        with open("./settings/config_" + self.username + ".ini", 'w') as configfile:
+            self.config.write(configfile)
     # TODO: get JDBC settings
