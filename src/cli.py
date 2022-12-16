@@ -1,8 +1,8 @@
 from cmd import Cmd
 from typing import Dict, Optional
 
-from ..database_connection import NgramDB, NgramDBBuilder
-from ..config_converter import ConfigConverter
+from src.database_connection import NgramDB, NgramDBBuilder
+from src.config_converter import ConfigConverter
 
 # TO DO: über pfeiltasten vorherigen befehl holen
 class Prompt(Cmd):
