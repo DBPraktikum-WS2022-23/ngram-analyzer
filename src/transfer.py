@@ -1,13 +1,17 @@
-from src.data_access import NgramDB
 from pyspark.sql import SparkSession, DataFrame
 from  pyspark.sql.functions import split, col, explode
 
 class Transferer:
-    def __init__(self, spark: SparkSession, db: NgramDB):
+    def __init__(self, spark: SparkSession, db_url: str, properties: str):
         self.__spark = spark
-        self.__database = db
+        self.__db_url = db_url
+        self.__properties = properties
 
-    def transfer_textFile(self, source_path: str, schema: str) -> None:
+    def __write(self, df: DataFrame, table: str) -> None:
+        """ Writes the given DataFrame to the given table by using DataFrame. """
+        df.write.jdbc(self.__db_url, table, mode="append", properties=self.__properties)
+
+    def transfer_textFile(self, source_path: str) -> None:
         # split data into word and occurence and make cartesian product on them
         df = self.__spark.read.textFile(source_path) \
             .withColume("word", split(col("value"), "\t")[0]) \
@@ -21,7 +25,7 @@ class Transferer:
             .withColume("book_count", split(col("occurence"), ",")[2]) \
             .drop("occurence")
 
-        self.__database.write(word_df, "word")
-        self.__database.write(occurence_df, "occurence")
+        self.__write(word_df, "word")
+        self.__write(occurence_df, "occurence")
 
         # TODO: error handling
