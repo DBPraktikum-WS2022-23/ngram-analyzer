@@ -1,6 +1,6 @@
 from cmd import Cmd
 from typing import Dict, Optional
-
+from getpass import getpass
 from src.database_connection import NgramDB, NgramDBBuilder
 from src.config_converter import ConfigConverter
 from src.transfer import Transferer
@@ -10,14 +10,20 @@ class Prompt(Cmd):
     intro: str = ('Welcome to the ngram_analyzer shell. Type help or ? to list commands.\n')
     prompt: str = '(ngram_analyzer) '
 
-    config = ConfigConverter('settings/config.ini')
+    #config = ConfigConverter('')
 
     ngram_db: NgramDB = None
     transferer: Transferer = None
 
     def do_db_connect(self, inp):
         # init db
-        conn_settings = self.config.get_conn_settings()
+        user: str = input("Enter user name:")
+        config = ConfigConverter(user)
+        if not config.user_exists:
+            password: str = getpass()
+            dbname: str = input("Enter database name:")
+            config.generate_conn_settings(password, dbname)
+        conn_settings = config.get_conn_settings()
         # TODO: this wrapper function might be useless but it appears here more readable to me
         self.ngram_db =  NgramDBBuilder(conn_settings).connect_to_ngram_db()
 
