@@ -31,6 +31,31 @@ pool = ["psycopg-pool"]
 test = ["mypy (>=0.981)", "pproxy (>=2.7)", "pytest (>=6.2.5)", "pytest-asyncio (>=0.17)", "pytest-cov (>=3.0)", "pytest-randomly (>=3.10)"]
 
 [[package]]
+name = "py4j"
+version = "0.10.9.5"
+description = "Enables Python programs to dynamically access arbitrary Java objects"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "pyspark"
+version = "3.3.1"
+description = "Apache Spark Python API"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+py4j = "0.10.9.5"
+
+[package.extras]
+ml = ["numpy (>=1.15)"]
+mllib = ["numpy (>=1.15)"]
+pandas-on-spark = ["numpy (>=1.15)", "pandas (>=1.0.5)", "pyarrow (>=1.0.0)"]
+sql = ["pandas (>=1.0.5)", "pyarrow (>=1.0.0)"]
+
+[[package]]
 name = "typing-extensions"
 version = "4.4.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -49,7 +74,7 @@ python-versions = ">=2"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "ecdf787262500a09bab681744fd71942d56a686df01d197bd4f30caf105a6991"
+content-hash = "eb1dad4ea38efb39669902fc6cb6828d4eba83d699183528cb81d690c975ee00"
 
 [metadata.files]
 backports-zoneinfo = [
@@ -73,6 +98,13 @@ backports-zoneinfo = [
 psycopg = [
     {file = "psycopg-3.1.4-py3-none-any.whl", hash = "sha256:aba61f12b11936cb25ec7bdf2d222d1ec36e4541ddc41f774ca763e0c50dd06f"},
     {file = "psycopg-3.1.4.tar.gz", hash = "sha256:6874dbaba583cc6663437604bf45f7c244b5fd702f88af6211cd5a74e8ee3a8a"},
+]
+py4j = [
+    {file = "py4j-0.10.9.5-py2.py3-none-any.whl", hash = "sha256:52d171a6a2b031d8a5d1de6efe451cf4f5baff1a2819aabc3741c8406539ba04"},
+    {file = "py4j-0.10.9.5.tar.gz", hash = "sha256:276a4a3c5a2154df1860ef3303a927460e02e97b047dc0a47c1c3fb8cce34db6"},
+]
+pyspark = [
+    {file = "pyspark-3.3.1.tar.gz", hash = "sha256:e99fa7de92be406884bfd831c32b9306a3a99de44cfc39a2eefb6ed07445d5fa"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.4.0-py3-none-any.whl", hash = "sha256:16fa4864408f655d35ec496218b85f79b3437c829e93320c7c9215ccfd92489e"},
