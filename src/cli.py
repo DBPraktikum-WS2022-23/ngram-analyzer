@@ -12,7 +12,7 @@ class Prompt(Cmd):
     intro: str = ('Welcome to the ngram_analyzer shell. Type help or ? to list commands.\n')
     prompt: str = '(ngram_analyzer) '
 
-    #config = ConfigConverter('')
+    conn_settings = None
 
     ngram_db: NgramDB = None
 
@@ -31,9 +31,9 @@ class Prompt(Cmd):
             password: str = getpass()
             dbname: str = input("Enter database name:")
             config.generate_conn_settings(password, dbname)
-        conn_settings = config.get_conn_settings()
+        self.conn_settings = config.get_conn_settings()
         # TODO: this wrapper function might be useless but it appears here more readable to me
-        self.ngram_db =  NgramDBBuilder(conn_settings).connect_to_ngram_db()
+        self.ngram_db =  NgramDBBuilder(self.conn_settings).connect_to_ngram_db()
 
         if self.ngram_db is None:
             # TODO return to main menu and retry db init with other connection settings
@@ -59,8 +59,10 @@ class Prompt(Cmd):
         
         if self.transferer is None:
             url =  'jdbc:postgresql://localhost:5432/googlengram'  # TODO: should be get from config converter
-            prop_dict = self.config.get_conn_settings()
-            properties = {'user': prop_dict['user'], 'password': prop_dict['password']}
+            prop_dict = self.conn_settings
+            url = 'jdbc:postgresql://' + prop_dict["host"] + ':' + prop_dict["port"] \
+                  + '/' + prop_dict['dbname']
+            properties: Dict[str, str] = {'user': prop_dict['user'], 'password': prop_dict['password']}
             self.transferer = Transferer(self.spark, url, properties)
         
         self.transferer.transfer_textFile(path)
