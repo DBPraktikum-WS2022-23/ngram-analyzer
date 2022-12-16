@@ -7,8 +7,6 @@ from typing import Dict, List, Optional, Type, Tuple, Any
 from psycopg import sql, OperationalError, Connection
 from psycopg.errors import DuplicateDatabase
 
-from pyspark.sql import SparkSession, DataFrame
-
 @dataclass
 class Ngram:
     """ TODO """

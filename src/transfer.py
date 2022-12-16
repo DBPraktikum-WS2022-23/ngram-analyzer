@@ -2,8 +2,7 @@ from pyspark.sql import SparkSession, DataFrame
 from  pyspark.sql.functions import split, col, explode
 
 class Transferer:
-    def __init__(self, spark: SparkSession, db_url: str, properties: str):
-        self.__spark = spark
+    def __init__(self, db_url: str, properties: str):
         self.__db_url = db_url
         self.__properties = properties
 
