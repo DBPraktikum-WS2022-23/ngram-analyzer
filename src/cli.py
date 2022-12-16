@@ -12,16 +12,16 @@ class Prompt(Cmd):
     intro: str = ('Welcome to the ngram_analyzer shell. Type help or ? to list commands.\n')
     prompt: str = '(ngram_analyzer) '
 
-    conn_settings = None
+    conn_settings: Dict[str, str] = {}
 
-    ngram_db: NgramDB = None
+    ngram_db: Optional[NgramDB] = None
 
     spark = SparkSession.builder.appName("ngram_analyzer").master("local[*]") \
         .config("spark.driver.memory", "4g") \
         .config("spark.executor.memory", "1g") \
         .getOrCreate()
 
-    transferer: Transferer = None
+    transferer: Optional[Transferer] = None
 
     def do_db_connect(self, inp):
         # init db
@@ -72,7 +72,8 @@ class Prompt(Cmd):
 
     # overrides class method, is run before cmdloop returns but not in case the shell crashes
     def postloop(self) -> None:
-        del self.ngram_db
+        if self.ngram_db:
+            del self.ngram_db
         self.spark.stop()
         print('Closed connection')
 
