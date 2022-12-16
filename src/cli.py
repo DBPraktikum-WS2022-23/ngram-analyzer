@@ -1,5 +1,6 @@
 from cmd import Cmd
 from typing import Dict, Optional
+from pyspark.sql import SparkSession
 
 from src.database_connection import NgramDB, NgramDBBuilder
 from src.config_converter import ConfigConverter
@@ -13,6 +14,7 @@ class Prompt(Cmd):
     config = ConfigConverter('settings/config.ini')
 
     ngram_db: NgramDB = None
+    spark : SparkSession = None  # TODO: init spark session
     transferer: Transferer = None
 
     def do_db_connect(self, inp):
@@ -44,7 +46,7 @@ class Prompt(Cmd):
             return
         
         if self.transferer is None:
-            self.transferer = Transferer(self.ngram_db, url, properties)  # TODO: url and properties are not defined
+            self.transferer = Transferer(self.spark, url, properties)  # TODO: url and properties are not defined
         
         self.transferer.transfer_textFile(path)
 
