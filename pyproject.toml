@@ -7,16 +7,18 @@ readme = "README.md"
 packages = []
 
 [tool.poe.tasks]
-mypy = "mypy --strict ."
-pylint = "pylint ./src"
 black = "black ./src"
 isort = "isort ./src"
-lint = ["mypy", "pylint", "black", "isort"]
+format = ["black", "isort"]
+
+mypy = "mypy --strict ."
+pylint = "pylint ./src"
+lint = ["mypy", "pylint", "isort"]
 
 pytest = "coverage run -m pytest -q"
 test = ["pytest"]
 
-check = ["lint", "test"]
+check = ["format", "lint", "test"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
