@@ -1,3 +1,4 @@
+import os
 from cmd import Cmd
 from typing import Dict, Optional
 from pyspark.sql import SparkSession
@@ -45,9 +46,9 @@ class Prompt(Cmd):
         print('Opened connection')
         #
         # Work with the database. For instance:
-        result = self.ngram_db.execute('SELECT version()')
+        # result = self.ngram_db.execute('SELECT version()')
         #
-        print(f'PostgreSQL database version: {result}')
+        # print(f'PostgreSQL database version: {result}')
 
     def do_transfer(self, path: str) -> None:
         """ Transfer data from a file to the database. """
@@ -58,7 +59,11 @@ class Prompt(Cmd):
         if path == '':
             print("Please provide a path to a file.")
             return
-        
+
+        if not os.path.isfile(path):
+            print("Please enter a valid path.")
+            return
+
         if self.transferer is None:
             prop_dict = self.conn_settings
             url = 'jdbc:postgresql://' + prop_dict['host'] + ':' + prop_dict['port'] \

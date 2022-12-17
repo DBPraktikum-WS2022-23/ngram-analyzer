@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS word(
 id serial,
 str_rep varchar(100) NOT NULL,
 type varchar(20),
-PRIMARY KEY(id));
+PRIMARY KEY(id),
+UNIQUE NULLS NOT DISTINCT (str_rep, type));
 
 CREATE TABLE IF NOT EXISTS occurence(
 id serial,
