@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
-from  pyspark.sql.functions import split, col, explode
-from typing import Dict, Optional
+from pyspark.sql.functions import split, col, explode
+from typing import Dict
 
 
 class Transferer:
@@ -12,26 +12,52 @@ class Transferer:
     def __write(self, df: DataFrame, table: str) -> None:
         """ Writes the given DataFrame to the given table by using DataFrame. """
         df.write.jdbc(self.__db_url, table, mode="append", properties=self.__properties)
+    
+    def __read(self, table: str) -> DataFrame:
+        """ Reads the given table and returns it as a DataFrame. """
+        return self.__spark.read.jdbc(self.__db_url, table, properties=self.__properties)
 
     def transfer_textFile(self, source_path: str) -> None:
-        # split data into word and occurence and make cartesian product on them
+        # split data into word, type and occurence
         df = self.__spark.read.text(source_path) \
-            .withColumn("word_and_type", split(col("value"), "\t")[0]) \
-            .withColumn("occurence", split(col("value"), "\t")[1:]) \
+            .withColumn("word_and_type", split(col("value"), "\t", 2)[0]) \
+            .withColumn("occ_all", split(col("value"), "\t", 2)[1]) \
             .drop("value") \
-            .select("word_and_type", explode("occurence").alias("occurence"))
-
-        word_df = df.select("word_and_type") \
-            .withColumn("word", split(col("word_and_type"), "_")[0]) \
+            .withColumn("str_rep", split(col("word_and_type"), "_")[0]) \
             .withColumn("type", split(col("word_and_type"), "_")[1]) \
             .drop("word_and_type")
-            
-        occurence_df = df.withColumn("year", split(col("occurence"), ",")[0]) \
-            .withColumn("frequency", split(col("occurence"), ",")[1]) \
-            .withColumn("book_count", split(col("occurence"), ",")[2]) \
-            .drop("occurence")
+
+        word_df = df.select("str_rep", "type").distinct()
+
+        # delete duplicates in word table
+        word_df_db = self.__read("word")
+        word_df = word_df.join(word_df_db.select("str_rep", "type"),
+                               [word_df_db["str_rep"] == word_df["str_rep"],
+                                word_df_db["type"].eqNullSafe(word_df["type"])],
+                               "left_anti")
 
         self.__write(word_df, "word")
+        
+        occurence_df = df.select("str_rep", "occ_all") \
+            .withColumn("occ_sep", split(col("occ_all"), "\t")) \
+            .drop("occ_all") \
+            .select("str_rep", explode("occ_sep").alias("occurence")) \
+            .withColumn("year", split(col("occurence"), ",")[0].cast("int")) \
+            .withColumn("freq", split(col("occurence"), ",")[1].cast("int")) \
+            .withColumn("book_count", split(col("occurence"), ",")[2].cast("int")) \
+            .drop("occurence")
+        
+        # add foreign key to occurence table
+        occurence_df = occurence_df.join(word_df_db.select("str_rep", "id"), "str_rep") \
+            .select("id", "year", "freq", "book_count")
+        
+        # delete duplicates in occurence table
+        occ_df_db = self.__read("occurence")
+        occurence_df = occurence_df.join(occ_df_db.select("id", "year"), ["id", "year"], "left_anti")
+        
         self.__write(occurence_df, "occurence")
+
+        word_df.show()
+        occurence_df.show()
 
         # TODO: error handling
