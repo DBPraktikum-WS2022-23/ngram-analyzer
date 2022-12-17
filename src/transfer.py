@@ -36,6 +36,8 @@ class Transferer:
                                 word_df_db["type"].eqNullSafe(word_df["type"])],
                                "left_anti")
 
+        # show word table that will be written to db
+        word_df.show()
         self.__write(word_df, "word")
         
         occurence_df = df.select("str_rep", "occ_all") \
@@ -55,9 +57,6 @@ class Transferer:
         occ_df_db = self.__read("occurence")
         occurence_df = occurence_df.join(occ_df_db.select("id", "year"), ["id", "year"], "left_anti")
         
-        self.__write(occurence_df, "occurence")
-
-        word_df.show()
+        # show occurence table that will be written to db
         occurence_df.show()
-
-        # TODO: error handling
+        self.__write(occurence_df, "occurence")

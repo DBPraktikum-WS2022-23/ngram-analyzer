@@ -74,6 +74,8 @@ class Prompt(Cmd):
         else:
             self.transferer.transfer_textFile(path)
 
+        print("You have successfully transferred the data.")
+
     # TODO error handling, be careful to use this
     def do_set_default_file(self, path: str) -> None:
         if self.ngram_db is None:
