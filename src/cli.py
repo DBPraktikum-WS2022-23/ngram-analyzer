@@ -61,15 +61,15 @@ class Prompt(Cmd):
         
         if self.transferer is None:
             prop_dict = self.conn_settings
-            url = 'jdbc:postgresql://' + prop_dict["host"] + ':' + prop_dict["port"] \
-                  + '/ngram_db'
+            url = 'jdbc:postgresql://' + prop_dict['host'] + ':' + prop_dict['port'] \
+                  + '/' + prop_dict['dbname']
             #TODO store name of database
             print(url)
             properties: Dict[str, str] = {'user': prop_dict['user'],
                                           'password': prop_dict['password']}
             self.transferer = Transferer(self.spark, url, properties)
 
-        if path == "--":
+        if path == "-default":
             self.transferer.transfer_textFile(prop_dict['default_filepath'])
         else:
             self.transferer.transfer_textFile(path)
