@@ -1,7 +1,7 @@
 from typing import Dict
 
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import col, explode, split
+from pyspark.sql.functions import col, explode, split, regexp_extract
 
 
 class Transferer:
@@ -21,14 +21,17 @@ class Transferer:
         )
 
     def transfer_textFile(self, source_path: str) -> None:
+        # regex expression of word[_type]
+        regexp = r"^(.*?)(_|_ADJ|_ADP|_ADV|_CONJ|_DET|_NOUN|_PRON|_VERB|_PRT|_X)?$"
+
         # split data into word, type and occurence
         df = (
             self.__spark.read.text(source_path)
             .withColumn("word_and_type", split(col("value"), "\t", 2)[0])
             .withColumn("occ_all", split(col("value"), "\t", 2)[1])
             .drop("value")
-            .withColumn("str_rep", split(col("word_and_type"), "_")[0])
-            .withColumn("type", split(col("word_and_type"), "_")[1])
+            .withColumn("str_rep", regexp_extract(col("word_and_type"), regexp, 1))
+            .withColumn("type", split(regexp_extract(col("word_and_type"), regexp, 2), "_")[1])
             .drop("word_and_type")
         )
 
@@ -42,27 +45,35 @@ class Transferer:
                 word_df_db["str_rep"] == word_df["str_rep"],
                 word_df_db["type"].eqNullSafe(word_df["type"]),
             ],
-            "left_anti",
+            "left_anti"
         )
 
         # show word table that will be written to db
         word_df.show()
         self.__write(word_df, "word")
 
+        # unpersist dataframes to free memory
+        word_df.unpersist()
+        word_df_db.unpersist()
+
         occurence_df = (
-            df.select("str_rep", "occ_all")
-            .withColumn("occ_sep", split(col("occ_all"), "\t"))
+            df.withColumn("occ_sep", split(col("occ_all"), "\t"))
             .drop("occ_all")
-            .select("str_rep", explode("occ_sep").alias("occurence"))
+            .select("str_rep","type", explode("occ_sep").alias("occurence"))
             .withColumn("year", split(col("occurence"), ",")[0].cast("int"))
             .withColumn("freq", split(col("occurence"), ",")[1].cast("int"))
             .withColumn("book_count", split(col("occurence"), ",")[2].cast("int"))
             .drop("occurence")
+            .dropDuplicates(["str_rep", "type", "year"])
         )
 
         # add foreign key to occurence table
         occurence_df = occurence_df.join(
-            word_df_db.select("str_rep", "id"), "str_rep"
+            word_df_db,
+            [
+                word_df_db["str_rep"] == occurence_df["str_rep"],
+                word_df_db["type"].eqNullSafe(occurence_df["type"])
+            ]
         ).select("id", "year", "freq", "book_count")
 
         # delete duplicates in occurence table
@@ -74,3 +85,7 @@ class Transferer:
         # show occurence table that will be written to db
         occurence_df.show()
         self.__write(occurence_df, "occurence")
+
+        # unpersist dataframes to free memory
+        occurence_df.unpersist()
+        occ_df_db.unpersist()
