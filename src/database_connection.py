@@ -2,32 +2,33 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Dict, List, Optional, Type, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple, Type
 
-from psycopg import sql, OperationalError, Connection
+from psycopg import Connection, OperationalError, sql
 from psycopg.errors import DuplicateDatabase
+
 
 @dataclass
 class Ngram:
-    """ TODO """
+    """TODO"""
 
     def __init__(self):
         pass
-        #TODO
+        # TODO
 
 
 class NgramDB:
-    """ A wrapper around psycopg classes."""
+    """A wrapper around psycopg classes."""
 
     def __init__(self, connection_settings: Dict[Any, str]) -> None:
         self.__connection = Connection.connect(
-                                                host=connection_settings['host'],
-                                                port=connection_settings['port'],
-                                                user=connection_settings['user'],
-                                                password=connection_settings['password'],
-                                                dbname=connection_settings['dbname'],
-                                                autocommit=True
-                                              )
+            host=connection_settings["host"],
+            port=connection_settings["port"],
+            user=connection_settings["user"],
+            password=connection_settings["password"],
+            dbname=connection_settings["dbname"],
+            autocommit=True,
+        )
 
         self.__create_relations_if_not_exists()
 
@@ -52,22 +53,23 @@ class NgramDB:
             for cmd in cmds:
                 cursor.execute(cmd)
 
-    def execute(self, query: str, values: Tuple[Any, ...] = (),
-                return_result: bool = True) -> List[Tuple[Any, ...]]:
-        """ Executes the given query and returns the result if desired.
+    def execute(
+        self, query: str, values: Tuple[Any, ...] = (), return_result: bool = True
+    ) -> List[Tuple[Any, ...]]:
+        """Executes the given query and returns the result if desired.
         Requesting a result on queries that don't return anything causes
-        an Exception. """
+        an Exception."""
 
         with self.__connection.cursor() as cur:
             cur.execute(query, values)
-        # TODO add flag to return just fetchone
+            # TODO add flag to return just fetchone
             if return_result:
                 return cur.fetchall()
 
             return []
 
-class NgramDBBuilder:
 
+class NgramDBBuilder:
     def __init__(self, connection_settings: Dict[str, str]) -> bool:
         self.connection_settings = connection_settings
 
@@ -77,16 +79,19 @@ class NgramDBBuilder:
         try:
             print("Trying to connect")
             con = Connection.connect(
-                                host=self.connection_settings['host'],
-                                port=self.connection_settings['port'],
-                                user=self.connection_settings['user'],
-                                password=self.connection_settings['password'],
-                                autocommit=True
-                                )
+                host=self.connection_settings["host"],
+                port=self.connection_settings["port"],
+                user=self.connection_settings["user"],
+                password=self.connection_settings["password"],
+                autocommit=True,
+            )
             with con.cursor() as cur:
-                name: str = self.connection_settings['dbname']
-                cur.execute("SELECT 1 \
-                            WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname=%s);", (name, ))
+                name: str = self.connection_settings["dbname"]
+                cur.execute(
+                    "SELECT 1 \
+                            WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname=%s);",
+                    (name,),
+                )
                 cmd: str = cur.fetchall()
                 # if list is not empty, db does not exist so create it
                 if cmd:
@@ -94,10 +99,10 @@ class NgramDBBuilder:
                     print("Created DB")
             return True
         except OperationalError:
-            print('Failed to connect to database. Check login settings.')
+            print("Failed to connect to database. Check login settings.")
             return False
         except DuplicateDatabase:
-            print('ProgrammingError: DB duplication.')
+            print("ProgrammingError: DB duplication.")
             return False
         except:
             print("Unknown DB creation error")
@@ -110,7 +115,7 @@ class NgramDBBuilder:
         isCreated = self.__create_database()
         if not isCreated:
             print("Issue with DB creation")
-            return None        
+            return None
         database: NgramDB = NgramDB(self.connection_settings)
         print("Connection to database established.")
         return database

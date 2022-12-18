@@ -1,7 +1,7 @@
-from configparser import ConfigParser
-from typing import Dict
-from getpass import getpass
 import os.path
+from configparser import ConfigParser
+from getpass import getpass
+from typing import Dict
 
 
 class ConfigConverter:
@@ -18,29 +18,28 @@ class ConfigConverter:
             print("Configuration for user not exists, create a new user")
             self.config.read(default_path)
 
-    # https://stackoverflow.com/questions/9202224/getting-a-hidden-password-input
-    # The explains for the warning while input password
     def generate_conn_settings(self, password: str, dbname: str) -> None:
-        self.config.set('database', 'user', self.username)
-        self.config.set('database', 'password', password)
-        self.config.set('database', 'dbname', dbname)
-        with open("./settings/config_" + self.username + ".ini", 'w') as configfile:
+        self.config.set("database", "user", self.username)
+        self.config.set("database", "password", password)
+        self.config.set("database", "dbname", dbname)
+        with open("./settings/config_" + self.username + ".ini", "w") as configfile:
             self.config.write(configfile)
 
     def get_conn_settings(self) -> Dict[str, str]:
         # convert list of tuples to dict
         connection_settings: Dict[str, str] = {}
-        if self.config.has_section('database'):
-            params = self.config.items('database')
+        if self.config.has_section("database"):
+            params = self.config.items("database")
             for key, value in params:
-                if key == 'schema':
-                    connection_settings['options'] = f'-c search_path={value}'
+                if key == "schema":
+                    connection_settings["options"] = f"-c search_path={value}"
                 else:
                     connection_settings[key] = value
         return connection_settings
 
     def set_default_path(self, path: str) -> None:
-        self.config.set('database', 'default_filepath', path)
-        with open("./settings/config_" + self.username + ".ini", 'w') as configfile:
+        self.config.set("database", "default_filepath", path)
+        with open("./settings/config_" + self.username + ".ini", "w") as configfile:
             self.config.write(configfile)
+
     # TODO: get JDBC settings

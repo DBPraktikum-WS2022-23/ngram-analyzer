@@ -6,12 +6,38 @@ authors = ["Franzi <92818644+franziskavonalbedyll@users.noreply.github.com>"]
 readme = "README.md"
 packages = []
 
+[tool.poe.tasks]
+black = "black ./src"
+isort = "isort ./src"
+format = ["black", "isort"]
+
+mypy = "mypy --strict ."
+pylint = "pylint ./src"
+lint = ["pylint", "mypy"]
+
+pytest = "coverage run -m pytest -q"
+test = ["pytest"]
+
+check = ["format", "lint", "test"]
+
 [tool.poetry.dependencies]
 python = "^3.8"
 psycopg = "^3.1.4"
 pyspark = "^3.3.1"
 
+[tool.poetry.group.dev.dependencies]
+pylint = "^2.15.9"
+black = "^22.12.0"
+mypy = "^0.991"
+isort = "^5.11.3"
+poethepoet = "^0.16.5"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.2.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
