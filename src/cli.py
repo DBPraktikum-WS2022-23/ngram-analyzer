@@ -10,7 +10,7 @@ from src.database_connection import NgramDB, NgramDBBuilder
 from src.transfer import Transferer
 
 
-# TO DO: über pfeiltasten vorherigen befehl holen
+# TODO: über pfeiltasten vorherigen befehl holen
 class Prompt(Cmd):
     intro: str = (
         "Welcome to the ngram_analyzer shell. Type help or ? to list commands.\n"
@@ -33,7 +33,7 @@ class Prompt(Cmd):
 
     transferer: Optional[Transferer] = None
 
-    def do_db_connect(self, inp):
+    def do_db_connect(self, arg):
         # init db
         user: str = input("Enter user name:")
         self.config = ConfigConverter(user)
@@ -48,7 +48,7 @@ class Prompt(Cmd):
         if self.ngram_db is None:
             # TODO return to main menu and retry db init with other connection settings
             print("Connection to DB could not be established. Goodbye!")
-            return True
+            return
 
         print("Opened connection")
         #
@@ -57,17 +57,25 @@ class Prompt(Cmd):
         #
         # print(f'PostgreSQL database version: {result}')
 
-    def do_transfer(self, path: str) -> None:
+    # TODO: hier sollte arg nicht fuer path UND -default stehen.
+    # also noch einen param hinzufuegen oder so
+    def do_transfer(self, arg: str) -> None:
         """Transfer data from a file to the database."""
+
+        temp_path: str = arg
+
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
 
-        if path == "":
+        if arg == '':
             print("Please provide a path to a file.")
             return
 
-        if not os.path.isfile(path):
+        if arg == "-default":
+            temp_path = self.conn_settings["default_filepath"]
+
+        if not os.path.isfile(temp_path):
             print("Please enter a valid path.")
             return
 
@@ -89,15 +97,11 @@ class Prompt(Cmd):
             }
             self.transferer = Transferer(self.spark, url, properties)
 
-        if path == "-default":
-            self.transferer.transfer_textFile(prop_dict["default_filepath"])
-        else:
-            self.transferer.transfer_textFile(path)
+            self.transferer.transfer_textFile(temp_path)
 
         print("You have successfully transferred the data.")
 
-    # TODO error handling, be careful to use this
-    def do_set_default_file(self, path: str) -> None:
+    def do_set_default_file(self, arg) -> None:
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
@@ -106,7 +110,9 @@ class Prompt(Cmd):
         self.config.set_default_path(path)
         self.conn_settings = self.config.get_conn_settings()
 
-    def do_exit(self, inp):
+        print("Set '" + path + "' as default file path for command 'transfer -default'")
+
+    def do_exit(self, arg):
         return True
 
     # overrides class method, is run before cmdloop returns but not in case the shell crashes

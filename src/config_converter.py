@@ -18,8 +18,6 @@ class ConfigConverter:
             print("Configuration for user not exists, create a new user")
             self.config.read(default_path)
 
-    # https://stackoverflow.com/questions/9202224/getting-a-hidden-password-input
-    # The explains for the warning while input password
     def generate_conn_settings(self, password: str, dbname: str) -> None:
         self.config.set("database", "user", self.username)
         self.config.set("database", "password", password)
