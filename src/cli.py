@@ -8,9 +8,10 @@ from src.database_connection import NgramDB, NgramDBBuilder
 from src.config_converter import ConfigConverter
 from src.transfer import Transferer
 
+
 # TO DO: über pfeiltasten vorherigen befehl holen
 class Prompt(Cmd):
-    intro: str = ('Welcome to the ngram_analyzer shell. Type help or ? to list commands.\n')
+    intro: str = 'Welcome to the ngram_analyzer shell. Type help or ? to list commands.\n'
     prompt: str = '(ngram_analyzer) '
 
     #TODO might be redundant
@@ -26,7 +27,7 @@ class Prompt(Cmd):
 
     transferer: Optional[Transferer] = None
 
-    def do_db_connect(self, inp):
+    def do_db_connect(self, arg):
         # init db
         user: str = input("Enter user name:")
         self.config = ConfigConverter(user)
@@ -36,53 +37,53 @@ class Prompt(Cmd):
             self.config.generate_conn_settings(password, dbname)
         self.conn_settings = self.config.get_conn_settings()
         # TODO: this wrapper function might be useless but it appears here more readable to me
-        self.ngram_db =  NgramDBBuilder(self.conn_settings).connect_to_ngram_db()
+        self.ngram_db = NgramDBBuilder(self.conn_settings).connect_to_ngram_db()
 
         if self.ngram_db is None:
             # TODO return to main menu and retry db init with other connection settings
             print("Connection to DB could not be established. Goodbye!")
-            return True
+            return
 
         print('Opened connection')
+        self.config.save_conn_settings()
         #
         # Work with the database. For instance:
         # result = self.ngram_db.execute('SELECT version()')
         #
         # print(f'PostgreSQL database version: {result}')
 
-    def do_transfer(self, path: str) -> None:
+    def do_transfer(self, arg: str) -> None:
         """ Transfer data from a file to the database. """
+
+        temp_path: str = arg
+
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
         
-        if path == '':
+        if arg == '':
             print("Please provide a path to a file.")
             return
 
-        if not os.path.isfile(path):
+        if arg == '-default':
+            temp_path = self.conn_settings['default_filepath']
+
+        if not os.path.isfile(temp_path):
             print("Please enter a valid path.")
             return
 
         if self.transferer is None:
-            prop_dict = self.conn_settings
-            url = 'jdbc:postgresql://' + prop_dict['host'] + ':' + prop_dict['port'] \
-                  + '/' + prop_dict['dbname']
-            #TODO store name of database
-            print(url)
-            properties: Dict[str, str] = {'user': prop_dict['user'],
-                                          'password': prop_dict['password']}
+            url = 'jdbc:postgresql://' + self.conn_settings['host'] + ':' + self.conn_settings['port'] \
+                  + '/' + self.conn_settings['dbname']
+            properties: Dict[str, str] = {'user': self.conn_settings['user'],
+                                          'password': self.conn_settings['password']}
             self.transferer = Transferer(self.spark, url, properties)
 
-        if path == "-default":
-            self.transferer.transfer_textFile(prop_dict['default_filepath'])
-        else:
-            self.transferer.transfer_textFile(path)
+        self.transferer.transfer_textFile(temp_path)
 
         print("You have successfully transferred the data.")
 
-    # TODO error handling, be careful to use this
-    def do_set_default_file(self, path: str) -> None:
+    def do_set_default_file(self, arg) -> None:
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
@@ -91,7 +92,9 @@ class Prompt(Cmd):
         self.config.set_default_path(path)
         self.conn_settings = self.config.get_conn_settings()
 
-    def do_exit(self, inp):
+        print('Set \'' + path + '\' as default file path for command \'transfer -default\'')
+
+    def do_exit(self, arg):
         return True
 
     # overrides class method, is run before cmdloop returns but not in case the shell crashes

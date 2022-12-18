@@ -18,14 +18,10 @@ class ConfigConverter:
             print("Configuration for user not exists, create a new user")
             self.config.read(default_path)
 
-    # https://stackoverflow.com/questions/9202224/getting-a-hidden-password-input
-    # The explains for the warning while input password
     def generate_conn_settings(self, password: str, dbname: str) -> None:
         self.config.set('database', 'user', self.username)
         self.config.set('database', 'password', password)
         self.config.set('database', 'dbname', dbname)
-        with open("./settings/config_" + self.username + ".ini", 'w') as configfile:
-            self.config.write(configfile)
 
     def get_conn_settings(self) -> Dict[str, str]:
         # convert list of tuples to dict
@@ -39,8 +35,11 @@ class ConfigConverter:
                     connection_settings[key] = value
         return connection_settings
 
-    def set_default_path(self, path: str) -> None:
-        self.config.set('database', 'default_filepath', path)
+    def save_conn_settings(self) -> None:
         with open("./settings/config_" + self.username + ".ini", 'w') as configfile:
             self.config.write(configfile)
-    # TODO: get JDBC settings
+
+    def set_default_path(self, path: str) -> None:
+        self.config.set('database', 'default_filepath', path)
+        self.save_conn_settings()
+
