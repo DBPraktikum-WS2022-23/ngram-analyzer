@@ -27,6 +27,7 @@ class Prompt(Cmd):
     transferer: Optional[Transferer] = None
 
     def do_db_connect(self, arg):
+        """Connect to database. This will create the database and relations if they don't exist."""
         # init db
         user: str = input("Enter user name:")
         self.config = ConfigConverter(user)
@@ -104,6 +105,7 @@ class Prompt(Cmd):
         print("You have successfully transferred the data.")
 
     def do_set_default_file(self, arg) -> None:
+        """Set default path to data to be transferred."""
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
