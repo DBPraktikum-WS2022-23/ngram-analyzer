@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+
 # write a basic function to plot example data
 def plot_example_data():
     x = [1, 2, 3, 4, 5]
