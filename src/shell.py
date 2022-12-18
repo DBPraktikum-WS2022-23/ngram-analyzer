@@ -102,6 +102,7 @@ class Prompt(Cmd):
             self.transferer.transfer_textFile(temp_path)
 
         print("You have successfully transferred the data.")
+        self.transferer = None
 
     def do_set_default_file(self, arg) -> None:
         if self.ngram_db is None:
