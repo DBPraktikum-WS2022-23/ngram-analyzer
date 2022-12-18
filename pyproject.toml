@@ -24,6 +24,7 @@ check = ["format", "lint", "test"]
 python = "^3.8"
 psycopg = "^3.1.4"
 pyspark = "^3.3.1"
+matplotlib = "^3.6.2"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^2.15.9"
