@@ -2,12 +2,15 @@ import matplotlib.pyplot as plt
 from typing import Dict
 from pyspark.sql import SparkSession, DataFrame
 
+#TODO save plots to output folder
 # write a basic function to plot example data
 def plot_example_data() -> None:
     x = [1, 2, 3, 4, 5]
     y = [1, 4, 9, 16, 25]
     plt.plot(x, y)
     plt.show()
+    # save plot
+    plt.savefig("output/example_plot.png")
 
 # plot the frequency of certain words in certain years
 def plot_word_frequencies(words, years) -> None:
@@ -32,3 +35,4 @@ def plot_word_frequencies(words, years) -> None:
     ax.legend()
     plt.show()
     spark.stop()
+    plt.savefig("output/word_frequency_plot.png")
