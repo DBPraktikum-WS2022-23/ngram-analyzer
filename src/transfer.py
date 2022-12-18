@@ -47,19 +47,26 @@ class Transferer:
             ],
             "left_anti"
         )
+        temp = word_df.cache().select(col("str_rep").alias("temp_str"), col("type").alias("temp_type")).alias("temp")
 
-        # show word table that will be written to db
         word_df.show()
         self.__write(word_df, "word")
 
-        word_df = self.__read("word")
+        df = df.join(
+            temp,
+            [
+                df["str_rep"] == temp["temp_str"],
+                df["type"].eqNullSafe(temp["temp_type"]),
+            ]
+        ).select("str_rep", "type", "occ_all")
 
+        word_df_new = self.__read("word")
         occurence_df = (
             df.join(
-                word_df,
+                word_df_new,
                 [
-                    word_df["str_rep"] == df["str_rep"],
-                    word_df["type"].eqNullSafe(df["type"])
+                    word_df_new["str_rep"] == df["str_rep"],
+                    word_df_new["type"].eqNullSafe(df["type"])
                 ]
             ).select("id", "occ_all")
             .withColumn("occ_sep", split(col("occ_all"), "\t"))
@@ -71,15 +78,8 @@ class Transferer:
             .drop("occurence")
             .dropDuplicates(["id", "year"])
         )
-        word_df.unpersist()
-        # delete duplicates in occurence table
-        occ_df_db = self.__read("occurence").select("id", "year")
-        occurence_df = occurence_df.join(
-            occ_df_db.select("id", "year"), ["id", "year"], "left_anti"
-        )
 
         occurence_df.show()
-
         self.__write(occurence_df, "occurence")
 
         """
