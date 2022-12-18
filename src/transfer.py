@@ -47,15 +47,42 @@ class Transferer:
             ],
             "left_anti"
         )
+        temp = word_df.cache().select(col("str_rep").alias("temp_str"), col("type").alias("temp_type")).alias("temp")
 
-        # show word table that will be written to db
         word_df.show()
         self.__write(word_df, "word")
 
-        # unpersist dataframes to free memory
-        word_df.unpersist()
-        word_df_db.unpersist()
+        df = df.join(
+            temp,
+            [
+                df["str_rep"] == temp["temp_str"],
+                df["type"].eqNullSafe(temp["temp_type"]),
+            ]
+        ).select("str_rep", "type", "occ_all")
 
+        word_df_new = self.__read("word")
+        occurence_df = (
+            df.join(
+                word_df_new,
+                [
+                    word_df_new["str_rep"] == df["str_rep"],
+                    word_df_new["type"].eqNullSafe(df["type"])
+                ]
+            ).select("id", "occ_all")
+            .withColumn("occ_sep", split(col("occ_all"), "\t"))
+            .drop("occ_all")
+            .select("id", explode("occ_sep").alias("occurence"))
+            .withColumn("year", split(col("occurence"), ",")[0].cast("int"))
+            .withColumn("freq", split(col("occurence"), ",")[1].cast("int"))
+            .withColumn("book_count", split(col("occurence"), ",")[2].cast("int"))
+            .drop("occurence")
+            .dropDuplicates(["id", "year"])
+        )
+
+        occurence_df.show()
+        self.__write(occurence_df, "occurence")
+
+        """
         occurence_df = (
             df.withColumn("occ_sep", split(col("occ_all"), "\t"))
             .drop("occ_all")
@@ -68,24 +95,19 @@ class Transferer:
         )
 
         # add foreign key to occurence table
+
         occurence_df = occurence_df.join(
-            word_df_db,
+            word_df,
             [
-                word_df_db["str_rep"] == occurence_df["str_rep"],
-                word_df_db["type"].eqNullSafe(occurence_df["type"])
+                word_df["str_rep"] == occurence_df["str_rep"],
+                word_df["type"].eqNullSafe(occurence_df["type"])
             ]
         ).select("id", "year", "freq", "book_count")
 
-        # delete duplicates in occurence table
-        occ_df_db = self.__read("occurence")
-        occurence_df = occurence_df.join(
-            occ_df_db.select("id", "year"), ["id", "year"], "left_anti"
-        )
 
         # show occurence table that will be written to db
         occurence_df.show()
-        self.__write(occurence_df, "occurence")
 
-        # unpersist dataframes to free memory
-        occurence_df.unpersist()
-        occ_df_db.unpersist()
+        self.__write(occurence_df, "occurence")
+        """
+
