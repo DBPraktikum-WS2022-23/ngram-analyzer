@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS word(
 id serial,
-str_rep varchar(100) NOT NULL,
+str_rep varchar(200) NOT NULL,
 type varchar(20),
 PRIMARY KEY(id),
 UNIQUE NULLS NOT DISTINCT (str_rep, type));
