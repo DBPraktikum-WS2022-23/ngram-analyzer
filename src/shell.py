@@ -7,6 +7,7 @@ from pyspark.sql import SparkSession
 
 from src.config_converter import ConfigConverter
 from src.database_connection import NgramDB, NgramDBBuilder
+from src.info import DataBaseStatistics, WordFrequencies
 from src.transfer import Transferer
 
 
@@ -69,7 +70,7 @@ class Prompt(Cmd):
             print("No connection to database. Please connect to a database first.")
             return
 
-        if arg == '':
+        if arg == "":
             print("Please provide a path to a file.")
             return
 
@@ -112,6 +113,18 @@ class Prompt(Cmd):
         self.conn_settings = self.config.get_conn_settings()
 
         print("Set '" + path + "' as default file path for command 'transfer -default'")
+
+    def do_print_word_frequencies(self, arg) -> None:
+        wf: WordFrequencies = WordFrequencies(["1972_NUM", "Ausbreitung"], [1973, 1972])
+        wf.print_word_frequencies()
+
+    def do_plot_word_frequencies(self, arg) -> None:
+        wf: WordFrequencies = WordFrequencies(["1972_NUM", "Ausbreitung"], [1973, 1972])
+        wf.plot_word_frequencies()
+
+    def do_print_db_statistics(self, arg) -> None:
+        dbs: DataBaseStatistics = DataBaseStatistics()
+        dbs.print_statistics()
 
     def do_exit(self, arg):
         return True
