@@ -51,6 +51,7 @@ class Prompt(Cmd):
             return
 
         print("Opened connection")
+        self.config.save_conn_settings()
         #
         # Work with the database. For instance:
         # result = self.ngram_db.execute('SELECT version()')
