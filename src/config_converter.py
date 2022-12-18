@@ -25,6 +25,13 @@ class ConfigConverter:
         with open("./settings/config_" + self.username + ".ini", "w") as configfile:
             self.config.write(configfile)
 
+    def generate_conn_settings_sample(self,username: str, password: str, dbname: str) -> None:
+        self.config.set("database", "user", username)
+        self.config.set("database", "password", password)
+        self.config.set("database", "dbname", dbname)
+        with open("./settings/config_" + self.username + ".ini", "w") as configfile:
+            self.config.write(configfile)
+
     def get_conn_settings(self) -> Dict[str, str]:
         # convert list of tuples to dict
         connection_settings: Dict[str, str] = {}

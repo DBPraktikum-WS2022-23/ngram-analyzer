@@ -22,14 +22,7 @@ class Prompt(Cmd):
     config: Optional[ConfigConverter] = None
     ngram_db: Optional[NgramDB] = None
 
-    spark = (
-        SparkSession.builder.appName("ngram_analyzer")
-        .master("local[*]")
-        .config("spark.driver.extraClassPath", "./resources/postgresql-42.5.1.jar")
-        .config("spark.driver.memory", "4g")
-        .config("spark.executor.memory", "1g")
-        .getOrCreate()
-    )
+    spark = None
 
     transferer: Optional[Transferer] = None
 
@@ -79,6 +72,15 @@ class Prompt(Cmd):
             print("Please enter a valid path.")
             return
 
+        self.spark = (
+            SparkSession.builder.appName("ngram_analyzer")
+            .master("local[*]")
+            .config("spark.driver.extraClassPath", "./resources/postgresql-42.5.1.jar")
+            .config("spark.driver.memory", "4g")
+            .config("spark.executor.memory", "1g")
+            .getOrCreate()
+        )
+
         if self.transferer is None:
             prop_dict = self.conn_settings
             url = (
@@ -119,5 +121,6 @@ class Prompt(Cmd):
     def postloop(self) -> None:
         if self.ngram_db:
             del self.ngram_db
-        self.spark.stop()
+        if self.spark:
+            self.spark.stop()
         print("Closed connection")
