@@ -13,7 +13,7 @@ format = ["black", "isort"]
 
 mypy = "mypy --strict ."
 pylint = "pylint ./src"
-lint = ["mypy", "pylint", "isort"]
+lint = ["pylint", "mypy"]
 
 pytest = "coverage run -m pytest -q"
 test = ["pytest"]
