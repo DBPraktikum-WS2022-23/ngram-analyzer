@@ -42,9 +42,10 @@ class Prompt(Cmd):
         if self.ngram_db is None:
             # TODO return to main menu and retry db init with other connection settings
             print("Connection to DB could not be established. Goodbye!")
-            return True
+            return
 
         print('Opened connection')
+        self.config.save_conn_settings()
         #
         # Work with the database. For instance:
         # result = self.ngram_db.execute('SELECT version()')
