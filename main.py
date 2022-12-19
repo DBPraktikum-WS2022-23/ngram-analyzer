@@ -1,4 +1,7 @@
 from src.shell import Prompt
+from src.cli import Cli
 
 if __name__ == '__main__':
-    Prompt().cmdloop()
+
+    Cli().run_cli()
+    # Prompt().cmdloop()

@@ -20,22 +20,18 @@ class Prompt(Cmd):
 
     # TODO might be redundant
     conn_settings: Dict[str, str] = {}
+    jdbc_driver: str = ''
+    data_path: str = ''
     config: Optional[ConfigConverter] = None
     ngram_db: Optional[NgramDB] = None
 
-    spark = (
-        SparkSession.builder.appName("ngram_analyzer")
-        .master("local[*]")
-        .config("spark.driver.extraClassPath", "./resources/postgresql-42.5.1.jar")
-        .config("spark.driver.memory", "4g")
-        .config("spark.executor.memory", "1g")
-        .getOrCreate()
-    )
+    spark = None
 
     transferer: Optional[Transferer] = None
     db2df: Optional[DataBaseStatistics]
 
     def do_db_connect(self, arg):
+        """Connect to database. This will create the database and relations if they don't exist."""
         # init db
         user: str = input("Enter user name:")
         self.config = ConfigConverter(user)
@@ -44,6 +40,8 @@ class Prompt(Cmd):
             dbname: str = input("Enter database name:")
             self.config.generate_conn_settings(password, dbname)
         self.conn_settings = self.config.get_conn_settings()
+        self.jdbc_driver = self.config.get_jdbc_path()
+        self.data_path = self.config.get_data_path()
         # TODO: this wrapper function might be useless but it appears here more readable to me
         self.ngram_db = NgramDBBuilder(self.conn_settings).connect_to_ngram_db()
 
@@ -71,16 +69,25 @@ class Prompt(Cmd):
             print("No connection to database. Please connect to a database first.")
             return
 
-        if arg == "":
-            print("Please provide a path to a file.")
-            return
+        if arg == '':
+            temp_path = self.data_path
 
-        if arg == "-default":
-            temp_path = self.conn_settings["default_filepath"]
-
-        if not os.path.isfile(temp_path):
+        if not os.path.isfile(temp_path) and not os.path.isdir(temp_path):
             print("Please enter a valid path.")
             return
+
+        driver_path: str = self.jdbc_driver
+        if driver_path == '':
+            driver_path = "./jdbc-driver/postgresql-42.5.1.jar"
+
+        self.spark = (
+            SparkSession.builder.appName("ngram_analyzer")
+            .master("local[*]")
+            .config("spark.driver.extraClassPath", driver_path)
+            .config("spark.driver.memory", "4g")
+            .config("spark.executor.memory", "1g")
+            .getOrCreate()
+        )
 
         if self.transferer is None:
             prop_dict = self.conn_settings
@@ -93,29 +100,23 @@ class Prompt(Cmd):
                 + prop_dict["dbname"]
             )
             # TODO store name of database
-            print(url)
             properties: Dict[str, str] = {
                 "user": prop_dict["user"],
                 "password": prop_dict["password"],
             }
             self.transferer = Transferer(self.spark, url, properties)
 
-            self.transferer.transfer_textFile(temp_path)
+            if os.path.isfile(temp_path):
+                self.transferer.transfer_textFile(temp_path)
+            elif os.path.isdir(temp_path):  # handle directory
+                for cur_path, _, files in os.walk(temp_path):
+                    for file in files:
+                        print(f"Transferring {file}")
+                        self.transferer.transfer_textFile(os.path.join(cur_path, file))
 
         print("You have successfully transferred the data.")
         self.transferer = None
-
-    def do_set_default_file(self, arg) -> None:
-        if self.ngram_db is None:
-            print("No connection to database. Please connect to a database first.")
-            return
-
-        path = input("Enter default file path:")
-        self.config.set_default_path(path)
-        self.conn_settings = self.config.get_conn_settings()
-
-        print("Set '" + path + "' as default file path for command 'transfer -default'")
-
+        
     def do_print_word_frequencies(self, arg) -> None:
         prop_dict = self.conn_settings
         url = (
@@ -180,5 +181,6 @@ class Prompt(Cmd):
     def postloop(self) -> None:
         if self.ngram_db:
             del self.ngram_db
-        self.spark.stop()
+        if self.spark:
+            self.spark.stop()
         print("Closed connection")
