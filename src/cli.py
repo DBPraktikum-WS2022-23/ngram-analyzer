@@ -18,15 +18,12 @@ from pyspark.sql import SparkSession
 class Cli:
 
     def __init__(self) -> None:
-        # TODO might be redundant
         self.conn_settings: Dict[str, str] = {}
         self.config: ConfigConverter = ConfigConverter("sample")
         self.ngram_db: Optional[NgramDB] = None
         self.spark = None
 
     def __exit(self) -> None:
-
-        # TODO: close db connection
         if self.ngram_db:
             del self.ngram_db
         if self.spark:
@@ -35,8 +32,6 @@ class Cli:
         sys.exit()
 
     def __exit_error(self, message) -> None:
-
-        # TODO: close db connection
         if self.ngram_db:
             del self.ngram_db
         if self.spark:
@@ -53,10 +48,6 @@ class Cli:
             epilog="Text at the bottom of help",
         )
 
-        # psr.add_argument(
-        #     "-c", "--config", metavar="FILE", help="Path to the config file"
-        # )  # option that takes a value
-
         psr.add_argument(
             "-c",
             "--create-db",
@@ -68,7 +59,7 @@ class Cli:
             "-t",
             "--transfer",
             metavar="PATH",
-            help="Reads raw data from supplyed file or folder and imports it into"\
+            help="Reads raw data from supplied file or folder and imports it into"\
             " database, use -r to recurse into subdirectories",
         )
 
@@ -175,13 +166,3 @@ class Cli:
                 transferer.transfer_textFile(file)
 
         self.__exit()
-
-
-# python main.py --db-create  # create db and return
-# python main.py --transfer  # only do transfer and return
-# python main.py --db-create --transfer  # create db, transfer data and return
-# python main.py --transfer --db-create  # create db, transfer data and return
-#
-# python main.py --db-create --transfer --shell # should this be possible???
-#
-# python main.py # start shell  instead of python main.py --shell

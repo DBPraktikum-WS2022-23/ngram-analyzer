@@ -44,9 +44,23 @@ class ConfigConverter:
                     connection_settings[key] = value
         return connection_settings
 
+    def get_jdbc_path(self) -> str:
+        if self.config.has_section("jdbc"):
+            params = self.config.items("jdbc")
+            for key, value in params:
+                if key == "driver":
+                    return value
+        return ''
+
+    def get_data_path(self) -> str:
+        if self.config.has_section("data"):
+            params = self.config.items("data")
+            for key, value in params:
+                if key == "path":
+                    return value
+        return ''
+
     def set_default_path(self, path: str) -> None:
         self.config.set("database", "default_filepath", path)
         with open("./settings/config_" + self.username + ".ini", "w") as configfile:
             self.config.write(configfile)
-
-    # TODO: get JDBC settings
