@@ -33,6 +33,7 @@ class Prompt(Cmd):
     )
 
     transferer: Optional[Transferer] = None
+    db2df: Optional[DataBaseStatistics]
 
     def do_db_connect(self, arg):
         # init db
@@ -116,15 +117,60 @@ class Prompt(Cmd):
         print("Set '" + path + "' as default file path for command 'transfer -default'")
 
     def do_print_word_frequencies(self, arg) -> None:
-        wf: WordFrequencies = WordFrequencies(["1972_NUM", "Ausbreitung"], [1973, 1972])
-        wf.print_word_frequencies()
+        prop_dict = self.conn_settings
+        url = (
+                "jdbc:postgresql://"
+                + prop_dict["host"]
+                + ":"
+                + prop_dict["port"]
+                + "/"
+                + prop_dict["dbname"]
+        )
+        # TODO store name of database
+        print(url)
+        properties: Dict[str, str] = {
+            "user": prop_dict["user"],
+            "password": prop_dict["password"],
+        }
+        wf: WordFrequencies = WordFrequencies(self.spark, url, properties)
+        wf.print_word_frequencies(["Produkte", "Produkte_"], [1973, 1972])
 
     def do_plot_word_frequencies(self, arg) -> None:
-        wf: WordFrequencies = WordFrequencies(["1972_NUM", "Ausbreitung"], [1973, 1972])
-        wf.plot_word_frequencies()
+        prop_dict = self.conn_settings
+        url = (
+                "jdbc:postgresql://"
+                + prop_dict["host"]
+                + ":"
+                + prop_dict["port"]
+                + "/"
+                + prop_dict["dbname"]
+        )
+        # TODO store name of database
+        print(url)
+        properties: Dict[str, str] = {
+            "user": prop_dict["user"],
+            "password": prop_dict["password"],
+        }
+        wf: WordFrequencies = WordFrequencies(self.spark, url, properties)
+        wf.plot_word_frequencies(["Produkte", "Produkte_"], [1973, 1972])
 
     def do_print_db_statistics(self, arg) -> None:
-        dbs: DataBaseStatistics = DataBaseStatistics()
+        prop_dict = self.conn_settings
+        url = (
+                "jdbc:postgresql://"
+                + prop_dict["host"]
+                + ":"
+                + prop_dict["port"]
+                + "/"
+                + prop_dict["dbname"]
+        )
+        # TODO store name of database
+        print(url)
+        properties: Dict[str, str] = {
+            "user": prop_dict["user"],
+            "password": prop_dict["password"],
+        }
+        dbs: DataBaseStatistics = DataBaseStatistics(self.spark, url, properties)
         dbs.print_statistics()
 
     def do_exit(self, arg):
