@@ -69,3 +69,14 @@ class ConfigConverter:
         self.config.set("database", "default_filepath", path)
         with open("./settings/config_" + self.username + ".ini", "w") as configfile:
             self.config.write(configfile)
+
+    def get_db_url(self) -> str:
+        db_conn_setting = self.get_conn_settings()
+        return (
+            "jdbc:postgresql://"
+            + db_conn_setting["host"]
+            + ":"
+            + db_conn_setting["port"]
+            + "/"
+            + db_conn_setting["dbname"]
+        )

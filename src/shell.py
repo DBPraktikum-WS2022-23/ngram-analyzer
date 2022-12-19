@@ -1,7 +1,7 @@
 import os
 from cmd import Cmd
 from getpass import getpass
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from pyspark.sql import SparkSession
 
@@ -19,7 +19,7 @@ class Prompt(Cmd):
     prompt: str = "(ngram_analyzer) "
 
     # TODO might be redundant
-    conn_settings: Dict[str, str] = {}
+    db_conn_settings: Dict[str, str] = {}
     jdbc_driver: str = ""
     data_path: str = ""
     config: Optional[ConfigConverter] = None
@@ -38,11 +38,11 @@ class Prompt(Cmd):
             password: str = getpass()
             dbname: str = input("Enter database name:")
             self.config.generate_conn_settings(password, dbname)
-        self.conn_settings = self.config.get_conn_settings()
+        self.db_conn_settings = self.config.get_conn_settings()
         self.jdbc_driver = self.config.get_jdbc_path()
         self.data_path = self.config.get_data_path()
         # TODO: this wrapper function might be useless but it appears here more readable to me
-        self.ngram_db = NgramDBBuilder(self.conn_settings).connect_to_ngram_db()
+        self.ngram_db = NgramDBBuilder(self.db_conn_settings).connect_to_ngram_db()
 
         if self.ngram_db is None:
             # TODO return to main menu and retry db init with other connection settings
@@ -51,6 +51,7 @@ class Prompt(Cmd):
 
         print("Opened connection")
         self.config.save_conn_settings()
+
         #
         # Work with the database. For instance:
         # result = self.ngram_db.execute('SELECT version()')
@@ -92,19 +93,11 @@ class Prompt(Cmd):
         )
 
         if self.transferer is None:
-            prop_dict = self.conn_settings
-            url = (
-                "jdbc:postgresql://"
-                + prop_dict["host"]
-                + ":"
-                + prop_dict["port"]
-                + "/"
-                + prop_dict["dbname"]
-            )
-            # TODO store name of database
+            url = self.config.get_db_url()
+            print(url)
             properties: Dict[str, str] = {
-                "user": prop_dict["user"],
-                "password": prop_dict["password"],
+                "user": self.db_conn_settings["user"],
+                "password": self.db_conn_settings["password"],
             }
             self.transferer = Transferer(self.spark, url, properties)
 
@@ -120,15 +113,78 @@ class Prompt(Cmd):
         self.transferer = None
 
     def do_print_word_frequencies(self, arg) -> None:
-        wf: WordFrequencies = WordFrequencies(["1972_NUM", "Ausbreitung"], [1973, 1972])
-        wf.print_word_frequencies()
+        if self.ngram_db is None:
+            print("No connection to database. Please connect to a database first.")
+            return
+        url = self.config.get_db_url()
+        print(url)
+        properties: Dict[str, str] = {
+            "user": self.db_conn_settings["user"],
+            "password": self.db_conn_settings["password"],
+        }
+        words: List[str] = input("Enter words: (separate by space)").split(" ")
+        years: List[str] = input("Enter years: (separate by space)").split(" ")
+        for year in years:
+            if not year.isdigit():
+                print("Year must be a number.")
+                return
+        self.spark = (
+            SparkSession.builder.appName("ngram_analyzer")
+            .master("local[*]")
+            .config("spark.driver.extraClassPath", self.jdbc_driver)
+            .config("spark.driver.memory", "4g")
+            .config("spark.executor.memory", "1g")
+            .getOrCreate()
+        )
+        wf: WordFrequencies = WordFrequencies(self.spark, url, properties)
+        wf.print_word_frequencies(words, [int(x) for x in years])
 
     def do_plot_word_frequencies(self, arg) -> None:
-        wf: WordFrequencies = WordFrequencies(["1972_NUM", "Ausbreitung"], [1973, 1972])
-        wf.plot_word_frequencies()
+        if self.ngram_db is None:
+            print("No connection to database. Please connect to a database first.")
+            return
+        url = self.config.get_db_url()
+        print(url)
+        properties: Dict[str, str] = {
+            "user": self.db_conn_settings["user"],
+            "password": self.db_conn_settings["password"],
+        }
+        words: List[str] = input("Enter words: (separate by space)").split(" ")
+        years: List[str] = input("Enter years: (separate by space)").split(" ")
+        for year in years:
+            if not year.isdigit():
+                print("Year must be a number.")
+                return
+        self.spark = (
+            SparkSession.builder.appName("ngram_analyzer")
+            .master("local[*]")
+            .config("spark.driver.extraClassPath", self.jdbc_driver)
+            .config("spark.driver.memory", "4g")
+            .config("spark.executor.memory", "1g")
+            .getOrCreate()
+        )
+        wf: WordFrequencies = WordFrequencies(self.spark, url, properties)
+        wf.plot_word_frequencies(words, [int(x) for x in years])
 
     def do_print_db_statistics(self, arg) -> None:
-        dbs: DataBaseStatistics = DataBaseStatistics()
+        if self.ngram_db is None:
+            print("No connection to database. Please connect to a database first.")
+            return
+        url = self.config.get_db_url()
+        print(url)
+        properties: Dict[str, str] = {
+            "user": self.db_conn_settings["user"],
+            "password": self.db_conn_settings["password"],
+        }
+        self.spark = (
+            SparkSession.builder.appName("ngram_analyzer")
+            .master("local[*]")
+            .config("spark.driver.extraClassPath", self.jdbc_driver)
+            .config("spark.driver.memory", "4g")
+            .config("spark.executor.memory", "1g")
+            .getOrCreate()
+        )
+        dbs: DataBaseStatistics = DataBaseStatistics(self.spark, url, properties)
         dbs.print_statistics()
 
     def do_exit(self, arg):
