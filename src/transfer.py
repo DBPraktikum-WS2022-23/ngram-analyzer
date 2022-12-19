@@ -1,7 +1,7 @@
 from typing import Dict
 
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import col, explode, split, regexp_extract
+from pyspark.sql.functions import col, explode, regexp_extract, split
 
 
 class Transferer:
@@ -31,7 +31,9 @@ class Transferer:
             .withColumn("occ_all", split(col("value"), "\t", 2)[1])
             .drop("value")
             .withColumn("str_rep", regexp_extract(col("word_and_type"), regexp, 1))
-            .withColumn("type", split(regexp_extract(col("word_and_type"), regexp, 2), "_")[1])
+            .withColumn(
+                "type", split(regexp_extract(col("word_and_type"), regexp, 2), "_")[1]
+            )
             .drop("word_and_type")
         )
 
@@ -45,9 +47,13 @@ class Transferer:
                 word_df_db["str_rep"] == word_df["str_rep"],
                 word_df_db["type"].eqNullSafe(word_df["type"]),
             ],
-            "left_anti"
+            "left_anti",
         )
-        temp = word_df.cache().select(col("str_rep").alias("temp_str"), col("type").alias("temp_type")).alias("temp")
+        temp = (
+            word_df.cache()
+            .select(col("str_rep").alias("temp_str"), col("type").alias("temp_type"))
+            .alias("temp")
+        )
 
         word_df.show()
         self.__write(word_df, "word")
@@ -57,7 +63,7 @@ class Transferer:
             [
                 df["str_rep"] == temp["temp_str"],
                 df["type"].eqNullSafe(temp["temp_type"]),
-            ]
+            ],
         ).select("str_rep", "type", "occ_all")
 
         word_df_new = self.__read("word")
@@ -66,9 +72,10 @@ class Transferer:
                 word_df_new,
                 [
                     word_df_new["str_rep"] == df["str_rep"],
-                    word_df_new["type"].eqNullSafe(df["type"])
-                ]
-            ).select("id", "occ_all")
+                    word_df_new["type"].eqNullSafe(df["type"]),
+                ],
+            )
+            .select("id", "occ_all")
             .withColumn("occ_sep", split(col("occ_all"), "\t"))
             .drop("occ_all")
             .select("id", explode("occ_sep").alias("occurence"))
@@ -110,4 +117,3 @@ class Transferer:
 
         self.__write(occurence_df, "occurence")
         """
-

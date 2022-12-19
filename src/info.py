@@ -1,5 +1,6 @@
 import os
-from typing import Any, List, Dict
+from typing import Any, Dict, List
+
 import matplotlib.pyplot as plt  # type: ignore
 from pyspark.sql import DataFrame, Row, SparkSession
 from pyspark.sql import functions as f
@@ -14,23 +15,22 @@ class DatabaseToSparkDF:
 
     def __set_up(self) -> None:
         """Set up the spark session and the dataframes"""
-        self.df_word: DataFrame = (
-            self.__spark.read.jdbc(
-                self.__db_url, "word", properties=self.__properties
-            )
+        self.df_word: DataFrame = self.__spark.read.jdbc(
+            self.__db_url, "word", properties=self.__properties
         )
 
-        self.df_occurence: DataFrame = (
-            self.__spark.read.jdbc(
-                self.__db_url, "occurence", properties=self.__properties
-            )
+        self.df_occurence: DataFrame = self.__spark.read.jdbc(
+            self.__db_url, "occurence", properties=self.__properties
         )
 
 
 class DataBaseStatistics:
-    def __init__(self, spark: SparkSession, db_url: str, properties: Dict[str, str]) -> None:
-        self.df_word: DataFrame = DatabaseToSparkDF(spark, db_url, properties).df_word
-        self.df_occurence: DataFrame = DatabaseToSparkDF(spark, db_url, properties).df_occurence
+    def __init__(
+        self, spark: SparkSession, db_url: str, properties: Dict[str, str]
+    ) -> None:
+        self.db2df: DatabaseToSparkDF = DatabaseToSparkDF(spark, db_url, properties)
+        self.df_word: DataFrame = self.db2df.df_word
+        self.df_occurence: DataFrame = self.db2df.df_occurence
 
     def print_statistics(self) -> None:
         """Print the info about the database"""
@@ -57,7 +57,9 @@ class DataBaseStatistics:
 
 
 class WordFrequencies:
-    def __init__(self, spark: SparkSession, db_url: str, properties: Dict[str, str]) -> None:
+    def __init__(
+        self, spark: SparkSession, db_url: str, properties: Dict[str, str]
+    ) -> None:
         """Set uo Word Frequency Object"""
         self.db2df: DatabaseToSparkDF = DatabaseToSparkDF(spark, db_url, properties)
         self.df_word: DataFrame = self.db2df.df_word
