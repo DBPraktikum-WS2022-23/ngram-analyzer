@@ -26,7 +26,11 @@
     - if no config profile exists for the username, then they are prompted for 
         - password of their postgres and
         - a new database name
-- ```transfer``` 
-- ```plot_word_frequencies```
-- ```print_db_statistics```
-- ```print_word_frequencies```
+- ```transfer``` loads the data into the database
+    - if run without any parameter, it uses the data in the default folder: ./data
+    - if a path is manually inputted as ```transfer path/to/file```, then the data is read from the file
+- ```plot_word_frequencies``` plotting frequency of words against each other for a set of years
+    - user is prompted to give the words and years
+- ```print_db_statistics``` prints count for each table, highest frequency and number of years
+- ```print_word_frequencies``` prints a table of the word frequencies in different years for different words
+    - user is prompted to give the words and years

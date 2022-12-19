@@ -113,6 +113,7 @@ class Prompt(Cmd):
         self.transferer = None
 
     def do_print_word_frequencies(self, arg) -> None:
+        """Print the frequency of selected words for selected years."""
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
@@ -140,6 +141,7 @@ class Prompt(Cmd):
         wf.print_word_frequencies(words, [int(x) for x in years])
 
     def do_plot_word_frequencies(self, arg) -> None:
+        """Plot frequency of words in different years."""
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
@@ -167,6 +169,7 @@ class Prompt(Cmd):
         wf.plot_word_frequencies(words, [int(x) for x in years])
 
     def do_print_db_statistics(self, arg) -> None:
+        """Print statistics of the database tables."""
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
