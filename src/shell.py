@@ -7,6 +7,7 @@ from pyspark.sql import SparkSession
 
 from src.config_converter import ConfigConverter
 from src.database_connection import NgramDB, NgramDBBuilder
+from src.info import DataBaseStatistics, WordFrequencies
 from src.transfer import Transferer
 
 
@@ -49,7 +50,15 @@ class Prompt(Cmd):
             return
 
         print("Opened connection")
+        self.config.save_conn_settings()
+        #
+        # Work with the database. For instance:
+        # result = self.ngram_db.execute('SELECT version()')
+        #
+        # print(f'PostgreSQL database version: {result}')
 
+    # TODO: hier sollte arg nicht fuer path UND -default stehen.
+    # also noch einen param hinzufuegen oder so
     def do_transfer(self, arg: str) -> None:
         """Transfer data from a file to the database."""
 
@@ -105,6 +114,19 @@ class Prompt(Cmd):
                         self.transferer.transfer_textFile(os.path.join(cur_path, file))
 
         print("You have successfully transferred the data.")
+        self.transferer = None
+        
+    def do_print_word_frequencies(self, arg) -> None:
+        wf: WordFrequencies = WordFrequencies(["1972_NUM", "Ausbreitung"], [1973, 1972])
+        wf.print_word_frequencies()
+
+    def do_plot_word_frequencies(self, arg) -> None:
+        wf: WordFrequencies = WordFrequencies(["1972_NUM", "Ausbreitung"], [1973, 1972])
+        wf.plot_word_frequencies()
+
+    def do_print_db_statistics(self, arg) -> None:
+        dbs: DataBaseStatistics = DataBaseStatistics()
+        dbs.print_statistics()
 
     def do_exit(self, arg):
         return True
