@@ -1,10 +1,11 @@
 import os.path
 from configparser import ConfigParser
-from getpass import getpass
 from typing import Dict
 
 
 class ConfigConverter:
+    """Wrapper around ConfigParser. Used to write and read config files for different users."""
+
     def __init__(self, username: str) -> None:
         self.username = username
         config_path = "./settings/config_" + username + ".ini"

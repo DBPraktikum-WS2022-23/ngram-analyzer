@@ -61,7 +61,10 @@ class Prompt(Cmd):
     # TODO: hier sollte arg nicht fuer path UND -default stehen.
     # also noch einen param hinzufuegen oder so
     def do_transfer(self, arg: str) -> None:
-        """Transfer data from a file to the database."""
+        """
+        Transfer data from a file to the database.
+        arg: path to file or directory from which to read data. If no path is given a
+        """
 
         temp_path: str = arg
 
@@ -110,6 +113,7 @@ class Prompt(Cmd):
         self.transferer = None
 
     def do_print_word_frequencies(self, arg) -> None:
+        """Print the frequency of selected words for selected years."""
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
@@ -137,6 +141,7 @@ class Prompt(Cmd):
         wf.print_word_frequencies(words, [int(x) for x in years])
 
     def do_plot_word_frequencies(self, arg) -> None:
+        """Plot frequency of words in different years."""
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
@@ -164,6 +169,7 @@ class Prompt(Cmd):
         wf.plot_word_frequencies(words, [int(x) for x in years])
 
     def do_print_db_statistics(self, arg) -> None:
+        """Print statistics of the database tables."""
         if self.ngram_db is None:
             print("No connection to database. Please connect to a database first.")
             return
@@ -185,6 +191,7 @@ class Prompt(Cmd):
         dbs.print_statistics()
 
     def do_exit(self, arg):
+        """Leave shell"""
         return True
 
     # overrides class method, is run before cmdloop returns but not in case the shell crashes
