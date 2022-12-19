@@ -8,17 +8,8 @@ from psycopg import Connection, OperationalError, sql
 from psycopg.errors import DuplicateDatabase
 
 
-@dataclass
-class Ngram:
-    """TODO"""
-
-    def __init__(self):
-        pass
-        # TODO
-
-
 class NgramDB:
-    """A wrapper around psycopg classes."""
+    """A wrapper around psycopg classes. Based on NgramDocumentDB from doc2ngram."""
 
     def __init__(self, connection_settings: Dict[Any, str]) -> None:
         self.__connection = Connection.connect(
@@ -46,7 +37,6 @@ class NgramDB:
         return cmds
 
     def __create_relations_if_not_exists(self) -> None:
-        # TODO: check if tables are read properly
         cmds = self.__get_sql_cmds("./src/resources/db_tables.sql")
 
         with self.__connection.cursor() as cursor:
@@ -70,7 +60,9 @@ class NgramDB:
 
 
 class NgramDBBuilder:
-    def __init__(self, connection_settings: Dict[str, str]) -> bool:
+    """Creates the ngram database and opens connection to it."""
+
+    def __init__(self, connection_settings: Dict[str, str]) -> None:
         self.connection_settings = connection_settings
 
     # TODO: convert prints to logging info

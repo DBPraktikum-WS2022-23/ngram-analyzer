@@ -11,7 +11,7 @@ black = "black ./src"
 isort = "isort ./src"
 format = ["black", "isort"]
 
-mypy = "mypy --strict ."
+mypy = "mypy ."
 pylint = "pylint ./src"
 lint = ["pylint", "mypy"]
 
@@ -42,3 +42,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
+
+[tool.pylint.main]
+fail-under = "5.0"

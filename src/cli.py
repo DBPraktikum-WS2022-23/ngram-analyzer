@@ -1,21 +1,20 @@
 import argparse
 import os
 import sys
-import time
-
-from src.config_converter import ConfigConverter
-from src.database_connection import NgramDB, NgramDBBuilder
-from src.transfer import Transferer
-
-from getpass import getpass
 from typing import Dict, Optional
-from src.shell import Prompt
-
 
 from pyspark.sql import SparkSession
 
+from src.config_converter import ConfigConverter
+from src.database_connection import NgramDB, NgramDBBuilder
+from src.shell import Prompt
+from src.transfer import Transferer
+
 
 class Cli:
+    """
+    Entry Point to the ngram_analyzer program
+    """
 
     def __init__(self) -> None:
         self.conn_settings: Dict[str, str] = {}
@@ -39,11 +38,11 @@ class Cli:
 
         sys.exit(f"Error: {message}.")
 
-
     def run_cli(self) -> None:
+        """Define and analyze the argument structure."""
         psr = argparse.ArgumentParser(
             prog="main.py",
-            description="A program to store ngrams in a database and analyse "\
+            description="A program to store ngrams in a database and analyse "
             "them. To start interactive shell call program without parameters",
             epilog="Text at the bottom of help",
         )
@@ -59,7 +58,7 @@ class Cli:
             "-t",
             "--transfer",
             metavar="PATH",
-            help="Reads raw data from supplied file or folder and imports it into"\
+            help="Reads raw data from supplied file or folder and imports it into"
             " database, use -r to recurse into subdirectories",
         )
 
@@ -69,14 +68,14 @@ class Cli:
             action="store_true",
             help="Open shell",
         )
-        
+
         psr.add_argument(
             "-u",
             "--username",
             metavar="USER",
             help="Username for the database",
         )
-        
+
         psr.add_argument(
             "-p",
             "--password",
@@ -93,31 +92,32 @@ class Cli:
 
         args = vars(psr.parse_args())
 
-        print("Command line arguments are:")  # TODO remove later
-        print(args)  # TODO remove later
-        print("")  # TODO remove later
-
         if args["shell"]:
             Prompt().cmdloop()
             return
 
-        if args['username']:
+        if args["username"]:
             conn_settings = self.config.get_conn_settings()
             username = args["username"]
             if conn_settings["user"] != username:
                 if args["password"] is None or args["dbname"] is None:
-                    self.__exit_error(f"config file for user {args['username']} does not exist. Please enter username, password and dbname")
+                    self.__exit_error(
+                        f"config file for user {args['username']} does not exist. \
+                        Please enter username, password and dbname"
+                    )
                 password = args["password"]
                 dbname: str = args["dbname"]
                 self.config.generate_conn_settings_sample(username, password, dbname)
 
         if args["create_db"] or args["transfer"] is not None:
             # check config and open connection
-            # TODO: [optional] add option to overwrite username and password
             self.conn_settings = self.config.get_conn_settings()
             ngram_db = NgramDBBuilder(self.conn_settings).connect_to_ngram_db()
             if ngram_db is None:
-                self.__exit_error("connection to DB could not be established. Please input username, password and dbname")
+                self.__exit_error(
+                    "connection to DB could not be established. \
+                    Please input username, password and dbname"
+                )
 
         if args["transfer"] is not None:
             path = os.path.abspath(args["transfer"])
@@ -130,7 +130,9 @@ class Cli:
             self.spark = (
                 SparkSession.builder.appName("ngram_analyzer")
                 .master("local[*]")
-                .config("spark.driver.extraClassPath", "./resources/postgresql-42.5.1.jar")
+                .config(
+                    "spark.driver.extraClassPath", "./resources/postgresql-42.5.1.jar"
+                )
                 .config("spark.driver.memory", "4g")
                 .config("spark.executor.memory", "1g")
                 .getOrCreate()
@@ -138,9 +140,9 @@ class Cli:
 
             # get files from path
             if os.path.isfile(path):
-                 data_files.append(path)  # single file
+                data_files.append(path)  # single file
             elif os.path.isdir(path):  # handle directory
-                for cur_path, folders, files in os.walk(path):
+                for cur_path, _, files in os.walk(path):
                     for file in files:
                         data_files.append(os.path.join(cur_path, file))
 

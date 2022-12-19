@@ -1,10 +1,11 @@
 import os.path
 from configparser import ConfigParser
-from getpass import getpass
 from typing import Dict
 
 
 class ConfigConverter:
+    """Wrapper around ConfigParser. Used to write and read config files for different users."""
+
     def __init__(self, username: str) -> None:
         self.username = username
         config_path = "./settings/config_" + username + ".ini"
@@ -27,7 +28,9 @@ class ConfigConverter:
         with open("./settings/config_" + self.username + ".ini", "w") as configfile:
             self.config.write(configfile)
 
-    def generate_conn_settings_sample(self,username: str, password: str, dbname: str) -> None:
+    def generate_conn_settings_sample(
+        self, username: str, password: str, dbname: str
+    ) -> None:
         self.config.set("database", "user", username)
         self.config.set("database", "password", password)
         self.config.set("database", "dbname", dbname)
@@ -52,7 +55,7 @@ class ConfigConverter:
             for key, value in params:
                 if key == "driver":
                     return value
-        return ''
+        return ""
 
     def get_data_path(self) -> str:
         if self.config.has_section("data"):
@@ -60,7 +63,7 @@ class ConfigConverter:
             for key, value in params:
                 if key == "path":
                     return value
-        return ''
+        return ""
 
     def set_default_path(self, path: str) -> None:
         self.config.set("database", "default_filepath", path)

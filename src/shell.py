@@ -20,8 +20,8 @@ class Prompt(Cmd):
 
     # TODO might be redundant
     conn_settings: Dict[str, str] = {}
-    jdbc_driver: str = ''
-    data_path: str = ''
+    jdbc_driver: str = ""
+    data_path: str = ""
     config: Optional[ConfigConverter] = None
     ngram_db: Optional[NgramDB] = None
 
@@ -60,7 +60,10 @@ class Prompt(Cmd):
     # TODO: hier sollte arg nicht fuer path UND -default stehen.
     # also noch einen param hinzufuegen oder so
     def do_transfer(self, arg: str) -> None:
-        """Transfer data from a file to the database."""
+        """
+        Transfer data from a file to the database.
+        arg: path to file or directory from which to read data. If no path is given a
+        """
 
         temp_path: str = arg
 
@@ -68,7 +71,7 @@ class Prompt(Cmd):
             print("No connection to database. Please connect to a database first.")
             return
 
-        if arg == '':
+        if arg == "":
             temp_path = self.data_path
 
         if not os.path.isfile(temp_path) and not os.path.isdir(temp_path):
@@ -76,7 +79,7 @@ class Prompt(Cmd):
             return
 
         driver_path: str = self.jdbc_driver
-        if driver_path == '':
+        if driver_path == "":
             driver_path = "./jdbc-driver/postgresql-42.5.1.jar"
 
         self.spark = (
@@ -115,7 +118,7 @@ class Prompt(Cmd):
 
         print("You have successfully transferred the data.")
         self.transferer = None
-        
+
     def do_print_word_frequencies(self, arg) -> None:
         wf: WordFrequencies = WordFrequencies(["1972_NUM", "Ausbreitung"], [1973, 1972])
         wf.print_word_frequencies()
@@ -129,6 +132,7 @@ class Prompt(Cmd):
         dbs.print_statistics()
 
     def do_exit(self, arg):
+        """Leave shell"""
         return True
 
     # overrides class method, is run before cmdloop returns but not in case the shell crashes
