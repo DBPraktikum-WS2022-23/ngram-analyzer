@@ -92,7 +92,8 @@ class Cli:
 
         args = vars(psr.parse_args())
 
-        if args["shell"]:
+        # if no arguments are supplied or user asks for shell, start shell
+        if (len(sys.argv) == 1) or args["shell"]:
             Prompt().cmdloop()
             return
 
