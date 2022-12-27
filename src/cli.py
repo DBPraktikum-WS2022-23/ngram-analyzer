@@ -68,6 +68,13 @@ class Cli:
         )
 
         psr.add_argument(
+            "-cp",
+            "--config_path",
+            metavar="PATH",
+            help="Path to the config file",
+        )
+
+        psr.add_argument(
             "-u",
             "--username",
             metavar="USER",
@@ -100,18 +107,21 @@ class Cli:
                 args["username"] is None
                 or args["password"] is None
                 or args["dbname"] is None
-            ):
+            ) and args["config_path"] is None:
                 self.__exit_error(
                     "Missing arguments for database creation. "
                     "Please rerun the program providing a user, a password and a dbname"
+                    " or a config file"
                 )
-
-            ConfigCreator(
-                args["username"], args["password"], args["dbname"]
-            ).generate_new_conn_settings()
-            conn_settings: dict[str, str] = ConfigConverter(
-                args["username"]
-            ).get_conn_settings()
+            if args["config_path"] is not None:
+                conn_settings = ConfigConverter(args["config_path"].split("_")[1].split(".")[0]).get_conn_settings()
+            else:
+                ConfigCreator(
+                    args["username"], args["password"], args["dbname"]
+                ).generate_new_conn_settings()
+                conn_settings: dict[str, str] = ConfigConverter(
+                    args["username"]
+                ).get_conn_settings()
             NgramDBBuilder(conn_settings).create_ngram_db()
 
         if args["transfer"] is not None:
@@ -119,10 +129,11 @@ class Cli:
                 args["username"] is None
                 or args["password"] is None
                 or args["dbname"] is None
-            ):
+            ) and (args["config_path"] is None):
                 self.__exit_error(
                     "Missing arguments for transfer. "
                     "Please rerun the program providing a user, a password and a dbname"
+                    " or a config file"
                 )
             path = os.path.abspath(args["transfer"])
 
@@ -140,12 +151,15 @@ class Cli:
                         data_files.append(os.path.join(cur_path, file))
 
             # use SparkController to transfer files
-            ConfigCreator(
-                args["username"], args["password"], args["dbname"]
-            ).generate_new_conn_settings()
-            conn_settings: dict[str, str] = ConfigConverter(  # type: ignore
-                args["username"]
-            ).get_conn_settings()
+            if args["config_path"] is not None:
+                conn_settings = ConfigConverter(args["config_path"].split("_")[1].split(".")[0]).get_conn_settings()
+            else:
+                ConfigCreator(
+                    args["username"], args["password"], args["dbname"]
+                ).generate_new_conn_settings()
+                conn_settings: dict[str, str] = ConfigConverter(  # type: ignore
+                    args["username"]
+                ).get_conn_settings()
             spark_controller: SparkController = SparkController(conn_settings)
             spark_controller.transfer(data_files)
 

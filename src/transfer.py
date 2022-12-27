@@ -31,6 +31,7 @@ class Transferer:
 
     def transfer_textFile(self, source_path: str) -> None:
         """Transfers the data from the given text file to the database."""
+        print("Starting transfer of text file...")
         # regex expression of word[_type]
         regexp = r"^(.*?)(_|_ADJ|_ADP|_ADV|_CONJ|_DET|_NOUN|_PRON|_VERB|_PRT|_X)?$"
 
