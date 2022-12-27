@@ -1,10 +1,9 @@
+""" Module for creating the database """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from types import TracebackType
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, List, Tuple
 
-from psycopg import Connection, OperationalError, sql
+from psycopg import Connection, OperationalError
 from psycopg.errors import DuplicateDatabase
 
 
@@ -32,8 +31,8 @@ class NgramDB:
 
     @staticmethod
     def __get_sql_cmds(path: str) -> List[str]:
-        with open(path, "r") as f:
-            cmds = [i.strip() for i in f.read().split(";")]
+        with open(path, "r", encoding="UTF-8") as file:
+            cmds = [i.strip() for i in file.read().split(";")]
         return cmds
 
     def __create_relations_if_not_exists(self) -> None:
@@ -67,10 +66,9 @@ class NgramDBBuilder:
 
     # TODO: convert prints to logging info
     def __create_database(self) -> bool:
-        con: Connection = None
         try:
-            print("Trying to connect")
             con = Connection.connect(
+                dbname="postgres",
                 host=self.connection_settings["host"],
                 port=self.connection_settings["port"],
                 user=self.connection_settings["user"],
@@ -84,14 +82,16 @@ class NgramDBBuilder:
                             WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname=%s);",
                     (name,),
                 )
-                cmd: str = cur.fetchall()
+                cmd: List[Tuple[Any, ...]] = cur.fetchall()
                 # if list is not empty, db does not exist so create it
                 if cmd:
                     cur.execute(f"CREATE DATABASE {name};")
                     print("Created DB")
+                else:
+                    print("DB already exists")
             return True
         except OperationalError:
-            print("Failed to connect to database. Check login settings.")
+            print("Failed to create database. Check login settings.")
             return False
         except DuplicateDatabase:
             print("ProgrammingError: DB duplication.")
@@ -103,11 +103,8 @@ class NgramDBBuilder:
             if con:
                 con.close()
 
-    def connect_to_ngram_db(self) -> Optional[NgramDB]:
-        isCreated = self.__create_database()
-        if not isCreated:
+    def create_ngram_db(self) -> None:
+        """Creates the ngram database if it doesn't exist yet."""
+        is_created = self.__create_database()
+        if not is_created:
             print("Issue with DB creation")
-            return None
-        database: NgramDB = NgramDB(self.connection_settings)
-        print("Connection to database established.")
-        return database
