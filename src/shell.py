@@ -1,11 +1,10 @@
 """ Module for hosting the shell """
 import os
 from cmd import Cmd
-from typing import Dict, List
+from typing import List
 
 from src.config_converter import ConfigConverter
 from src.controller import SparkController
-from src.info import DataBaseStatistics, WordFrequencies
 
 
 class Prompt(Cmd):
@@ -36,11 +35,9 @@ class Prompt(Cmd):
         config: ConfigConverter = ConfigConverter(
             os.listdir("settings")[choice].split("_")[1].split(".")[0]  # type: ignore
         )
-        self.settings: Dict[str, str] = config.get_conn_settings()
         self.spark_controller: SparkController = SparkController(
-            self.settings, log_level="OFF"
+            config.get_conn_settings(), log_level="OFF"
         )
-        self.spark = self.spark_controller.get_spark_session()
         print("Connection settings loaded.")
 
     def do_print_word_frequencies(self, arg) -> None:
@@ -53,11 +50,8 @@ class Prompt(Cmd):
                 print("Year must be a number.")
                 return
 
-        if self.spark is not None:  # type: ignore
-            wf: WordFrequencies = WordFrequencies(
-                self.spark, self.url, self.spark_properties  # type: ignore
-            )
-            wf.print_word_frequencies(words, [int(x) for x in years])
+        if self.spark_controller is not None:
+            self.spark_controller.print_word_frequencies(words, [int(x) for x in years])
 
     def do_plot_word_frequencies(self, arg) -> None:
         """Plot frequency of words in different years."""
@@ -69,19 +63,13 @@ class Prompt(Cmd):
                 print("Year must be a number.")
                 return
 
-        if self.spark is not None:
-            wf: WordFrequencies = WordFrequencies(
-                self.spark, self.url, self.spark_properties  # type: ignore
-            )
-            wf.plot_word_frequencies(words, [int(x) for x in years])
+        if self.spark_controller is not None:
+            self.spark_controller.plot_word_frequencies(words, [int(x) for x in years])
 
     def do_print_db_statistics(self, arg) -> None:
         """Print statistics of the database tables."""
-        if self.spark is not None:  # type: ignore
-            dbs: DataBaseStatistics = DataBaseStatistics(
-                self.spark, self.url, self.spark_properties  # type: ignore
-            )
-        dbs.print_statistics()
+        if self.spark_controller is not None:
+            self.spark_controller.print_db_statistics()
 
     def do_sql(self, arg):
         """Open a prompt to execute SQL queries."""
