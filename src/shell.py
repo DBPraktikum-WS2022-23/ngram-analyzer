@@ -8,7 +8,7 @@ from pyspark.sql import SparkSession
 from src.config_converter import ConfigConverter
 from src.database_connection import NgramDB, NgramDBBuilder
 from src.info import DataBaseStatistics, WordFrequencies
-from src.transfer import Transferer
+from src.controller import SparkController, DBController
 
 
 # TODO: über pfeiltasten vorherigen befehl holen
@@ -18,105 +18,42 @@ class Prompt(Cmd):
     )
     prompt: str = "(ngram_analyzer) "
 
-    # TODO might be redundant
-    db_conn_settings: Dict[str, str] = {}
-    jdbc_driver: str = ""
-    data_path: str = ""
-    config: Optional[ConfigConverter] = None
-    ngram_db: Optional[NgramDB] = None
+    def preloop(self):
+        print("To use this shell, you need to connect to an already existing database.")
+        print("If you don't have a database yet, you can create one via the CLI using the db_connect command.")
+        print("If you already have a database, please select the correct config file:")
+        for idx, file in enumerate(os.listdir("settings")):
+            print(f"[{idx}] {file}")
+        choice = input("Enter number of config file: ")
+        if not choice.isdigit():
+            print("Invalid input.")
+            return
+        choice = int(choice)
+        if choice < 0 or choice > len(os.listdir("settings")):
+            print("Invalid input.")
+            return
 
-    spark = None
-
-    transferer: Optional[Transferer] = None
-
-    def do_db_connect(self, arg):
-        """Connect to database. This will create the database and relations if they don't exist."""
-        # init db
-        user: str = input("Enter user name:")
-        self.config = ConfigConverter(user)
-        if not self.config.user_exists:
-            password: str = getpass()
-            dbname: str = input("Enter database name:")
-            self.config.generate_conn_settings(password, dbname)
+        self.config = ConfigConverter(os.listdir("settings")[choice-1])
         self.db_conn_settings = self.config.get_conn_settings()
         self.jdbc_driver = self.config.get_jdbc_path()
         self.data_path = self.config.get_data_path()
-        # TODO: this wrapper function might be useless but it appears here more readable to me
         self.ngram_db = NgramDBBuilder(self.db_conn_settings).connect_to_ngram_db()
-
-        if self.ngram_db is None:
-            # TODO return to main menu and retry db init with other connection settings
-            print("Connection to DB could not be established. Goodbye!")
-            return
-
-        print("Opened connection")
-        self.config.save_conn_settings()
-
-        #
-        # Work with the database. For instance:
-        # result = self.ngram_db.execute('SELECT version()')
-        #
-        # print(f'PostgreSQL database version: {result}')
-
-    # TODO: hier sollte arg nicht fuer path UND -default stehen.
-    # also noch einen param hinzufuegen oder so
-    def do_transfer(self, arg: str) -> None:
-        """
-        Transfer data from a file to the database.
-        arg: path to file or directory from which to read data. If no path is given a
-        """
-
-        temp_path: str = arg
-
-        if self.ngram_db is None:
-            print("No connection to database. Please connect to a database first.")
-            return
-
-        if arg == "":
-            temp_path = self.data_path
-
-        if not os.path.isfile(temp_path) and not os.path.isdir(temp_path):
-            print("Please enter a valid path.")
-            return
-
-        driver_path: str = self.jdbc_driver
-        if driver_path == "":
-            driver_path = "./jdbc-driver/postgresql-42.5.1.jar"
-
-        self.spark = (
-            SparkSession.builder.appName("ngram_analyzer")
-            .master("local[*]")
-            .config("spark.driver.extraClassPath", driver_path)
-            .config("spark.driver.memory", "4g")
-            .config("spark.executor.memory", "1g")
-            .getOrCreate()
-        )
-
-        if self.transferer is None:
-            url = self.config.get_db_url()
-            print(url)
-            properties: Dict[str, str] = {
-                "user": self.db_conn_settings["user"],
-                "password": self.db_conn_settings["password"],
-            }
-            self.transferer = Transferer(self.spark, url, properties)
-
-            if os.path.isfile(temp_path):
-                self.transferer.transfer_textFile(temp_path)
-            elif os.path.isdir(temp_path):  # handle directory
-                for cur_path, _, files in os.walk(temp_path):
-                    for file in files:
-                        print(f"Transferring {file}")
-                        self.transferer.transfer_textFile(os.path.join(cur_path, file))
-
-        print("You have successfully transferred the data.")
-        self.transferer = None
+        spark_config = {
+            "user": self.db_conn_settings["user"],
+            "password": self.db_conn_settings["password"],
+            "db_url": self.config.get_db_url(),
+            "jdbc_driver": self.jdbc_driver
+        }
+        self.spark_controller = SparkController(spark_config)
+        self.db_controller: Optional[DBController] = DBController(self.db_conn_settings)
+        print("Connection settings loaded.")
 
     def do_print_word_frequencies(self, arg) -> None:
         """Print the frequency of selected words for selected years."""
-        if self.ngram_db is None:
-            print("No connection to database. Please connect to a database first.")
-            return
+
+        if not self.spark:
+            self.spark = SparkController(self.config.get_conn_settings()).get_spark_session()
+
         url = self.config.get_db_url()
         print(url)
         properties: Dict[str, str] = {
@@ -129,14 +66,7 @@ class Prompt(Cmd):
             if not year.isdigit():
                 print("Year must be a number.")
                 return
-        self.spark = (
-            SparkSession.builder.appName("ngram_analyzer")
-            .master("local[*]")
-            .config("spark.driver.extraClassPath", self.jdbc_driver)
-            .config("spark.driver.memory", "4g")
-            .config("spark.executor.memory", "1g")
-            .getOrCreate()
-        )
+
         wf: WordFrequencies = WordFrequencies(self.spark, url, properties)
         wf.print_word_frequencies(words, [int(x) for x in years])
 
@@ -190,6 +120,25 @@ class Prompt(Cmd):
         dbs: DataBaseStatistics = DataBaseStatistics(self.spark, url, properties)
         dbs.print_statistics()
 
+    def do_sql(self, arg):
+        """Open a prompt to execute SQL queries."""
+        print("Welcome to the SQL prompt. Enter your SQL query.")
+        print("Enter 'exit' to exit the prompt.")
+
+        # connect to database
+        if self.ngram_db is None:
+            print("No connection to database. Please connect to a database first.")
+            return
+
+        while True:
+            sql_query = input("SQL> ")
+            if sql_query == "exit":
+                break
+            try:
+                self.spark_controller.execute_sql(sql_query).show()
+            except Exception as e:
+                print(e) # TODO: invalid sql query
+
     def do_exit(self, arg):
         """Leave shell"""
         return True
@@ -198,6 +147,6 @@ class Prompt(Cmd):
     def postloop(self) -> None:
         if self.ngram_db:
             del self.ngram_db
-        if self.spark:
-            self.spark.stop()
+        if self.spark_controller:
+            self.spark_controller.close()
         print("Closed connection")
