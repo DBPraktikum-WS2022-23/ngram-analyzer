@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 import matplotlib.pyplot as plt  # type: ignore
 from pyspark.sql import DataFrame, Row, SparkSession
 from pyspark.sql import functions as f
+from pyspark.sql.types import IntegerType, StringType, FloatType, StructField, StructType
 
 
 class DatabaseToSparkDF:
@@ -120,3 +121,67 @@ class WordFrequencies:
                 .select("year", "freq")
             )
             df.show()
+
+class StatFunctions:
+    def __init__(
+        self, spark: SparkSession, db_url: str, properties: Dict[str, str]
+    ) -> None:
+        self.__spark = spark
+        # TODO: maybe redundant?
+        self.db2df: DatabaseToSparkDF = DatabaseToSparkDF(spark, db_url, properties)
+        self.df_word: DataFrame = self.db2df.df_word
+        self.df_occurence: DataFrame = self.db2df.df_occurence
+
+    def __get_f_view(self) -> DataFrame:
+        schema_l = [
+            StructField("str_rep", StringType(), False),
+            StructField("type", StringType(), False)
+        ]
+
+        for i in range (1800, 2000, 1):
+            schema.append(StructField(str(i), IntegerType(), True))
+
+        schema = StructType(schema_l)
+
+        #TODO: write data
+
+        df = self.__spark.createDataFrame([], schema).createOrReplaceTempView("f_view")
+        return df
+
+    def __get_s_df(self) -> DataFrame:
+        """Returns a view of words with start year, end year and a result."""
+        schema = StructType(
+            [
+                StructField("str_rep", StringType(), False),
+                StructField("type", StringType(), False),
+                StructField("start_year", IntegerType(), False),
+                StructField("end_year", IntegerType(), False),
+                StructField("result", FloatType(), False)
+            ]
+        )
+
+        df = self.__spark.createDataFrame([], schema)
+        return df
+
+    def __get_d_df(self) -> DataFrame:
+        """Returns a view of two words with their start years, end years and a result."""
+        schema = StructType(
+            [
+                StructField("str_rep_1", StringType(), False),
+                StructField("type_1", StringType(), False),
+                StructField("str_rep_2", StringType(), False),
+                StructField("type_2", StringType(), False),
+                StructField("start_year", IntegerType(), False),
+                StructField("end_year", IntegerType(), False),
+                StructField("result", FloatType(), False)
+            ]
+        )
+
+        df = self.__spark.createDataFrame([], schema)
+        return df
+    
+    def hrc(duration: int) -> DataFrame:
+        pass
+
+    def pc(start_year: int, end_year: int) -> DataFrame:
+        pass

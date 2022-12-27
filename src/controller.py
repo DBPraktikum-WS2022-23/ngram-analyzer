@@ -9,6 +9,7 @@ from pyspark.sql import SparkSession, DataFrame
 from src.config_converter import ConfigConverter
 from src.database_connection import NgramDB, NgramDBBuilder
 from src.transfer import Transferer
+from src.info import StatFunctions
 
 
 class SparkController:
@@ -31,6 +32,13 @@ class SparkController:
             self.__db_url,
             self.__properties
         )
+
+        self.__functions: Optional[StatFunctions] = StatFunctions(
+            self.__spark,
+            self.__db_url,
+            self.__properties
+        )
+
         # TODO: add other functions
 
     def get_spark_session(self) -> SparkSession:
@@ -58,6 +66,12 @@ class SparkController:
         occurence_df.createOrReplaceTempView("occurence")
 
         return self.__spark.sql(sql)
+
+    def hrc(self, duration: int) -> DataFrame:
+        return self.__functions.hrc(duration)
+
+    def pc(self, start_year: int, end_year: int) -> DataFrame:
+        return self.__functions.pc(start_year, end_year)
 
 
 class DBController:
