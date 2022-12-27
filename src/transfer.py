@@ -12,7 +12,11 @@ class Transferer:
 
     def __write(self, df: DataFrame, table: str) -> None:
         """Writes the given DataFrame to the given table by using DataFrame."""
-        df.write.jdbc(self.__db_url, table, mode="append", properties=self.__properties)
+        try:
+            df.write.jdbc(self.__db_url, table, mode="append", properties=self.__properties)
+        except:
+            print(f"Writing to {table} failed. \n"
+                  f"Have you already transfered this data before?")
 
     def __read(self, table: str) -> DataFrame:
         """Reads the given table and returns it as a DataFrame."""
@@ -38,82 +42,34 @@ class Transferer:
         )
 
         word_df = df.select("str_rep", "type").distinct()
-
-        # delete duplicates in word table
-        word_df_db = self.__read("word")
-        word_df = word_df.join(
-            word_df_db.select("str_rep", "type"),
-            [
-                word_df_db["str_rep"] == word_df["str_rep"],
-                word_df_db["type"].eqNullSafe(word_df["type"]),
-            ],
-            "left_anti",
-        )
-        temp = (
-            word_df.cache()
-            .select(col("str_rep").alias("temp_str"), col("type").alias("temp_type"))
-            .alias("temp")
-        )
-
-        word_df.show()
         self.__write(word_df, "word")
 
-        df = df.join(
-            temp,
-            [
-                df["str_rep"] == temp["temp_str"],
-                df["type"].eqNullSafe(temp["temp_type"]),
-            ],
-        ).select("str_rep", "type", "occ_all")
+        word_df_db = self.__read("word")
 
-        word_df_new = self.__read("word")
-        occurence_df = (
-            df.join(
-                word_df_new,
-                [
-                    word_df_new["str_rep"] == df["str_rep"],
-                    word_df_new["type"].eqNullSafe(df["type"]),
-                ],
-            )
-            .select("id", "occ_all")
-            .withColumn("occ_sep", split(col("occ_all"), "\t"))
-            .drop("occ_all")
-            .select("id", explode("occ_sep").alias("occurence"))
-            .withColumn("year", split(col("occurence"), ",")[0].cast("int"))
-            .withColumn("freq", split(col("occurence"), ",")[1].cast("int"))
-            .withColumn("book_count", split(col("occurence"), ",")[2].cast("int"))
-            .drop("occurence")
-            .dropDuplicates(["id", "year"])
-        )
-
-        occurence_df.show()
-        self.__write(occurence_df, "occurence")
-
-        """
+        # split occurence to a list
         occurence_df = (
             df.withColumn("occ_sep", split(col("occ_all"), "\t"))
-            .drop("occ_all")
-            .select("str_rep","type", explode("occ_sep").alias("occurence"))
-            .withColumn("year", split(col("occurence"), ",")[0].cast("int"))
-            .withColumn("freq", split(col("occurence"), ",")[1].cast("int"))
-            .withColumn("book_count", split(col("occurence"), ",")[2].cast("int"))
-            .drop("occurence")
-            .dropDuplicates(["str_rep", "type", "year"])
+            .select("str_rep", "type", "occ_sep")
         )
 
         # add foreign key to occurence table
+        occurence_df = (
+            occurence_df.join(
+                word_df_db,
+                [
+                    word_df_db["str_rep"] == occurence_df["str_rep"],
+                    word_df_db["type"].eqNullSafe(occurence_df["type"])
+                ]
+            )
+            .select("id", "occ_sep")
+        )
 
-        occurence_df = occurence_df.join(
-            word_df,
-            [
-                word_df["str_rep"] == occurence_df["str_rep"],
-                word_df["type"].eqNullSafe(occurence_df["type"])
-            ]
-        ).select("id", "year", "freq", "book_count")
-
-
-        # show occurence table that will be written to db
-        occurence_df.show()
+        occurence_df = (
+            occurence_df.select("id", explode("occ_sep").alias("occurence"))
+            .withColumn("year", split(col("occurence"), ",")[0].cast("int"))
+            .withColumn("freq", split(col("occurence"), ",")[1].cast("int"))
+            .withColumn("book_count", split(col("occurence"), ",")[2].cast("int"))
+            .drop("occurence")
+        )
 
         self.__write(occurence_df, "occurence")
-        """
