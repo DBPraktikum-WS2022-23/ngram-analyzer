@@ -1,14 +1,13 @@
+""" Module which provides the CLI interface for the application """
 import argparse
 import os
 import sys
 from typing import Dict, Optional
 
-from pyspark.sql import SparkSession
-
-from src.config_converter import ConfigConverter
-from src.database_connection import NgramDB, NgramDBBuilder
+from src.config_converter import ConfigConverter, ConfigCreator
+from src.controller import SparkController
+from src.database_creation import NgramDB, NgramDBBuilder
 from src.shell import Prompt
-from src.transfer import Transferer
 
 
 class Cli:
@@ -18,7 +17,6 @@ class Cli:
 
     def __init__(self) -> None:
         self.conn_settings: Dict[str, str] = {}
-        self.config: ConfigConverter = ConfigConverter("sample")
         self.ngram_db: Optional[NgramDB] = None
         self.spark = None
 
@@ -51,7 +49,7 @@ class Cli:
             "-c",
             "--create-db",
             action="store_true",
-            help="Creates necessary database relations if not existing",
+            help="Creates the database incl. its relations, if not already existing.",
         )
 
         psr.add_argument(
@@ -70,10 +68,17 @@ class Cli:
         )
 
         psr.add_argument(
+            "-cp",
+            "--config_path",
+            metavar="PATH",
+            help="Path to the config file",
+        )
+
+        psr.add_argument(
             "-u",
             "--username",
             metavar="USER",
-            help="Username for the database",
+            help="Username for the database. Note that the user most be an existing role",
         )
 
         psr.add_argument(
@@ -97,47 +102,45 @@ class Cli:
             Prompt().cmdloop()
             return
 
-        if args["username"]:
-            conn_settings = self.config.get_conn_settings()
-            username = args["username"]
-            if conn_settings["user"] != username:
-                if args["password"] is None or args["dbname"] is None:
-                    self.__exit_error(
-                        f"config file for user {args['username']} does not exist. \
-                        Please enter username, password and dbname"
-                    )
-                password = args["password"]
-                dbname: str = args["dbname"]
-                self.config.generate_conn_settings_sample(username, password, dbname)
-
-        if args["create_db"] or args["transfer"] is not None:
-            # check config and open connection
-            self.conn_settings = self.config.get_conn_settings()
-            ngram_db = NgramDBBuilder(self.conn_settings).connect_to_ngram_db()
-            if ngram_db is None:
+        if args["create_db"]:
+            if (
+                args["username"] is None
+                or args["password"] is None
+                or args["dbname"] is None
+            ) and args["config_path"] is None:
                 self.__exit_error(
-                    "connection to DB could not be established. \
-                    Please input username, password and dbname"
+                    "Missing arguments for database creation. "
+                    "Please rerun the program providing a user, a password and a dbname"
+                    " or a config file"
                 )
+            if args["config_path"] is not None:
+                conn_settings = ConfigConverter(args["config_path"].split("_")[1].split(".")[0]).get_conn_settings()
+            else:
+                ConfigCreator(
+                    args["username"], args["password"], args["dbname"]
+                ).generate_new_conn_settings()
+                conn_settings: dict[str, str] = ConfigConverter(
+                    args["username"]
+                ).get_conn_settings()
+            NgramDBBuilder(conn_settings).create_ngram_db()
 
         if args["transfer"] is not None:
+            if (
+                args["username"] is None
+                or args["password"] is None
+                or args["dbname"] is None
+            ) and (args["config_path"] is None):
+                self.__exit_error(
+                    "Missing arguments for transfer. "
+                    "Please rerun the program providing a user, a password and a dbname"
+                    " or a config file"
+                )
             path = os.path.abspath(args["transfer"])
 
             if not os.path.exists(path):
                 self.__exit_error(f"path '{path}' does not exist")
 
             data_files = []  # list of files to process
-
-            self.spark = (
-                SparkSession.builder.appName("ngram_analyzer")
-                .master("local[*]")
-                .config(
-                    "spark.driver.extraClassPath", "./resources/postgresql-42.5.1.jar"
-                )
-                .config("spark.driver.memory", "4g")
-                .config("spark.executor.memory", "1g")
-                .getOrCreate()
-            )
 
             # get files from path
             if os.path.isfile(path):
@@ -147,25 +150,17 @@ class Cli:
                     for file in files:
                         data_files.append(os.path.join(cur_path, file))
 
-            # setup transferer
-            prop_dict = self.conn_settings
-            url = (
-                "jdbc:postgresql://"
-                + prop_dict["host"]
-                + ":"
-                + prop_dict["port"]
-                + "/"
-                + prop_dict["dbname"]
-            )
-            # store name of database
-            properties: Dict[str, str] = {
-                "user": prop_dict["user"],
-                "password": prop_dict["password"],
-            }
-            transferer = Transferer(self.spark, url, properties)
-
-            # do transfer for all files in data_files
-            for file in data_files:
-                transferer.transfer_textFile(file)
+            # use SparkController to transfer files
+            if args["config_path"] is not None:
+                conn_settings = ConfigConverter(args["config_path"].split("_")[1].split(".")[0]).get_conn_settings()
+            else:
+                ConfigCreator(
+                    args["username"], args["password"], args["dbname"]
+                ).generate_new_conn_settings()
+                conn_settings: dict[str, str] = ConfigConverter(  # type: ignore
+                    args["username"]
+                ).get_conn_settings()
+            spark_controller: SparkController = SparkController(conn_settings)
+            spark_controller.transfer(data_files)
 
         self.__exit()

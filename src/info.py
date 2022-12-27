@@ -1,3 +1,4 @@
+""" Module for creating statistics and plots"""
 import os
 from typing import Any, Dict, List
 
@@ -8,6 +9,8 @@ from pyspark.sql.types import IntegerType, StringType, FloatType, StructField, S
 
 
 class DatabaseToSparkDF:
+    """Module which reads data from the database into spark dataframes"""
+
     def __init__(self, spark: SparkSession, db_url: str, properties: Dict[str, str]):
         self.__spark = spark
         self.__db_url = db_url
@@ -26,7 +29,11 @@ class DatabaseToSparkDF:
 
 
 class DataBaseStatistics:
-    def __init__(self, spark: SparkSession, db_url: str, properties: Dict[str, str]) -> None:
+    """Module which creates statistics from the database"""
+
+    def __init__(
+        self, spark: SparkSession, db_url: str, properties: Dict[str, str]
+    ) -> None:
         self.db2df: DatabaseToSparkDF = DatabaseToSparkDF(spark, db_url, properties)
         self.df_word: DataFrame = self.db2df.df_word
         self.df_occurence: DataFrame = self.db2df.df_occurence
@@ -56,6 +63,8 @@ class DataBaseStatistics:
 
 
 class WordFrequencies:
+    """Module for creating statistics about word frequencies"""
+
     def __init__(
         self, spark: SparkSession, db_url: str, properties: Dict[str, str]
     ) -> None:
@@ -81,23 +90,23 @@ class WordFrequencies:
             print("No entries for specified words found")
             return
 
-        fig, ax = plt.subplots()
-        ax.set_title("Frequency of words in years")
-        ax.set_xlabel("year")
-        ax.set_xticks(range(min(years), max(years) + 1))
-        ax.set_ylabel("frequency")
+        _, axis = plt.subplots()
+        axis.set_title("Frequency of words in years")
+        axis.set_xlabel("year")
+        axis.set_xticks(range(min(years), max(years) + 1))
+        axis.set_ylabel("frequency")
 
         for row in string_representations:
-            df: DataFrame = self.df_occurence.filter(
+            dataframe: DataFrame = self.df_occurence.filter(
                 self.df_occurence.id == row.id
             ).filter(self.df_occurence.year.isin(years))
-            ax.scatter(
-                df.select("year").collect(),
-                df.select("freq").collect(),
+            axis.scatter(
+                dataframe.select("year").collect(),
+                dataframe.select("freq").collect(),
                 label=row.str_rep,
             )
 
-        ax.legend()
+        axis.legend()
         plt.show()
 
         # check if the directory output already exists, if not, create it
@@ -115,12 +124,12 @@ class WordFrequencies:
             return
         for row in string_representations:
             print(f"{row.str_rep}: ")
-            df: DataFrame = (
+            dataframe: DataFrame = (
                 self.df_occurence.filter(self.df_occurence.id == row.id)
                 .filter(self.df_occurence.year.isin(years))
                 .select("year", "freq")
             )
-            df.show()
+            dataframe.show()
 
 class StatFunctions:
     def __init__(

@@ -1,19 +1,16 @@
-import os
-from abc import ABC
-from cmd import Cmd
-from getpass import getpass
-from typing import Dict, Optional
+""" Simple controller class for pyspark """
+from typing import Dict, List, Optional
 
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import DataFrame, SparkSession
 
-from src.config_converter import ConfigConverter
-from src.database_connection import NgramDB, NgramDBBuilder
 from src.transfer import Transferer
 from src.info import StatFunctions
 
 
 class SparkController:
-    def __init__(self, config: Dict[str, str]) -> None:
+    """Wrapper for the pyspark class"""
+
+    def __init__(self, config: Dict[str, str], log_level: str = "OFF") -> None:
         self.__db_url: str = config["db_url"]
         self.__properties: Dict[str, str] = {
             "user": config["user"],
@@ -27,10 +24,9 @@ class SparkController:
             .config("spark.executor.memory", "1g")
             .getOrCreate()
         )
+        self.__spark.sparkContext.setLogLevel(log_level)
         self.__transferer: Optional[Transferer] = Transferer(
-            self.__spark,
-            self.__db_url,
-            self.__properties
+            self.__spark, self.__db_url, self.__properties
         )
 
         self.__functions: Optional[StatFunctions] = StatFunctions(
@@ -41,59 +37,42 @@ class SparkController:
 
         # TODO: add other functions
 
-    def get_spark_session(self) -> SparkSession:
+    def get_spark_session(self) -> Optional[SparkSession]:
+        """Returns the spark session"""
         return self.__spark
 
     def close(self) -> None:
-        self.__spark.stop()
+        """Closes the spark session"""
+        if self.__spark is not None:
+            self.__spark.stop()
 
-    def transfer(self, path: str) -> None:
-        self.__transferer.transfer_textFile(path)
+    def transfer(self, paths: List[str]) -> None:
+        """Transfers a list of files to the database"""
+        for path in paths:
+            if self.__transferer is not None:
+                self.__transferer.transfer_textFile(path)
 
-    def execute_sql(self, sql: str) -> DataFrame:
-        word_df = self.__spark.read.jdbc(
-            url=self.__db_url,
-            table="word",
-            properties=self.__properties,
-        )
-        occurence_df = self.__spark.read.jdbc(
-            url=self.__db_url,
-            table="occurence",
-            properties=self.__properties,
-        )
+    def execute_sql(self, sql: str) -> Optional[DataFrame]:
+        """Executes a SQL query"""
+        if self.__spark is not None:
+            word_df = self.__spark.read.jdbc(
+                url=self.__db_url,
+                table="word",
+                properties=self.__properties,
+            )
+            occurence_df = self.__spark.read.jdbc(
+                url=self.__db_url,
+                table="occurence",
+                properties=self.__properties,
+            )
 
-        word_df.createOrReplaceTempView("word")
-        occurence_df.createOrReplaceTempView("occurence")
-
-        return self.__spark.sql(sql)
+            word_df.createOrReplaceTempView("word")
+            occurence_df.createOrReplaceTempView("occurence")
+            return self.__spark.sql(sql)
+        return None
 
     def hrc(self, duration: int) -> DataFrame:
         return self.__functions.hrc(duration)
 
     def pc(self, start_year: int, end_year: int) -> DataFrame:
         return self.__functions.pc(start_year, end_year)
-
-
-class DBController:
-    def __init__(self, conn_settings: Dict[str, str] = {}) -> None:
-
-        # TODO might be redundant
-        self.conn_settings = conn_settings
-        self.ngram_db: Optional[NgramDB] = None
-
-    def __init_db(self):
-        # TODO: config lesen
-        self.ngram_db = NgramDBBuilder(self.conn_settings).connect_to_ngram_db()
-
-        if self.ngram_db is None:
-            # TODO return to main menu and retry db init with other connection settings
-            print("Connection to DB could not be established. Goodbye!")
-            return
-
-        print("Opened connection")
-        return
-
-
-    def close_db_connection(self):
-        del self.ngram_db
-

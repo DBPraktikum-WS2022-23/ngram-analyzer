@@ -1,3 +1,4 @@
+""" Module which transfers data from a file to the database """
 from typing import Dict
 
 from pyspark.sql import DataFrame, SparkSession
@@ -13,10 +14,14 @@ class Transferer:
     def __write(self, df: DataFrame, table: str) -> None:
         """Writes the given DataFrame to the given table by using DataFrame."""
         try:
-            df.write.jdbc(self.__db_url, table, mode="append", properties=self.__properties)
+            df.write.jdbc(
+                self.__db_url, table, mode="append", properties=self.__properties
+            )
         except:
-            print(f"Writing to {table} failed. \n"
-                  f"Have you already transfered this data before?")
+            print(
+                f"Writing to {table} failed. \n"
+                f"Have you already transfered this data before?"
+            )
 
     def __read(self, table: str) -> DataFrame:
         """Reads the given table and returns it as a DataFrame."""
@@ -25,11 +30,13 @@ class Transferer:
         )
 
     def transfer_textFile(self, source_path: str) -> None:
+        """Transfers the data from the given text file to the database."""
+        print("Starting transfer of text file...")
         # regex expression of word[_type]
         regexp = r"^(.*?)(_|_ADJ|_ADP|_ADV|_CONJ|_DET|_NOUN|_PRON|_VERB|_PRT|_X)?$"
 
         # split data into word, type and occurence
-        df = (
+        dataframe = (
             self.__spark.read.text(source_path)
             .withColumn("word_and_type", split(col("value"), "\t", 2)[0])
             .withColumn("occ_all", split(col("value"), "\t", 2)[1])
@@ -41,28 +48,24 @@ class Transferer:
             .drop("word_and_type")
         )
 
-        word_df = df.select("str_rep", "type").distinct()
+        word_df = dataframe.select("str_rep", "type").distinct()
         self.__write(word_df, "word")
 
         word_df_db = self.__read("word")
 
         # split occurence to a list
-        occurence_df = (
-            df.withColumn("occ_sep", split(col("occ_all"), "\t"))
-            .select("str_rep", "type", "occ_sep")
-        )
+        occurence_df = dataframe.withColumn(
+            "occ_sep", split(col("occ_all"), "\t")
+        ).select("str_rep", "type", "occ_sep")
 
         # add foreign key to occurence table
-        occurence_df = (
-            occurence_df.join(
-                word_df_db,
-                [
-                    word_df_db["str_rep"] == occurence_df["str_rep"],
-                    word_df_db["type"].eqNullSafe(occurence_df["type"])
-                ]
-            )
-            .select("id", "occ_sep")
-        )
+        occurence_df = occurence_df.join(
+            word_df_db,
+            [
+                word_df_db["str_rep"] == occurence_df["str_rep"],
+                word_df_db["type"].eqNullSafe(occurence_df["type"]),
+            ],
+        ).select("id", "occ_sep")
 
         occurence_df = (
             occurence_df.select("id", explode("occ_sep").alias("occurence"))
@@ -73,3 +76,4 @@ class Transferer:
         )
 
         self.__write(occurence_df, "occurence")
+        print("Finished transfer.")
