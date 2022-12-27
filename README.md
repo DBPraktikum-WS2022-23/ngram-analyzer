@@ -10,7 +10,9 @@
 - the following commands are run inside the poetry shell
 - List command options: ```main.py -h```
 - Create database: ```main.py --create-db --username username --password password --dbname database_name```
+  - Alternatively, you can provide the path to a config file using the ```--config``` option
 - Transfer data from ./data into the database: ```main.py --transfer path_to_data --username username --password password --dbname database_name```
+  - Alternatively, you can provide the path to a config file using the ```--config``` option
 - Enter shell version of the CLI: ```main.py --shell``` oder ```main.py```
 
 ## Interaction via Shell
