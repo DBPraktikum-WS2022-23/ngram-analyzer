@@ -1,6 +1,46 @@
+""" Module for creating and reading out configs"""
 import os.path
 from configparser import ConfigParser
 from typing import Dict
+
+
+class ConfigCreator:
+    """
+    Creates a config file.
+    """
+
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        dbname: str,
+        template_path: str = "./settings/config_sample.ini",
+    ) -> None:
+        self.username: str = username
+        self.password: str = password
+        self.dbname: str = dbname
+
+        if os.path.isfile(template_path):
+            self.config = ConfigParser()
+            self.config.read(template_path)
+        else:
+            print("Invalid path to template file")
+            return
+
+    def generate_new_conn_settings(self) -> None:
+        """Generates a new config file with the given connection settings."""
+        fpath: str = "./settings/config_" + self.username + ".ini"
+        if os.path.isfile(fpath):
+            return
+
+        self.config.set("database", "user", self.username)
+        self.config.set("database", "password", self.password)
+        self.config.set("database", "dbname", self.dbname)
+
+        with open(fpath, "w", encoding="UTF-8") as configfile:
+            self.config.write(configfile)
+
+        print("Config file created.")
 
 
 class ConfigConverter:
@@ -16,28 +56,11 @@ class ConfigConverter:
             self.config.read(config_path)
             self.user_exists = True
         else:
-            print("Configuration for user does not exists, creating a new user")
+            print("Configuration for user doesn't exist, create a new user")
             self.config.read(default_path)
 
-    def generate_conn_settings(self, password: str, dbname: str) -> None:
-        self.config.set("database", "user", self.username)
-        self.config.set("database", "password", password)
-        self.config.set("database", "dbname", dbname)
-
-    def save_conn_settings(self) -> None:
-        with open("./settings/config_" + self.username + ".ini", "w") as configfile:
-            self.config.write(configfile)
-
-    def generate_conn_settings_sample(
-        self, username: str, password: str, dbname: str
-    ) -> None:
-        self.config.set("database", "user", username)
-        self.config.set("database", "password", password)
-        self.config.set("database", "dbname", dbname)
-        with open("./settings/config_" + self.username + ".ini", "w") as configfile:
-            self.config.write(configfile)
-
     def get_conn_settings(self) -> Dict[str, str]:
+        """Returns a dictionary with the connection settings for the database."""
         # convert list of tuples to dict
         connection_settings: Dict[str, str] = {}
         if self.config.has_section("database"):
@@ -47,9 +70,15 @@ class ConfigConverter:
                     connection_settings["options"] = f"-c search_path={value}"
                 else:
                     connection_settings[key] = value
+
+        connection_settings["db_url"] = self.get_db_url()
+        connection_settings["jdbc_driver"] = self.get_jdbc_path()
+        connection_settings["data_path"] = self.get_data_path()
+
         return connection_settings
 
     def get_jdbc_path(self) -> str:
+        """Returns the path to the jdbc driver."""
         if self.config.has_section("jdbc"):
             params = self.config.items("jdbc")
             for key, value in params:
@@ -58,6 +87,7 @@ class ConfigConverter:
         return ""
 
     def get_data_path(self) -> str:
+        """Returns the path to the data folder."""
         if self.config.has_section("data"):
             params = self.config.items("data")
             for key, value in params:
@@ -66,25 +96,23 @@ class ConfigConverter:
         return ""
 
     def set_default_path(self, path: str) -> None:
+        """Sets the default path for the data folder."""
         self.config.set("database", "default_filepath", path)
-        with open("./settings/config_" + self.username + ".ini", "w") as configfile:
+        with open(
+            "./settings/config_" + self.username + ".ini", "w", encoding="UTF-8"
+        ) as configfile:
             self.config.write(configfile)
 
     def get_db_url(self) -> str:
-        db_conn_setting = self.get_conn_settings()
-        return (
-            "jdbc:postgresql://"
-            + db_conn_setting["host"]
-            + ":"
-            + db_conn_setting["port"]
-            + "/"
-            + db_conn_setting["dbname"]
-        )
-
-    def get_spark_config(self, db_conn_settings, db_url, jdbc_driver) -> Dict[str, str]:
-        return {
-            "user": db_conn_settings["user"],
-            "password": db_conn_settings["password"],
-            "db_url": db_url,
-            "jdbc_driver": jdbc_driver
-        }
+        """Returns the database url."""
+        if self.config.has_section("database"):
+            params = self.config.items("database")
+            for key, value in params:
+                if key == "host":
+                    host = value
+                elif key == "port":
+                    port = value
+                elif key == "dbname":
+                    dbname = value
+            return f"jdbc:postgresql://{host}:{port}/{dbname}"
+        return ""
