@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 from pyspark.sql import DataFrame, SparkSession
 
 from src.transfer import Transferer
-from src.info import StatFunctions
+from src.info import StatFunctions, WordFrequencies, DataBaseStatistics
 
 
 class SparkController:
@@ -25,17 +25,22 @@ class SparkController:
             .getOrCreate()
         )
         self.__spark.sparkContext.setLogLevel(log_level)
+
         self.__transferer: Optional[Transferer] = Transferer(
             self.__spark, self.__db_url, self.__properties
         )
 
-        self.__functions: Optional[StatFunctions] = StatFunctions(
-            self.__spark,
-            self.__db_url,
-            self.__properties
+        self.__wf: WordFrequencies = WordFrequencies(
+            self.__spark, self.__db_url, self.__properties
         )
 
-        # TODO: add other functions
+        self.__dbs: DataBaseStatistics = DataBaseStatistics(
+            self.__spark, self.__db_url, self.__properties
+        )
+
+        self.__functions: Optional[StatFunctions] = StatFunctions(
+            self.__spark, self.__db_url, self.__properties
+        )
 
     def get_spark_session(self) -> Optional[SparkSession]:
         """Returns the spark session"""
@@ -70,6 +75,15 @@ class SparkController:
             occurence_df.createOrReplaceTempView("occurence")
             return self.__spark.sql(sql)
         return None
+
+    def print_word_frequencies(self, words: List[str], years: List[int]) -> None:
+        self.__wf.print_word_frequencies(words, years)
+
+    def plot_word_frequencies(self, words: List[str], years: List[int]) -> None:
+        self.__wf.plot_word_frequencies(words, years)
+
+    def print_db_statistics(self) -> None:
+        self.__dbs.print_statistics()
 
     def hrc(self, duration: int) -> DataFrame:
         return self.__functions.hrc(duration)
