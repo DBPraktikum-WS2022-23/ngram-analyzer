@@ -25,9 +25,7 @@ class DatabaseToSparkDF:
 
 
 class DataBaseStatistics:
-    def __init__(
-        self, spark: SparkSession, db_url: str, properties: Dict[str, str]
-    ) -> None:
+    def __init__(self, spark: SparkSession, db_url: str, properties: Dict[str, str]) -> None:
         self.db2df: DatabaseToSparkDF = DatabaseToSparkDF(spark, db_url, properties)
         self.df_word: DataFrame = self.db2df.df_word
         self.df_occurence: DataFrame = self.db2df.df_occurence

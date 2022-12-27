@@ -16,7 +16,7 @@ class ConfigConverter:
             self.config.read(config_path)
             self.user_exists = True
         else:
-            print("Configuration for user not exists, create a new user")
+            print("Configuration for user does not exists, creating a new user")
             self.config.read(default_path)
 
     def generate_conn_settings(self, password: str, dbname: str) -> None:
@@ -80,3 +80,11 @@ class ConfigConverter:
             + "/"
             + db_conn_setting["dbname"]
         )
+
+    def get_spark_config(self, db_conn_settings, db_url, jdbc_driver) -> Dict[str, str]:
+        return {
+            "user": db_conn_settings["user"],
+            "password": db_conn_settings["password"],
+            "db_url": db_url,
+            "jdbc_driver": jdbc_driver
+        }
