@@ -3,8 +3,8 @@ from typing import Dict, List, Optional
 
 from pyspark.sql import DataFrame, SparkSession
 
+from src.info import DataBaseStatistics, StatFunctions, WordFrequencies
 from src.transfer import Transferer
-from src.info import StatFunctions, WordFrequencies, DataBaseStatistics
 
 
 class SparkController:

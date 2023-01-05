@@ -5,7 +5,13 @@ from typing import Any, Dict, List
 import matplotlib.pyplot as plt  # type: ignore
 from pyspark.sql import DataFrame, Row, SparkSession
 from pyspark.sql import functions as f
-from pyspark.sql.types import IntegerType, StringType, FloatType, StructField, StructType
+from pyspark.sql.types import (
+    FloatType,
+    IntegerType,
+    StringType,
+    StructField,
+    StructType,
+)
 
 
 class DatabaseToSparkDF:
@@ -131,6 +137,7 @@ class WordFrequencies:
             )
             dataframe.show()
 
+
 class StatFunctions:
     def __init__(
         self, spark: SparkSession, db_url: str, properties: Dict[str, str]
@@ -144,15 +151,15 @@ class StatFunctions:
     def __get_f_view(self) -> DataFrame:
         schema_l = [
             StructField("str_rep", StringType(), False),
-            StructField("type", StringType(), False)
+            StructField("type", StringType(), False),
         ]
 
-        for i in range (1800, 2000, 1):
+        for i in range(1800, 2000, 1):
             schema.append(StructField(str(i), IntegerType(), True))
 
         schema = StructType(schema_l)
 
-        #TODO: write data
+        # TODO: write data
 
         df = self.__spark.createDataFrame([], schema).createOrReplaceTempView("f_view")
         return df
@@ -165,7 +172,7 @@ class StatFunctions:
                 StructField("type", StringType(), False),
                 StructField("start_year", IntegerType(), False),
                 StructField("end_year", IntegerType(), False),
-                StructField("result", FloatType(), False)
+                StructField("result", FloatType(), False),
             ]
         )
 
@@ -182,13 +189,13 @@ class StatFunctions:
                 StructField("type_2", StringType(), False),
                 StructField("start_year", IntegerType(), False),
                 StructField("end_year", IntegerType(), False),
-                StructField("result", FloatType(), False)
+                StructField("result", FloatType(), False),
             ]
         )
 
         df = self.__spark.createDataFrame([], schema)
         return df
-    
+
     def hrc(duration: int) -> DataFrame:
         pass
 

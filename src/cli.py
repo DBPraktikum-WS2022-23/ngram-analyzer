@@ -114,7 +114,9 @@ class Cli:
                     " or a config file"
                 )
             if args["config_path"] is not None:
-                conn_settings = ConfigConverter(args["config_path"].split("_")[1].split(".")[0]).get_conn_settings()
+                conn_settings = ConfigConverter(
+                    args["config_path"].split("_")[1].split(".")[0]
+                ).get_conn_settings()
             else:
                 ConfigCreator(
                     args["username"], args["password"], args["dbname"]
@@ -152,7 +154,9 @@ class Cli:
 
             # use SparkController to transfer files
             if args["config_path"] is not None:
-                conn_settings = ConfigConverter(args["config_path"].split("_")[1].split(".")[0]).get_conn_settings()
+                conn_settings = ConfigConverter(
+                    args["config_path"].split("_")[1].split(".")[0]
+                ).get_conn_settings()
             else:
                 ConfigCreator(
                     args["username"], args["password"], args["dbname"]
