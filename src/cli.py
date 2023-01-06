@@ -57,7 +57,7 @@ class Cli:
             "--transfer",
             metavar="PATH",
             help="Reads raw data from supplied file or folder and imports it into"
-            " database, use -r to recurse into subdirectories",
+            " database, directories are processed recursively.",
         )
 
         psr.add_argument(
@@ -115,7 +115,8 @@ class Cli:
                 )
             if args["config_path"] is not None:
                 conn_settings = ConfigConverter(
-                    args["config_path"].split("_")[1].split(".")[0]
+                    # TODO: this is not good. Why ask for a path if only the username is used?
+                    args["config_path"].split("/")[-1].split("_")[1].split(".")[0]
                 ).get_conn_settings()
             else:
                 ConfigCreator(
@@ -156,7 +157,8 @@ class Cli:
             # use SparkController to transfer files
             if args["config_path"] is not None:
                 conn_settings = ConfigConverter(
-                    args["config_path"].split("_")[1].split(".")[0]
+                    # TODO: same issue as for argument create_db, also redundant
+                    args["config_path"].split("/")[-1].split("_")[1].split(".")[0]
                 ).get_conn_settings()
             else:
                 ConfigCreator(
