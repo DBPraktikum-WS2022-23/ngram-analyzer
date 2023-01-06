@@ -124,7 +124,8 @@ class Cli:
                 conn_settings: dict[str, str] = ConfigConverter(
                     args["username"]
                 ).get_conn_settings()
-            NgramDBBuilder(conn_settings).create_ngram_db()
+            NgramDBBuilder(conn_settings).create_ngram_db()  # create database
+            self.ngram_db = NgramDB(conn_settings)           # create relation in database
 
         if args["transfer"] is not None:
             if (
@@ -164,6 +165,7 @@ class Cli:
                 conn_settings: dict[str, str] = ConfigConverter(  # type: ignore
                     args["username"]
                 ).get_conn_settings()
+            # TODO: should relations be created here if they dont exist?
             spark_controller: SparkController = SparkController(conn_settings)
             spark_controller.transfer(data_files)
 
