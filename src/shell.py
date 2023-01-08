@@ -35,6 +35,7 @@ class Prompt(Cmd):
         config: ConfigConverter = ConfigConverter(
             os.listdir("settings")[choice].split("_")[1].split(".")[0]  # type: ignore
         )
+        # TODO: check if db exists here
         self.spark_controller: SparkController = SparkController(
             config.get_conn_settings(), log_level="OFF"
         )
