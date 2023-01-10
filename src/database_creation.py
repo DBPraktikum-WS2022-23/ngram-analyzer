@@ -66,6 +66,7 @@ class NgramDBBuilder:
 
     # TODO: convert prints to logging info
     def __create_database(self) -> bool:
+        con = None
         try:
             con = Connection.connect(
                 dbname="postgres",
