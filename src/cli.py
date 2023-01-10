@@ -6,7 +6,7 @@ from typing import Dict, Optional
 
 from src.config_converter import ConfigConverter, ConfigCreator
 from src.controller import SparkController
-from src.database_creation import NgramDB, NgramDBBuilder
+from src.database_creation import NgramDBBuilder
 from src.shell import Prompt
 
 
@@ -17,20 +17,15 @@ class Cli:
 
     def __init__(self) -> None:
         self.conn_settings: Dict[str, str] = {}
-        self.ngram_db: Optional[NgramDB] = None
         self.spark = None
 
     def __exit(self) -> None:
-        if self.ngram_db:
-            del self.ngram_db
         if self.spark:
             self.spark.stop()
 
         sys.exit()
 
     def __exit_error(self, message) -> None:
-        if self.ngram_db:
-            del self.ngram_db
         if self.spark:
             self.spark.stop()
 
@@ -126,7 +121,6 @@ class Cli:
                     args["username"]
                 ).get_conn_settings()
             NgramDBBuilder(conn_settings).create_ngram_db()  # create database
-            self.ngram_db = NgramDB(conn_settings)           # create relation in database
 
         if args["transfer"] is not None:
             if (
@@ -167,7 +161,7 @@ class Cli:
                 conn_settings: dict[str, str] = ConfigConverter(  # type: ignore
                     args["username"]
                 ).get_conn_settings()
-            # TODO: should relations be created here if they dont exist?
+            # TODO: check if db exists here
             spark_controller: SparkController = SparkController(conn_settings)
             spark_controller.transfer(data_files)
 

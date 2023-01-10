@@ -6,28 +6,22 @@ from typing import Any, Dict, List, Tuple
 from psycopg import Connection, OperationalError
 from psycopg.errors import DuplicateDatabase
 
+class NgramDBBuilder:
+    """Creates the ngram database and its corresponding tables."""
 
-class NgramDB:
-    """A wrapper around psycopg classes. Based on NgramDocumentDB from doc2ngram."""
+    def __init__(self, connection_settings: Dict[str, str]) -> None:
+        self.connection_settings = connection_settings
 
-    def __init__(self, connection_settings: Dict[Any, str]) -> None:
-        self.__connection = Connection.connect(
-            host=connection_settings["host"],
-            port=connection_settings["port"],
-            user=connection_settings["user"],
-            password=connection_settings["password"],
-            dbname=connection_settings["dbname"],
+    def __open_connection(self) -> Any:
+        connection = Connection.connect(
+            host=self.connection_settings["host"],
+            port=self.connection_settings["port"],
+            user=self.connection_settings["user"],
+            password=self.connection_settings["password"],
+            dbname=self.connection_settings["dbname"],
             autocommit=True,
         )
-
-        self.__create_relations_if_not_exists()
-
-    def __del__(self) -> None:
-        if self.__connection and not self.__connection.closed:
-            self.__connection.close()
-
-    def __enter__(self) -> NgramDB:
-        return self
+        return connection
 
     @staticmethod
     def __get_sql_cmds(path: str) -> List[str]:
@@ -36,36 +30,17 @@ class NgramDB:
         return cmds
 
     def __create_relations_if_not_exists(self) -> None:
+        connection = self.__open_connection()
         cmds = self.__get_sql_cmds("./src/resources/db_tables.sql")
 
-        with self.__connection.cursor() as cursor:
+        with connection.cursor() as cursor:
             for cmd in cmds:
                 cursor.execute(cmd)
 
-    def execute(
-        self, query: str, values: Tuple[Any, ...] = (), return_result: bool = True
-    ) -> List[Tuple[Any, ...]]:
-        """Executes the given query and returns the result if desired.
-        Requesting a result on queries that don't return anything causes
-        an Exception."""
+        connection.close
 
-        with self.__connection.cursor() as cur:
-            cur.execute(query, values)
-            # TODO add flag to return just fetchone
-            if return_result:
-                return cur.fetchall()
-
-            return []
-
-
-class NgramDBBuilder:
-    """Creates the ngram database and opens connection to it."""
-
-    def __init__(self, connection_settings: Dict[str, str]) -> None:
-        self.connection_settings = connection_settings
-
-    # TODO: convert prints to logging info
     def __create_database(self) -> bool:
+        con = None
         try:
             con = Connection.connect(
                 dbname="postgres",
@@ -108,3 +83,5 @@ class NgramDBBuilder:
         is_created = self.__create_database()
         if not is_created:
             print("Issue with DB creation")
+            return
+        self.__create_relations_if_not_exists()
