@@ -5,6 +5,7 @@ from pyspark.sql import DataFrame, SparkSession
 
 from src.info import DataBaseStatistics, StatFunctions, WordFrequencies
 from src.transfer import Transferer
+from src.visualiser import Visualiser
 
 
 class SparkController:
@@ -39,6 +40,10 @@ class SparkController:
         )
 
         self.__functions: Optional[StatFunctions] = StatFunctions(
+            self.__spark, self.__db_url, self.__properties
+        )
+
+        self.__visualiser: Visualiser = Visualiser(
             self.__spark, self.__db_url, self.__properties
         )
 
@@ -90,3 +95,6 @@ class SparkController:
 
     def pc(self, start_year: int, end_year: int) -> DataFrame:
         return self.__functions.pc(start_year, end_year)
+
+    def plot_kde(self) -> None:
+        self.__visualiser.plot_kde()
