@@ -166,39 +166,29 @@ class StatFunctions:
         df = self.__spark.createDataFrame([], schema).createOrReplaceTempView("f_view")
         return df
 
-    def __get_s_df(self) -> DataFrame:
-        """Returns a view of words with start year, end year and a result."""
-        schema = StructType(
-            [
-                StructField("str_rep", StringType(), False),
-                StructField("type", StringType(), False),
-                StructField("start_year", IntegerType(), False),
-                StructField("end_year", IntegerType(), False),
-                StructField("result", FloatType(), False),
-            ]
-        )
+    schema_s = StructType(
+        """Return type for calculations on time interval of one word."""[
+            StructField("str_rep", StringType(), False),
+            StructField("type", StringType(), False),
+            StructField("start_year", IntegerType(), False),
+            StructField("end_year", IntegerType(), False),
+            StructField("result", FloatType(), False),
+        ]
+    )
 
-        df = self.__spark.createDataFrame([], schema)
-        return df
+    schema_d = StructType(
+        """Return type for calculations on time intervals of two words."""[
+            StructField("str_rep_1", StringType(), False),
+            StructField("type_1", StringType(), False),
+            StructField("str_rep_2", StringType(), False),
+            StructField("type_2", StringType(), False),
+            StructField("start_year", IntegerType(), False),
+            StructField("end_year", IntegerType(), False),
+            StructField("result", FloatType(), False),
+        ]
+    )
 
-    def __get_d_df(self) -> DataFrame:
-        """Returns a view of two words with their start years, end years and a result."""
-        schema = StructType(
-            [
-                StructField("str_rep_1", StringType(), False),
-                StructField("type_1", StringType(), False),
-                StructField("str_rep_2", StringType(), False),
-                StructField("type_2", StringType(), False),
-                StructField("start_year", IntegerType(), False),
-                StructField("end_year", IntegerType(), False),
-                StructField("result", FloatType(), False),
-            ]
-        )
-
-        df = self.__spark.createDataFrame([], schema)
-        return df
-
-    @udf  # (returnType=self.f-schema)  # TODO add schema F as return type
+    @udf(returnType=schema_s)
     def hrc(self, duration: int, *f_tuple):
         """Returns the strongest relative change between any two years that duration years apart."""
 
@@ -223,7 +213,7 @@ class StatFunctions:
         # TODO: assuming start and end years should be returned here and not their frequencies
         return f_tuple[0], result_start_year, result_end_year, hrc_result
 
-    @udf  # (returnType=self.f-schema)  # TODO add schema D as return type
+    @udf(returnType=schema_d)
     def pc(self, start_year: int, end_year: int, *fxf_tuple):
         """Returns the Pearson correlation coefficient of two time series
         (limited to the time period of [start year, end year])."""

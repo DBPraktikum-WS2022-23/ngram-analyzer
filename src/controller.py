@@ -43,8 +43,8 @@ class SparkController:
         )
 
         # TODO: this should not be necessary with @udf notation
-        # self.__spark.udf.register("hrc", StatFunctions.hrc)  # TODO add schema F as return type
-        # self.__spark.udf.register("pc", StatFunctions.pc)  # TODO add schema D as return type
+        # self.__spark.udf.register("hrc", StatFunctions.hrc, StatFunctions.schema_s)
+        # self.__spark.udf.register("pc", StatFunctions.pc, StatFunctions.schema_d)
 
     def get_spark_session(self) -> Optional[SparkSession]:
         """Returns the spark session"""
@@ -89,8 +89,10 @@ class SparkController:
     def print_db_statistics(self) -> None:
         self.__dbs.print_statistics()
 
-    def hrc(self, duration: int) -> DataFrame:
-        return self.__functions.hrc(duration)
+    # TODO: Does (or should) the user interface offer access to hrc and pc functionality
+    #       other than through spark SQL?
+    # def hrc(self, duration: int) -> DataFrame:
+    #     return self.__functions.hrc(duration)
 
-    def pc(self, start_year: int, end_year: int) -> DataFrame:
-        return self.__functions.pc(start_year, end_year)
+    # def pc(self, start_year: int, end_year: int) -> DataFrame:
+    #     return self.__functions.pc(start_year, end_year)
