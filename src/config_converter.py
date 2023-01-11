@@ -27,8 +27,9 @@ class ConfigCreator:
             print("Invalid path to template file")
             return
 
-    def generate_new_conn_settings(self) -> None:
-        """Generates a new config file with the given connection settings."""
+    def generate_new_conn_settings(self) -> dict[str, str]:
+        """Generates a new config file with the given connection settings.
+        Returns a dictionary with the newly generated settings."""
         fpath: str = "./settings/config_" + self.username + ".ini"
         if os.path.isfile(fpath):
             return
@@ -41,22 +42,24 @@ class ConfigCreator:
             self.config.write(configfile)
 
         print("Config file created.")
+        return ConfigConverter(fpath).get_conn_settings()
 
 
 class ConfigConverter:
     """Wrapper around ConfigParser. Used to write and read config files for different users."""
 
-    def __init__(self, username: str) -> None:
-        self.username = username
-        config_path = "./settings/config_" + username + ".ini"
+    def __init__(self, path: str) -> None:
+        self.username  # TODO: initial value (e.g. timestamp) necessary?
+        config_path = path
         default_path = "./settings/config_sample.ini"
         self.config = ConfigParser()
         self.user_exists = False
-        if os.path.exists(config_path):
+        if os.path.isFile(config_path):
             self.config.read(config_path)
             self.user_exists = True
         else:
-            print("Configuration for user doesn't exist, create a new user")
+            print(f"Config file '{path}' does not exist.")
+            # TODO: message "create a new user" necessary here?
             self.config.read(default_path)
 
     def get_conn_settings(self) -> Dict[str, str]:
