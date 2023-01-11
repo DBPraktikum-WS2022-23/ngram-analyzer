@@ -44,6 +44,7 @@ class SparkController:
 
         # TODO: this should not be necessary with @udf notation
         # self.__spark.udf.register("hrc", StatFunctions.hrc)  # TODO add schema F as return type
+        # self.__spark.udf.register("pc", StatFunctions.pc)  # TODO add schema D as return type
 
     def get_spark_session(self) -> Optional[SparkSession]:
         """Returns the spark session"""

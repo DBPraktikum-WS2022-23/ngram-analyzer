@@ -3,6 +3,7 @@ import os
 from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt  # type: ignore
+import numpy
 from pyspark.sql import DataFrame, Row, SparkSession
 from pyspark.sql import functions as f
 from pyspark.sql.functions import udf
@@ -222,6 +223,29 @@ class StatFunctions:
         # TODO: assuming start and end years should be returned here and not their frequencies
         return f_tuple[0], result_start_year, result_end_year, hrc_result
 
+    @udf  # (returnType=self.f-schema)  # TODO add schema D as return type
+    def pc(self, start_year: int, end_year: int, *fxf_tuple):
+        """Returns the Pearson correlation coefficient of two time series
+        (limited to the time period of [start year, end year])."""
 
-    def pc(start_year: int, end_year: int) -> DataFrame:
-        pass
+        # FxF format: w1, t1, frq1_1800, ..., frq1_2000, w2, t2, frq2_1800, ..., frq2_2000
+
+        # split input tuple
+        str_rep_1 = fxf_tuple[0]
+        type_1 = fxf_tuple[1]
+        frequencies_1 = fxf_tuple[2:203]
+
+        str_rep_2 = fxf_tuple[203]
+        type_2 = fxf_tuple[204]
+        frequencies_2 = fxf_tuple[205:]
+
+        # limit to interval between start and end year, each inclusive
+        start_index = start_year - 1800
+        end_index = end_year - 1800 + 1  # end year inclusive
+        frequencies_1 = frequencies_1[start_index:end_index]
+        frequencies_2 = frequencies_2[start_index:end_index]
+
+        # pearson correlation coefficient in second entry in first row in matrix from numpy
+        pearson_corr = numpy.corrcoef(frequencies_1, frequencies_2)[0][1]
+
+        return str_rep_1, type_1, str_rep_2, type_2, start_year, end_year, pearson_corr
