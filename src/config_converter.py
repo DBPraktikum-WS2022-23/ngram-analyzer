@@ -27,12 +27,13 @@ class ConfigCreator:
             print("Invalid path to template file")
             return
 
-    def generate_new_conn_settings(self) -> dict[str, str]:
+    def generate_new_conn_settings(self) -> Dict[str, str]:
         """Generates a new config file with the given connection settings.
         Returns a dictionary with the newly generated settings."""
         fpath: str = "./settings/config_" + self.username + ".ini"
         if os.path.isfile(fpath):
-            return
+            print("Configuration for this user already exists.")
+            return ConfigConverter(fpath).get_conn_settings()
 
         self.config.set("database", "user", self.username)
         self.config.set("database", "password", self.password)
@@ -44,17 +45,15 @@ class ConfigCreator:
         print("Config file created.")
         return ConfigConverter(fpath).get_conn_settings()
 
-
 class ConfigConverter:
     """Wrapper around ConfigParser. Used to write and read config files for different users."""
 
     def __init__(self, path: str) -> None:
-        self.username  # TODO: initial value (e.g. timestamp) necessary?
         config_path = path
         default_path = "./settings/config_sample.ini"
         self.config = ConfigParser()
         self.user_exists = False
-        if os.path.isFile(config_path):
+        if os.path.isfile(config_path):
             self.config.read(config_path)
             self.user_exists = True
         else:
@@ -97,14 +96,6 @@ class ConfigConverter:
                 if key == "path":
                     return value
         return ""
-
-    def set_default_path(self, path: str) -> None:
-        """Sets the default path for the data folder."""
-        self.config.set("database", "default_filepath", path)
-        with open(
-            "./settings/config_" + self.username + ".ini", "w", encoding="UTF-8"
-        ) as configfile:
-            self.config.write(configfile)
 
     def get_db_url(self) -> str:
         """Returns the database url."""
