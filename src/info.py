@@ -150,24 +150,9 @@ class StatFunctions:
         self.df_word: DataFrame = self.db2df.df_word
         self.df_occurence: DataFrame = self.db2df.df_occurence
 
-    def __get_f_view(self) -> DataFrame:
-        schema_l = [
-            StructField("str_rep", StringType(), False),
-            StructField("type", StringType(), False),
-        ]
-
-        for i in range(1800, 2000, 1):
-            schema.append(StructField(str(i), IntegerType(), True))
-
-        schema = StructType(schema_l)
-
-        # TODO: write data
-
-        df = self.__spark.createDataFrame([], schema).createOrReplaceTempView("f_view")
-        return df
-
+    """Return type for calculations on time interval of one word."""
     schema_s = StructType(
-        """Return type for calculations on time interval of one word."""[
+        [
             StructField("str_rep", StringType(), False),
             StructField("type", StringType(), False),
             StructField("start_year", IntegerType(), False),
@@ -176,8 +161,9 @@ class StatFunctions:
         ]
     )
 
+    """Return type for calculations on time intervals of two words."""
     schema_d = StructType(
-        """Return type for calculations on time intervals of two words."""[
+        [
             StructField("str_rep_1", StringType(), False),
             StructField("type_1", StringType(), False),
             StructField("str_rep_2", StringType(), False),

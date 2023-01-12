@@ -75,8 +75,22 @@ class SparkController:
                 properties=self.__properties,
             )
 
+            years = []
+            for i in range(1800, 2001, 1):
+                years.append(i)
+
+            schema_f_df = (
+                occurence_df.select("id", "year", "freq")
+                .join(word_df, "id")
+                .select("str_rep", "type", "year", "freq")
+                .groupBy("str_rep", "type")
+                .pivot("year", years)
+                .sum("freq")
+            )
+
             word_df.createOrReplaceTempView("word")
             occurence_df.createOrReplaceTempView("occurence")
+            schema_f_df.createOrReplaceTempView("schema_f")
             return self.__spark.sql(sql)
         return None
 
