@@ -1,7 +1,7 @@
 """ Module for creating and reading out configs"""
 import os.path
 from configparser import ConfigParser
-from typing import Dict
+from typing import Dict, Tuple
 
 
 class ConfigCreator:
@@ -14,11 +14,13 @@ class ConfigCreator:
         username: str,
         password: str,
         dbname: str,
+        data_path: str = "./data",
         template_path: str = "./settings/config_sample.ini",
     ) -> None:
         self.username: str = username
         self.password: str = password
         self.dbname: str = dbname
+        self.data_path: str = data_path
 
         if os.path.isfile(template_path):
             self.config = ConfigParser()
@@ -27,23 +29,24 @@ class ConfigCreator:
             print("Invalid path to template file")
             return
 
-    def generate_new_conn_settings(self) -> Dict[str, str]:
+    def generate_new_config(self) -> str:
         """Generates a new config file with the given connection settings.
         Returns a dictionary with the newly generated settings."""
         fpath: str = "./settings/config_" + self.username + ".ini"
         if os.path.isfile(fpath):
-            print("Configuration for this user already exists.")
-            return ConfigConverter(fpath).get_conn_settings()
+            print("Configuration for this user already exists. Reading Configuration...")
+            return fpath
 
         self.config.set("database", "user", self.username)
         self.config.set("database", "password", self.password)
         self.config.set("database", "dbname", self.dbname)
+        self.config.set("data", "path", self.data_path)
 
         with open(fpath, "w", encoding="UTF-8") as configfile:
             self.config.write(configfile)
 
         print("Config file created.")
-        return ConfigConverter(fpath).get_conn_settings()
+        return fpath
 
 class ConfigConverter:
     """Wrapper around ConfigParser. Used to write and read config files for different users."""

@@ -62,9 +62,9 @@ class NgramDBBuilder:
         con.close()
 
         if cmd:
-            return True
-        else:
             return False
+        else:
+            return True
 
 
     def __create_database(self) -> bool:
@@ -91,7 +91,7 @@ class NgramDBBuilder:
 
     def create_ngram_db(self) -> None:
         """Creates the ngram database if it doesn't exist yet."""
-        if not self.exists_db():
+        if self.exists_db():
             name = self.connection_settings["dbname"]
             print(f"{name} database already exists.")
             return

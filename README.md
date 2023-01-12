@@ -16,6 +16,7 @@
       - look for config_your_username.ini
       - this will not delete the actual database
 - Transfer data from ./data into the database: ```main.py --transfer path_to_data --username username --password password --dbname database_name```
+  - You can specify a path to the data folder by using ```--data_path```. If not, the default path from the config file will be used
   - Alternatively, you can provide the path to a config file using the ```--config_path``` option
 - Enter shell version of the CLI: ```main.py --shell``` oder ```main.py```
 
