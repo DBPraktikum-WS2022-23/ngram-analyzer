@@ -88,6 +88,9 @@ class Prompt(Cmd):
             except Exception as e:
                 print(e)  # TODO: invalid sql query
 
+    def do_plot_kde(self, arg):
+        self.spark_controller.plot_kde()
+
     def do_exit(self, arg):
         """Leave shell"""
         return True
