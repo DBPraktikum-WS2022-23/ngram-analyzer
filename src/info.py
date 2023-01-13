@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt  # type: ignore
 import numpy
 from pyspark.sql import DataFrame, Row, SparkSession
 from pyspark.sql import functions as f
-from pyspark.sql.functions import udf
 from pyspark.sql.types import (
     FloatType,
     IntegerType,
@@ -175,75 +174,109 @@ class StatFunctions:
     )
 
     @staticmethod
+    def _rm_direction(rel_change: float) -> float:
+        return rel_change if rel_change >= 0 else abs(1 / rel_change)
+
+    @staticmethod
     def hrc(duration, word, w_type, *years):
-        """Returns the strongest relative change between any two years that duration years apart."""
+        """Returns the strongest relative change between any two years that duration years apart.
+        Examples: no change = 0, doubled = 1, halved -0.5"""
+
+        # F-tuple format: str_rep, type, frq_1800, ..., frq_2000
+        y_offset: int = 1800
+        year_count: int = 201  # 1800 -> 2000: 201
+        debug = False
 
         hrc_result = 0.0
         result_start_year = 0
         result_end_year = 0
+        duration = int(duration)
 
-        #print(f"duration: {duration}")
-        #print(f"word: {word}")
-        #print(f"type: {w_type}")
-        #for i in range(0,4):
-        #    print(f"years[{i}]: {years[i]}")
+        if debug:
+            print(f"duration: {duration}")
+            print(f"word: {word}")
+            print(f"type: {w_type}")
+            print("years: ", years[:20])
 
-        # duration = int(duration)
-
-        # F-tuple format: str_rep, type, frq_1800, ..., frq_2000
-        # 2000-1799 = 201 values, offset 2 -> 203
-        for year in range(0, (201 - duration)):
-
-            #print(f"f_tuple[year]: {f_tuple[year]}")
+        for year in range(0, (year_count - duration)):
 
             start: int = int(years[year])
             end: int = int(years[year + duration])
 
-            #print(f"start: {start}")
-
-            # relative change does not exist if one of the entries is 0
-            if start == 0 or end == 0:
+            # relative change for start value 0 does not exist
+            if start == 0:
                 continue
 
-            # TODO: Consider direction of change (0.5 vs 2)? Currently change always >1
-            change = max((start / end), (end / start)) - 1
+            change = (end - start) / start
 
-            if change > hrc_result:
+            if StatFunctions._rm_direction(change) > StatFunctions._rm_direction(
+                hrc_result
+            ):
                 hrc_result = change
-                result_start_year = start
-                result_end_year = end
+                result_start_year = y_offset + start
+                result_end_year = y_offset + end
 
+            if debug and year < 13:
+                print(f"{y_offset + year} to {y_offset + year + duration}: {change}")
+
+        # TODO: how to treat null values? for now set to empty string
         if not w_type:
             w_type = ""
 
-        #print(f"hrc: {hrc_result}")
-
-        # TODO: assuming start and end years should be returned here and not their frequencies
         return word, w_type, result_start_year, result_end_year, hrc_result
 
     @staticmethod
-    def pc(start_year: int, end_year: int, *fxf_tuple):
+    def pc(start_year, end_year, *fxf_tuple):
         """Returns the Pearson correlation coefficient of two time series
         (limited to the time period of [start year, end year])."""
 
         # FxF format: w1, t1, frq1_1800, ..., frq1_2000, w2, t2, frq2_1800, ..., frq2_2000
+        y_offset: int = 1800
+        year_count: int = 201  # 1800 -> 2000: 201
+        debug = False
+
+        start_year: int = int(start_year)
+        end_year: int = int(end_year)
 
         # split input tuple
-        str_rep_1 = fxf_tuple[0]
+        word_1 = fxf_tuple[0]
         type_1 = fxf_tuple[1]
-        frequencies_1 = fxf_tuple[2:203]
+        freq_1 = fxf_tuple[2 : 2 + year_count]
 
-        str_rep_2 = fxf_tuple[203]
-        type_2 = fxf_tuple[204]
-        frequencies_2 = fxf_tuple[205:]
+        word_2 = fxf_tuple[(2 + year_count)]
+        type_2 = fxf_tuple[(2 + year_count + 1)]
+        freq_2 = fxf_tuple[(2 + year_count + 2) : (2 + year_count + 2 + year_count)]
+
+        if debug:
+            print(f"1: {word_1}_{type_1}  2: {word_2}_{type_2};")
+            print("freq_1:", freq_1)
+            print("freq_2:", freq_2)
 
         # limit to interval between start and end year, each inclusive
-        start_index = start_year - 1800
-        end_index = end_year - 1800 + 1  # end year inclusive
-        frequencies_1 = frequencies_1[start_index:end_index]
-        frequencies_2 = frequencies_2[start_index:end_index]
+        start_index = start_year - y_offset
+        end_index = end_year - y_offset + 1  # end year inclusive
+        freq_1 = freq_1[start_index:end_index]
+        freq_2 = freq_2[start_index:end_index]
 
         # pearson correlation coefficient in second entry in first row in matrix from numpy
-        pearson_corr = numpy.corrcoef(frequencies_1, frequencies_2)[0][1]
+        pearson_corr: float = float(numpy.corrcoef(freq_1, freq_2)[0][1])
 
-        return str_rep_1, type_1, str_rep_2, type_2, start_year, end_year, pearson_corr
+        if debug:
+            print("interval 1:", freq_1)
+            print("interval 2:", freq_2)
+            print("Pearson correlation:", pearson_corr)
+            print(type(word_1), sep=", ")
+            print(type(type_1), sep=", ")
+            print(type(word_2), sep=", ")
+            print(type(type_2), sep=", ")
+            print(type(start_year), sep=", ")
+            print(type(end_year), sep=", ")
+            print(type(pearson_corr))
+
+        # TODO: how to treat null values? for now set to empty string
+        if not type_1:
+            type_1 = ""
+        if not type_2:
+            type_2 = ""
+
+        return word_1, type_1, word_2, type_2, start_year, end_year, pearson_corr
