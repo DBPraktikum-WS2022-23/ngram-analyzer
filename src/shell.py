@@ -5,9 +5,12 @@ from typing import List
 
 from src.config_converter import ConfigConverter
 from src.controller import SparkController
+from src.database_creation import NgramDBBuilder
 
 
 class Prompt(Cmd):
+    __config_dir = "settings"
+
     intro: str = (
         "Welcome to the ngram_analyzer shell. Type help or ? to list commands.\n"
     )
@@ -24,19 +27,27 @@ class Prompt(Cmd):
             "using the db_connect command.\n"
             "If you already have a database, please select the correct config file:\n"
         )
-        for idx, file in enumerate(os.listdir("settings")):
+        for idx, file in enumerate(os.listdir(self.__config_dir)):
             print(f"[{idx}] {file}")
         choice: int = int(input("Enter number of config file: "))
-        if choice < 0 or choice > len(os.listdir("settings")):
+        if choice < 0 or choice > len(os.listdir(self.__config_dir)):
             print("Invalid input. Please restart the shell and try again.")
             return
 
         # read in configuration data
         config: ConfigConverter = ConfigConverter(
-            os.listdir("settings")[choice].split("_")[1].split(".")[0]  # type: ignore
+            self.__config_dir + "/" + os.listdir(self.__config_dir)[choice]
         )
+        # TODO: check if db exists here
+        conn_settings = config.get_conn_settings()
+
+        db_builder = NgramDBBuilder(conn_settings)
+        if not db_builder.exists_db():
+            print("Invalid input. DB does not exist. Please use --db_create and restart shell.")
+            return
+
         self.spark_controller: SparkController = SparkController(
-            config.get_conn_settings(), log_level="OFF"
+            conn_settings, log_level="OFF"
         )
         print("Connection settings loaded.")
 
@@ -83,7 +94,8 @@ class Prompt(Cmd):
             try:
                 self.spark_controller.execute_sql(sql_query).show()
             except Exception as e:
-                print(e)  # TODO: invalid sql query
+                print(e)
+                print("Invalid query.")
 
     def do_plot_kde(self, arg):
         self.spark_controller.plot_kde()

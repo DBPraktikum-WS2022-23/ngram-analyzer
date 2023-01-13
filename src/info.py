@@ -3,8 +3,10 @@ import os
 from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt  # type: ignore
+import numpy
 from pyspark.sql import DataFrame, Row, SparkSession
 from pyspark.sql import functions as f
+from pyspark.sql.functions import udf
 from pyspark.sql.types import (
     FloatType,
     IntegerType,
@@ -148,56 +150,100 @@ class StatFunctions:
         self.df_word: DataFrame = self.db2df.df_word
         self.df_occurence: DataFrame = self.db2df.df_occurence
 
-    def __get_f_view(self) -> DataFrame:
-        schema_l = [
+    """Return type for calculations on time interval of one word."""
+    schema_s = StructType(
+        [
             StructField("str_rep", StringType(), False),
             StructField("type", StringType(), False),
+            StructField("start_year", IntegerType(), False),
+            StructField("end_year", IntegerType(), False),
+            StructField("result", FloatType(), False),
         ]
+    )
 
-        for i in range(1800, 2000, 1):
-            schema.append(StructField(str(i), IntegerType(), True))
+    """Return type for calculations on time intervals of two words."""
+    schema_d = StructType(
+        [
+            StructField("str_rep_1", StringType(), False),
+            StructField("type_1", StringType(), False),
+            StructField("str_rep_2", StringType(), False),
+            StructField("type_2", StringType(), False),
+            StructField("start_year", IntegerType(), False),
+            StructField("end_year", IntegerType(), False),
+            StructField("result", FloatType(), False),
+        ]
+    )
 
-        schema = StructType(schema_l)
+    @staticmethod
+    def hrc(duration, word, w_type, *years):
+        """Returns the strongest relative change between any two years that duration years apart."""
 
-        # TODO: write data
+        hrc_result = 0.0
+        result_start_year = 0
+        result_end_year = 0
 
-        df = self.__spark.createDataFrame([], schema).createOrReplaceTempView("f_view")
-        return df
+        #print(f"duration: {duration}")
+        #print(f"word: {word}")
+        #print(f"type: {w_type}")
+        #for i in range(0,4):
+        #    print(f"years[{i}]: {years[i]}")
 
-    def __get_s_df(self) -> DataFrame:
-        """Returns a view of words with start year, end year and a result."""
-        schema = StructType(
-            [
-                StructField("str_rep", StringType(), False),
-                StructField("type", StringType(), False),
-                StructField("start_year", IntegerType(), False),
-                StructField("end_year", IntegerType(), False),
-                StructField("result", FloatType(), False),
-            ]
-        )
+        # duration = int(duration)
 
-        df = self.__spark.createDataFrame([], schema)
-        return df
+        # F-tuple format: str_rep, type, frq_1800, ..., frq_2000
+        # 2000-1799 = 201 values, offset 2 -> 203
+        for year in range(0, (201 - duration)):
 
-    def __get_d_df(self) -> DataFrame:
-        """Returns a view of two words with their start years, end years and a result."""
-        schema = StructType(
-            [
-                StructField("str_rep_1", StringType(), False),
-                StructField("type_1", StringType(), False),
-                StructField("str_rep_2", StringType(), False),
-                StructField("type_2", StringType(), False),
-                StructField("start_year", IntegerType(), False),
-                StructField("end_year", IntegerType(), False),
-                StructField("result", FloatType(), False),
-            ]
-        )
+            #print(f"f_tuple[year]: {f_tuple[year]}")
 
-        df = self.__spark.createDataFrame([], schema)
-        return df
+            start: int = int(years[year])
+            end: int = int(years[year + duration])
 
-    def hrc(duration: int) -> DataFrame:
-        pass
+            #print(f"start: {start}")
 
-    def pc(start_year: int, end_year: int) -> DataFrame:
-        pass
+            # relative change does not exist if one of the entries is 0
+            if start == 0 or end == 0:
+                continue
+
+            # TODO: Consider direction of change (0.5 vs 2)? Currently change always >1
+            change = max((start / end), (end / start)) - 1
+
+            if change > hrc_result:
+                hrc_result = change
+                result_start_year = start
+                result_end_year = end
+
+        if not w_type:
+            w_type = ""
+
+        #print(f"hrc: {hrc_result}")
+
+        # TODO: assuming start and end years should be returned here and not their frequencies
+        return word, w_type, result_start_year, result_end_year, hrc_result
+
+    @staticmethod
+    def pc(start_year: int, end_year: int, *fxf_tuple):
+        """Returns the Pearson correlation coefficient of two time series
+        (limited to the time period of [start year, end year])."""
+
+        # FxF format: w1, t1, frq1_1800, ..., frq1_2000, w2, t2, frq2_1800, ..., frq2_2000
+
+        # split input tuple
+        str_rep_1 = fxf_tuple[0]
+        type_1 = fxf_tuple[1]
+        frequencies_1 = fxf_tuple[2:203]
+
+        str_rep_2 = fxf_tuple[203]
+        type_2 = fxf_tuple[204]
+        frequencies_2 = fxf_tuple[205:]
+
+        # limit to interval between start and end year, each inclusive
+        start_index = start_year - 1800
+        end_index = end_year - 1800 + 1  # end year inclusive
+        frequencies_1 = frequencies_1[start_index:end_index]
+        frequencies_2 = frequencies_2[start_index:end_index]
+
+        # pearson correlation coefficient in second entry in first row in matrix from numpy
+        pearson_corr = numpy.corrcoef(frequencies_1, frequencies_2)[0][1]
+
+        return str_rep_1, type_1, str_rep_2, type_2, start_year, end_year, pearson_corr
