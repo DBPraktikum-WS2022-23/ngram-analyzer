@@ -35,6 +35,20 @@ class DatabaseToSparkDF:
             self.__db_url, "occurence", properties=self.__properties
         )
 
+        year = []
+        for i in range(1800, 2001, 1):
+            year.append(i)
+
+        self.df_schema_f = (
+            self.df_occurence.select("id", "year", "freq")
+            .join(self.df_word, "id")
+            .select("str_rep", "type", "year", "freq")
+            .groupBy("str_rep", "type")
+            .pivot("year", years)
+            .sum("freq")
+            .na.fill(0)
+        )
+
 
 class DataBaseStatistics:
     """Module which creates statistics from the database"""
@@ -141,14 +155,8 @@ class WordFrequencies:
 
 
 class StatFunctions:
-    def __init__(
-        self, spark: SparkSession, db_url: str, properties: Dict[str, str]
-    ) -> None:
-        self.__spark = spark
-        # TODO: maybe redundant?
-        self.db2df: DatabaseToSparkDF = DatabaseToSparkDF(spark, db_url, properties)
-        self.df_word: DataFrame = self.db2df.df_word
-        self.df_occurence: DataFrame = self.db2df.df_occurence
+    def __init__() -> None:
+        pass
 
     """Return type for calculations on time interval of one word."""
     schema_s = StructType(
@@ -247,3 +255,64 @@ class StatFunctions:
         pearson_corr = numpy.corrcoef(frequencies_1, frequencies_2)[0][1]
 
         return str_rep_1, type_1, str_rep_2, type_2, start_year, end_year, pearson_corr
+
+    def stat_feature(*f) -> Dict[str, float]:
+        """Returns a dictionary of statistical features for a given schema f."""
+
+        # F format: str_rep, type, frq_1800, ..., frq_2000
+
+        # split input tuple
+        str_rep = f[0]
+        type = f[1]
+        freq = f[2:]
+
+        # calculate statistical features
+        mean = numpy.mean(freq)
+        median = numpy.median(freq)
+        q_25 = numpy.percentile(freq, 25)
+        q_75 = numpy.percentile(freq, 75)
+        var = numpy.var(freq)
+        min = numpy.min(freq)
+        max = numpy.max(freq)
+        hrc = StatFunctions.hrc(1, str_rep, type, *freq)[-1]
+
+        # create dictionary of statistical features
+        stat_features = {
+            "mean": mean,
+            "median": median,
+            "var": var,
+            "min": min,
+            "max": max,
+            "q_25": q_25,
+            "q_75": q_75,
+            "hrc": hrc
+        }
+
+        return stat_features
+
+    def stat_feature_pairs(*fxf) -> Dict[str, float]:
+        """Returns a dictionary of statistical features for a given schema fxf."""
+
+        # FxF format: w1, t1, frq1_1800, ..., frq1_2000, w2, t2, frq2_1800, ..., frq2_2000
+
+        # split input tuple
+        freq1 = fxf[2:203]
+        freq2 = fxf[205:]
+
+        # calculate statistical features
+        hrc_l = numpy.divide(numpy.subtract(freq2, freq1), freq1)
+        hrc_year = numpy.argmax(hrc_l) + 1800
+        hrc_max = numpy.max(hrc_l)
+        cov = numpy.cov(freq1, freq2)[0][1]
+        spearman_corr = cov / (numpy.std(freq1) * numpy.std(freq2))
+
+        # create dictionary of statistical features
+        stat_features = {
+            "hrc_year": hrc_year,
+            "hrc_max": hrc_max,
+            "cov": cov,
+            "spearman_corr": spearman_corr,
+            "pearson_corr": StatFunctions.pc(1800, 2000, *fxf)[-1]
+        }
+
+        return stat_features
