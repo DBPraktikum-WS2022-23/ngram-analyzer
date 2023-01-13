@@ -98,3 +98,6 @@ class SparkController:
 
     def plot_kde(self) -> None:
         self.__visualiser.plot_kde()
+
+    def plot_box(self) -> None:
+        self.__visualiser.plot_boxplot_all()

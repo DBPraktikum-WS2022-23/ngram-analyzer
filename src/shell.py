@@ -88,6 +88,9 @@ class Prompt(Cmd):
     def do_plot_kde(self, arg):
         self.spark_controller.plot_kde()
 
+    def do_plot_boxplot(self, arg):
+        self.spark_controller.plot_box()
+
     def do_exit(self, arg):
         """Leave shell"""
         return True
