@@ -110,16 +110,12 @@ class Cli:
                 )
             if args["config_path"] is not None:
                 conn_settings = ConfigConverter(
-                    # TODO: this is not good. Why ask for a path if only the username is used?
-                    args["config_path"].split("/")[-1].split("_")[1].split(".")[0]
+                    args["config_path"]
                 ).get_conn_settings()
             else:
-                ConfigCreator(
+                conn_settings: dict[str, str] = ConfigCreator(
                     args["username"], args["password"], args["dbname"]
                 ).generate_new_conn_settings()
-                conn_settings: dict[str, str] = ConfigConverter(
-                    args["username"]
-                ).get_conn_settings()
             NgramDBBuilder(conn_settings).create_ngram_db()  # create database
 
         if args["transfer"] is not None:
@@ -150,17 +146,15 @@ class Cli:
 
             # use SparkController to transfer files
             if args["config_path"] is not None:
+                # TODO: duplicate code, reading config in create_db and transfer
                 conn_settings = ConfigConverter(
-                    # TODO: same issue as for argument create_db, also redundant
-                    args["config_path"].split("/")[-1].split("_")[1].split(".")[0]
+                    args["config_path"]
                 ).get_conn_settings()
             else:
-                ConfigCreator(
+                conn_settings: dict[str, str] = ConfigCreator(
                     args["username"], args["password"], args["dbname"]
                 ).generate_new_conn_settings()
-                conn_settings: dict[str, str] = ConfigConverter(  # type: ignore
-                    args["username"]
-                ).get_conn_settings()
+
             # TODO: check if db exists here
             spark_controller: SparkController = SparkController(conn_settings)
             spark_controller.transfer(data_files)

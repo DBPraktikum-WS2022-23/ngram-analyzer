@@ -8,6 +8,8 @@ from src.controller import SparkController
 
 
 class Prompt(Cmd):
+    __config_dir = "settings"
+
     intro: str = (
         "Welcome to the ngram_analyzer shell. Type help or ? to list commands.\n"
     )
@@ -24,16 +26,16 @@ class Prompt(Cmd):
             "using the db_connect command.\n"
             "If you already have a database, please select the correct config file:\n"
         )
-        for idx, file in enumerate(os.listdir("settings")):
+        for idx, file in enumerate(os.listdir(self.__config_dir)):
             print(f"[{idx}] {file}")
         choice: int = int(input("Enter number of config file: "))
-        if choice < 0 or choice > len(os.listdir("settings")):
+        if choice < 0 or choice > len(os.listdir(self.__config_dir)):
             print("Invalid input. Please restart the shell and try again.")
             return
 
         # read in configuration data
         config: ConfigConverter = ConfigConverter(
-            os.listdir("settings")[choice].split("_")[1].split(".")[0]  # type: ignore
+            self.__config_dir + "/" + os.listdir(self.__config_dir)[choice]
         )
         # TODO: check if db exists here
         self.spark_controller: SparkController = SparkController(
