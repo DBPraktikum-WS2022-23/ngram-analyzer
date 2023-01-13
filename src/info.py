@@ -174,31 +174,55 @@ class StatFunctions:
         ]
     )
 
-    def hrc(self, duration: int, *f_tuple):
+    @staticmethod
+    def hrc(duration, word, w_type, *years):
         """Returns the strongest relative change between any two years that duration years apart."""
 
         hrc_result = 0.0
         result_start_year = 0
         result_end_year = 0
 
+        #print(f"duration: {duration}")
+        #print(f"word: {word}")
+        #print(f"type: {w_type}")
+        #for i in range(0,4):
+        #    print(f"years[{i}]: {years[i]}")
+
+        # duration = int(duration)
+
         # F-tuple format: str_rep, type, frq_1800, ..., frq_2000
         # 2000-1799 = 201 values, offset 2 -> 203
-        for year in range(2, (203 - duration + 1)):
-            start = f_tuple[year]
-            end = f_tuple[year + duration]
+        for year in range(0, (201 - duration)):
+
+            #print(f"f_tuple[year]: {f_tuple[year]}")
+
+            start: int = int(years[year])
+            end: int = int(years[year + duration])
+
+            #print(f"start: {start}")
+
+            # relative change does not exist if one of the entries is 0
+            if start == 0 or end == 0:
+                continue
 
             # TODO: Consider direction of change (0.5 vs 2)? Currently change always >1
-            change = max((start / end), (end / start))
+            change = max((start / end), (end / start)) - 1
 
             if change > hrc_result:
                 hrc_result = change
                 result_start_year = start
                 result_end_year = end
 
-        # TODO: assuming start and end years should be returned here and not their frequencies
-        return f_tuple[0], result_start_year, result_end_year, hrc_result
+        if not w_type:
+            w_type = ""
 
-    def pc(self, start_year: int, end_year: int, *fxf_tuple):
+        #print(f"hrc: {hrc_result}")
+
+        # TODO: assuming start and end years should be returned here and not their frequencies
+        return word, w_type, result_start_year, result_end_year, hrc_result
+
+    @staticmethod
+    def pc(start_year: int, end_year: int, *fxf_tuple):
         """Returns the Pearson correlation coefficient of two time series
         (limited to the time period of [start year, end year])."""
 

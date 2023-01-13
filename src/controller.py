@@ -63,6 +63,9 @@ class SparkController:
 
     def execute_sql(self, sql: str) -> Optional[DataFrame]:
         """Executes a SQL query"""
+
+        # select str_rep, type, `1800` from schema_f limit 5
+
         if self.__spark is not None:
             word_df = self.__spark.read.jdbc(
                 url=self.__db_url,
@@ -86,6 +89,7 @@ class SparkController:
                 .groupBy("str_rep", "type")
                 .pivot("year", years)
                 .sum("freq")
+                .na.fill(0)
             )
 
             word_df.createOrReplaceTempView("word")
