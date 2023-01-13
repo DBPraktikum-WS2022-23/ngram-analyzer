@@ -174,7 +174,6 @@ class StatFunctions:
         ]
     )
 
-    @udf(returnType=schema_s)
     def hrc(self, duration: int, *f_tuple):
         """Returns the strongest relative change between any two years that duration years apart."""
 
@@ -199,7 +198,6 @@ class StatFunctions:
         # TODO: assuming start and end years should be returned here and not their frequencies
         return f_tuple[0], result_start_year, result_end_year, hrc_result
 
-    @udf(returnType=schema_d)
     def pc(self, start_year: int, end_year: int, *fxf_tuple):
         """Returns the Pearson correlation coefficient of two time series
         (limited to the time period of [start year, end year])."""

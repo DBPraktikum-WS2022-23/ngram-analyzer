@@ -82,7 +82,8 @@ class Prompt(Cmd):
                 break
             try:
                 self.spark_controller.execute_sql(sql_query).show()
-            except Exception:
+            except Exception as e:
+                print(e)
                 print("Invalid query.")
 
     def do_exit(self, arg):
