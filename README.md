@@ -24,6 +24,9 @@
 - the following commands are available within the ngram_analyzer shell:
 - ```help``` or ```?``` shows commands
 - ```sql``` opens a sql shell
+  -  Example usage for user defined functions:
+    - linear regression for a given time series: `select lr(*) lr from (select * from schema_f limit 1)`
+      - Calculates the linear regression for a given time series from schema f
 - ```plot_word_frequencies``` plotting frequency of words against each other for a set of years
 - ```print_db_statistics``` prints count for each table, highest frequency and number of years
 - ```print_word_frequencies``` prints a table of the word frequencies in different years for different words
