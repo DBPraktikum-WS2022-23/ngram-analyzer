@@ -45,6 +45,7 @@ class SparkController:
         # TODO: this should not be necessary with @udf notation
         self.__spark.udf.register("hrc", StatFunctions.hrc, StatFunctions.schema_s)
         self.__spark.udf.register("pc", StatFunctions.pc, StatFunctions.schema_d)
+        self.__spark.udf.register("lr", StatFunctions.lr, StatFunctions.schema_r)
 
     def get_spark_session(self) -> Optional[SparkSession]:
         """Returns the spark session"""
@@ -106,6 +107,7 @@ class SparkController:
 
     def print_db_statistics(self) -> None:
         self.__dbs.print_statistics()
+
 
     # TODO: Does (or should) the user interface offer access to hrc and pc functionality
     #       other than through spark SQL?

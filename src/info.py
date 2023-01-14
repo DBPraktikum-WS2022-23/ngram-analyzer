@@ -1,9 +1,10 @@
 """ Module for creating statistics and plots"""
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import matplotlib.pyplot as plt  # type: ignore
 import numpy
+from scipy.stats import linregress
 from pyspark.sql import DataFrame, Row, SparkSession
 from pyspark.sql import functions as f
 from pyspark.sql.types import (
@@ -173,6 +174,18 @@ class StatFunctions:
         ]
     )
 
+    """ Returns type for calculations of a linear regression given a time series """
+    schema_r = StructType(
+        [
+            StructField("type", StringType(), False),
+            StructField("slope", FloatType(), False),
+            StructField("intercept", FloatType(), False),
+            StructField("r_value", FloatType(), False),
+            StructField("p_value", FloatType(), False),
+            StructField("std_err", FloatType(), False),
+        ]
+    )
+
     @staticmethod
     def _rm_direction(rel_change: float) -> float:
         return rel_change if rel_change >= 0 else abs(1 / rel_change)
@@ -279,4 +292,29 @@ class StatFunctions:
         if not type_2:
             type_2 = ""
 
+
+        print(type(word_1), type(word_2), type(type_1), type(type_2), type(start_year), type(end_year), type(pearson_corr))
         return word_1, type_1, word_2, type_2, start_year, end_year, pearson_corr
+
+    def lr(self, *f_tuple) -> Tuple[str, float, float, float, float, float]:
+        """Returns the linear regression coefficient of a time series."""
+        # remove data type from tuple
+        tp = f_tuple[0]
+        f_tuple = f_tuple[1:]
+
+        # F-tuple format: frq_1800, ..., frq_2000
+        # generate years from 1800 to 2000
+        years = range(1800, 2001)
+
+        # convert to numpy array
+        years = numpy.array(years)
+        freq = numpy.array(f_tuple)
+        assert len(years) == len(freq), "years and freq must have same length"
+
+        # calculate linear regression
+        result = linregress(years, freq)
+
+        return tp, float(result.slope), float(result.intercept), float(result.rvalue), float(result.pvalue), float(result.stderr)
+
+
+    # select lr(*) lr from (select * from schema_f limit 1)
