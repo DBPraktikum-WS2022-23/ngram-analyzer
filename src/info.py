@@ -223,12 +223,16 @@ class StatFunctions:
 
     @staticmethod
     def hrc(duration, word, w_type, *years):
-        """Returns the strongest relative change between any two years that duration years apart.
-        Examples: no change = 0, doubled = 1, halved -0.5"""
+        """Returns the strongest relative change between any two years that duration years apart."""
+        """Examples: no change = 0, doubled = 1, halved -0.5"""
+        """Example usage: select hrc['str_rep'] word, hrc['type'] type, hrc['start_year'] start, 
+        hrc['end_year'] end, hrc['result'] hrc from (select hrc(3, *) hrc from schema_f)"""
 
         # F-tuple format: str_rep, type, frq_1800, ..., frq_2000
         y_offset: int = 1800
         year_count: int = 201  # 1800 -> 2000: 201
+
+        # TODO: remove debugging code before submission
         debug = False
 
         hrc_result = 0.0
@@ -257,8 +261,8 @@ class StatFunctions:
                 hrc_result
             ):
                 hrc_result = change
-                result_start_year = y_offset + start
-                result_end_year = y_offset + end
+                result_start_year = year + y_offset
+                result_end_year = year + duration + y_offset
 
             if debug and year < 13:
                 print(f"{y_offset + year} to {y_offset + year + duration}: {change}")
@@ -273,10 +277,16 @@ class StatFunctions:
     def pc(start_year, end_year, *fxf_tuple):
         """Returns the Pearson correlation coefficient of two time series
         (limited to the time period of [start year, end year])."""
+        """Example usage: select pc['str_rep_1'] word_1, pc['type_1'] type_1, 
+        pc['str_rep_2'] word_2, pc['type_2'] type_2, pc['start_year'] start, pc['end_year'] end, 
+        pc['result'] pearson_corr from (select pc(1990, 2000, *) pc 
+        from schema_f a cross join schema_f b where a.str_rep != b.str_rep)"""
 
         # FxF format: w1, t1, frq1_1800, ..., frq1_2000, w2, t2, frq2_1800, ..., frq2_2000
         y_offset: int = 1800
         year_count: int = 201  # 1800 -> 2000: 201
+
+        # TODO: remove debugging code before submission
         debug = False
 
         start_year: int = int(start_year)
@@ -302,6 +312,9 @@ class StatFunctions:
         freq_1 = freq_1[start_index:end_index]
         freq_2 = freq_2[start_index:end_index]
 
+        # TODO: handle case where pc does not exist, e.g. all entries of one interval are 0
+        #       Also if all entries are 1 it might cause division by zero due to pc formular
+
         # pearson correlation coefficient in second entry in first row in matrix from numpy
         pearson_corr: float = float(numpy.corrcoef(freq_1, freq_2)[0][1])
 
@@ -323,8 +336,9 @@ class StatFunctions:
         if not type_2:
             type_2 = ""
 
+        if debug:
+            print(type(word_1), type(word_2), type(type_1), type(type_2), type(start_year), type(end_year), type(pearson_corr))
 
-        print(type(word_1), type(word_2), type(type_1), type(type_2), type(start_year), type(end_year), type(pearson_corr))
         return word_1, type_1, word_2, type_2, start_year, end_year, pearson_corr
 
     @staticmethod
