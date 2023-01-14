@@ -298,6 +298,8 @@ class StatFunctions:
 
     def lr(self, *f_tuple) -> Tuple[str, float, float, float, float, float]:
         """Returns the linear regression coefficient of a time series."""
+        """ Example usage: select lr(*) lr from (select * from schema_f limit 1)"""
+
         # remove data type from tuple
         tp = f_tuple[0]
         f_tuple = f_tuple[1:]
