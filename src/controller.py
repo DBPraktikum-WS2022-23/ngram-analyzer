@@ -38,13 +38,12 @@ class SparkController:
             self.__spark, self.__db_url, self.__properties
         )
 
-        self.__functions: Optional[StatFunctions] = StatFunctions(
-            self.__spark, self.__db_url, self.__properties
-        )
-
         # TODO: this should not be necessary with @udf notation
         self.__spark.udf.register("hrc", StatFunctions.hrc, StatFunctions.schema_s)
         self.__spark.udf.register("pc", StatFunctions.pc, StatFunctions.schema_d)
+        self.__spark.udf.register("sf", StatFunctions.stat_feature, StatFunctions.schema_sf)
+        self.__spark.udf.register("sfp", StatFunctions.stat_feature_pairs, StatFunctions.schema_sfp)
+
 
     def get_spark_session(self) -> Optional[SparkSession]:
         """Returns the spark session"""

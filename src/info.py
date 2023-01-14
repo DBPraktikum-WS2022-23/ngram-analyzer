@@ -1,6 +1,6 @@
 """ Module for creating statistics and plots"""
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import matplotlib.pyplot as plt  # type: ignore
 import numpy
@@ -35,9 +35,9 @@ class DatabaseToSparkDF:
             self.__db_url, "occurence", properties=self.__properties
         )
 
-        year = []
+        years = []
         for i in range(1800, 2001, 1):
-            year.append(i)
+            years.append(i)
 
         self.df_schema_f = (
             self.df_occurence.select("id", "year", "freq")
@@ -182,6 +182,30 @@ class StatFunctions:
         ]
     )
 
+    schema_sf = StructType(
+        [
+            StructField("mean", FloatType(), False),
+            StructField("median", FloatType(), False),
+            StructField("var", FloatType(), False),
+            StructField("min", FloatType(), False),
+            StructField("max", FloatType(), False),
+            StructField("q_25", FloatType(), False),
+            StructField("q_75", FloatType(), False),
+            StructField("hrc", FloatType(), False),
+        ]
+    )
+
+    schema_sfp = StructType(
+        [
+            StructField("hrc_year", IntegerType(), False),
+            StructField("hrc_max", FloatType(), False),
+            StructField("cov", FloatType(), False),
+            StructField("spearman_corr", FloatType(), False),
+            StructField("pearson_corr", FloatType(), False),
+        ]
+    )
+
+
     @staticmethod
     def hrc(duration, word, w_type, *years):
         """Returns the strongest relative change between any two years that duration years apart."""
@@ -256,63 +280,45 @@ class StatFunctions:
 
         return str_rep_1, type_1, str_rep_2, type_2, start_year, end_year, pearson_corr
 
-    def stat_feature(*f) -> Dict[str, float]:
+    @staticmethod
+    def stat_feature(word, type, *f_tuple) -> Tuple[float, float, float, float, float, float, float, float]:
         """Returns a dictionary of statistical features for a given schema f."""
 
         # F format: str_rep, type, frq_1800, ..., frq_2000
 
-        # split input tuple
-        str_rep = f[0]
-        type = f[1]
-        freq = f[2:]
+        f_int_list = [int(i) for i in f_tuple]
+        f_array = numpy.asarray(f_int_list)
 
         # calculate statistical features
-        mean = numpy.mean(freq)
-        median = numpy.median(freq)
-        q_25 = numpy.percentile(freq, 25)
-        q_75 = numpy.percentile(freq, 75)
-        var = numpy.var(freq)
-        min = numpy.min(freq)
-        max = numpy.max(freq)
-        hrc = StatFunctions.hrc(1, str_rep, type, *freq)[-1]
+        mean = numpy.mean(f_array).item()
+        median = numpy.median(f_array).item()
+        q_25 = numpy.percentile(f_array, 25).item()
+        q_75 = numpy.percentile(f_array, 75).item()
+        var = numpy.var(f_array).item()
+        min = numpy.min(f_array).item()
+        max = numpy.max(f_array).item()
+        hrc = 0.0  # StatFunctions.hrc(1, word, type, f_tuple)[-1]
 
-        # create dictionary of statistical features
-        stat_features = {
-            "mean": mean,
-            "median": median,
-            "var": var,
-            "min": min,
-            "max": max,
-            "q_25": q_25,
-            "q_75": q_75,
-            "hrc": hrc
-        }
+        return mean, median, var, min, max, q_25, q_75, hrc
 
-        return stat_features
-
-    def stat_feature_pairs(*fxf) -> Dict[str, float]:
+    @staticmethod
+    def stat_feature_pairs(*fxf_tuple):
         """Returns a dictionary of statistical features for a given schema fxf."""
 
         # FxF format: w1, t1, frq1_1800, ..., frq1_2000, w2, t2, frq2_1800, ..., frq2_2000
 
         # split input tuple
-        freq1 = fxf[2:203]
-        freq2 = fxf[205:]
+        freq1 = fxf_tuple[2:203]
+        freq2 = fxf_tuple[205:]
 
         # calculate statistical features
+        numpy.seterr(divide='ignore', invalid='ignore')
         hrc_l = numpy.divide(numpy.subtract(freq2, freq1), freq1)
-        hrc_year = numpy.argmax(hrc_l) + 1800
-        hrc_max = numpy.max(hrc_l)
-        cov = numpy.cov(freq1, freq2)[0][1]
-        spearman_corr = cov / (numpy.std(freq1) * numpy.std(freq2))
+        hrc_l = numpy.nan_to_num(numpy.absolute(hrc_l), nan=0.0, posinf=0.0, neginf=0.0)
+        hrc_year = numpy.argmax(hrc_l).item() + 1800
+        hrc_max = numpy.max(hrc_l).item()
+        cov = numpy.cov(freq1, freq2)[0][1].item()
+        pearson_corr = 0.0 # StatFunctions.pc(1800, 2000, *fxf_tuple)[-1]
+        spearman_corr = cov / (numpy.std(freq1).item() * numpy.std(freq2).item())
 
-        # create dictionary of statistical features
-        stat_features = {
-            "hrc_year": hrc_year,
-            "hrc_max": hrc_max,
-            "cov": cov,
-            "spearman_corr": spearman_corr,
-            "pearson_corr": StatFunctions.pc(1800, 2000, *fxf)[-1]
-        }
-
-        return stat_features
+        return  hrc_year, hrc_max, cov, spearman_corr, pearson_corr
