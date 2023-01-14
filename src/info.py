@@ -229,6 +229,8 @@ class StatFunctions:
         # F-tuple format: str_rep, type, frq_1800, ..., frq_2000
         y_offset: int = 1800
         year_count: int = 201  # 1800 -> 2000: 201
+
+        # TODO: remove debugging code before submission
         debug = False
 
         hrc_result = 0.0
@@ -257,8 +259,8 @@ class StatFunctions:
                 hrc_result
             ):
                 hrc_result = change
-                result_start_year = y_offset + start
-                result_end_year = y_offset + end
+                result_start_year = year + y_offset
+                result_end_year = year + duration + y_offset
 
             if debug and year < 13:
                 print(f"{y_offset + year} to {y_offset + year + duration}: {change}")
