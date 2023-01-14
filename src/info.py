@@ -223,8 +223,10 @@ class StatFunctions:
 
     @staticmethod
     def hrc(duration, word, w_type, *years):
-        """Returns the strongest relative change between any two years that duration years apart.
-        Examples: no change = 0, doubled = 1, halved -0.5"""
+        """Returns the strongest relative change between any two years that duration years apart."""
+        """Examples: no change = 0, doubled = 1, halved -0.5"""
+        """Example usage: select hrc['str_rep'] word, hrc['type'] type, hrc['start_year'] start, 
+        hrc['end_year'] end, hrc['result'] hrc from (select hrc(3, *) hrc from schema_f)"""
 
         # F-tuple format: str_rep, type, frq_1800, ..., frq_2000
         y_offset: int = 1800
@@ -275,6 +277,10 @@ class StatFunctions:
     def pc(start_year, end_year, *fxf_tuple):
         """Returns the Pearson correlation coefficient of two time series
         (limited to the time period of [start year, end year])."""
+        """Example usage: select pc['str_rep_1'] word_1, pc['type_1'] type_1, 
+        pc['str_rep_2'] word_2, pc['type_2'] type_2, pc['start_year'] start, pc['end_year'] end, 
+        pc['result'] pearson_corr from (select pc(1990, 2000, *) pc 
+        from schema_f a cross join schema_f b where a.str_rep != b.str_rep)"""
 
         # FxF format: w1, t1, frq1_1800, ..., frq1_2000, w2, t2, frq2_1800, ..., frq2_2000
         y_offset: int = 1800
