@@ -35,6 +35,16 @@ The following commands are available within the ngram_analyzer shell:
       select pc['str_rep_1'] word_1, pc['type_1'] type_1, pc['str_rep_2'] word_2, pc['type_2'] type_2, pc['start_year'] start, pc['end_year'] end, pc['result'] pearson_corr from (select pc(1990, 2000, *) pc from schema_f a cross join schema_f b where a.str_rep != b.str_rep)
       ```
       - Calculates the Pearson correlation coefficient of two time series (limited to the time period of [start year, end year])
+    - Statistical features for time series
+      ```sql
+      select sf.str_rep, sf.type, sf.mean, sf.median, sf.q_25, sf.q_75, sf.var, sf.min, sf.max, sf.hrc from (select sf(*) sf from schema_f)
+      ```
+      - Calculates statistical features for time series from schema f
+    - Relations between pairs of time series
+      ```sql
+      select rel.str_rep1, rel.type1, rel.str_rep2, rel.type2, rel.hrc_year, rel.hrc_max, rel.cov, rel.spearman_corr, rel.pearson_corr from (select rel(*) rel from schema_f a cross join schema_f b where a.str_rep != b.str_rep)
+      ```
+      - Calculates the relations between pairs of time series from schema fxf
     - linear regression for a given time series: `select lr(*) lr from (select * from schema_f limit 1)`
       - Calculates the linear regression for a given time series from schema f
 - ```plot_word_frequencies``` plotting frequency of words against each other for a set of years
