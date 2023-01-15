@@ -182,8 +182,11 @@ class StatFunctions:
         ]
     )
 
+    """Return type for calculations of statistical features of a word."""
     schema_sf = StructType(
         [
+            StructField("str_rep", StringType(), False),
+            StructField("type", StringType(), False),
             StructField("mean", FloatType(), False),
             StructField("median", FloatType(), False),
             StructField("var", FloatType(), False),
@@ -195,8 +198,13 @@ class StatFunctions:
         ]
     )
 
-    schema_sfp = StructType(
+    """Return type for calculations of relations between two words."""
+    schema_rel = StructType(
         [
+            StructField("str_rep1", StringType(), False),
+            StructField("type1", StringType(), False),
+            StructField("str_rep2", StringType(), False),
+            StructField("type2", StringType(), False),
             StructField("hrc_year", IntegerType(), False),
             StructField("hrc_max", FloatType(), False),
             StructField("cov", FloatType(), False),
@@ -342,12 +350,20 @@ class StatFunctions:
         return word_1, type_1, word_2, type_2, start_year, end_year, pearson_corr
 
     @staticmethod
-    def stat_feature(word, type, *f_tuple) -> Tuple[float, float, float, float, float, float, float, float]:
-        """Returns a dictionary of statistical features for a given schema f."""
+    def stat_feature(str_rep, type, *years):
+        """Returns statistical features from schema f."""
+        """
+        Example usage: 
+        select sf.str_rep, sf.type, sf.mean, sf.median, sf.q_25, sf.q_75, sf.var, sf.min, sf.max, sf.hrc 
+        from (select sf(*) sf from schema_f)
+        """
 
         # F format: str_rep, type, frq_1800, ..., frq_2000
 
-        f_int_list = [int(i) for i in f_tuple]
+        if not type:
+            type = ""
+
+        f_int_list = [int(i) for i in years]
         f_array = numpy.asarray(f_int_list)
 
         # calculate statistical features
@@ -358,31 +374,49 @@ class StatFunctions:
         var = numpy.var(f_array).item()
         min = numpy.min(f_array).item()
         max = numpy.max(f_array).item()
-        hrc = 0.0  # StatFunctions.hrc(1, word, type, f_tuple)[-1]
+        hrc = StatFunctions.hrc(1, str_rep, type, *years)[-1]
 
-        return mean, median, var, min, max, q_25, q_75, hrc
+        return str_rep, type, mean, median, var, min, max, q_25, q_75, hrc
 
     @staticmethod
-    def stat_feature_pairs(*fxf_tuple):
-        """Returns a dictionary of statistical features for a given schema fxf."""
+    def relations(*fxf_tuple):
+        """Returns relations between time series from schema fxf."""
+        """
+        Example usage: 
+        select rel.str_rep1, rel.type1, rel.str_rep2, rel.type2, rel.hrc_year, 
+        rel.hrc_max, rel.cov, rel.spearman_corr, rel.pearson_corr
+        from (
+            select rel(*) rel 
+            from schema_f a cross join schema_f b where a.str_rep != b.str_rep
+        )
+        """
 
         # FxF format: w1, t1, frq1_1800, ..., frq1_2000, w2, t2, frq2_1800, ..., frq2_2000
 
         # split input tuple
+        str_rep1 = fxf_tuple[0]
+        type1 = fxf_tuple[1]
         freq1 = fxf_tuple[2:203]
+        str_rep2 = fxf_tuple[203]
+        type2 = fxf_tuple[204]
         freq2 = fxf_tuple[205:]
 
-        # calculate statistical features
+        if not type1:
+            type1 = ""
+        if not type2:
+            type2 = ""
+
+        # calculate 
         numpy.seterr(divide='ignore', invalid='ignore')
         hrc_l = numpy.divide(numpy.subtract(freq2, freq1), freq1)
         hrc_l = numpy.nan_to_num(numpy.absolute(hrc_l), nan=0.0, posinf=0.0, neginf=0.0)
         hrc_year = numpy.argmax(hrc_l).item() + 1800
         hrc_max = numpy.max(hrc_l).item()
         cov = numpy.cov(freq1, freq2)[0][1].item()
-        pearson_corr = 0.0 # StatFunctions.pc(1800, 2000, *fxf_tuple)[-1]
+        pearson_corr = StatFunctions.pc(1800, 2000, *fxf_tuple)[-1]
         spearman_corr = cov / (numpy.std(freq1).item() * numpy.std(freq2).item())
 
-        return  hrc_year, hrc_max, cov, spearman_corr, pearson_corr
+        return  str_rep1, type1, str_rep2, type2, hrc_year, hrc_max, cov, spearman_corr, pearson_corr
 
     def lr(self, *f_tuple) -> Tuple[str, float, float, float, float, float]:
         """Returns the linear regression coefficient of a time series."""
