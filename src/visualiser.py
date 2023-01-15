@@ -31,6 +31,7 @@ class Visualiser:
         fig.subplots_adjust(left=leftmargin / figwidth, right=1 - rightmargin / figwidth,
                             top=0.94, bottom=0.1)
         ax = fig.add_subplot(111)
+        ax.boxplot(data, labels=words, positions=np.arrange(n))
         ax.set_xlim(-0.5, n - 0.5)
         ax.boxplot(data, labels=words, positions=np.arange(n))
 
@@ -41,19 +42,34 @@ class Visualiser:
         plt.savefig(plt_name, bbox_inches='tight', dpi=100)
         print(f"Saved {plt_name} to output directory")
 
-    def plot_scatter_all(self, df: DataFrame, start_year: int, end_year: int) -> None:
-        """Plot the frequency as scatter of all words in certain years and the regression line of each word"""
+    def plot_scatter_all(self, df: DataFrame, scaling_factors: List[int] = [],\
+                         with_regression_line: bool = False) -> None:
+        """Plot the frequency as scatter of all words in certain years
+        and the regression line of each word"""
 
-        # TODO: group the data and set colors
-        years = list(range(start_year, end_year))
-        data = df.rdd.map(lambda row: sf.get_freqs(row, start_year, end_year)).collect()
-        slopes = df.rdd.map(lambda row: sf.lr(*row)[1]).collect()
-        intercepts = df.rdd.map(lambda row: sf.lr(*row)[2]).collect()
-        x_seq = np.linspace(start_year, end_year, num=1000)
+        years = list(range(1800, 2001))
+        data = df.rdd.map(lambda row: sf.get_freqs(row, 1800, 2000)).collect()
+        words = df.rdd.map(lambda row: row['str_rep'] + '_' + row['type']).collect()
+        slopes, intercepts, x_seq = [], [], []
 
+        # set all factors to 1 if none are given.
+        if not scaling_factors:
+            scaling_factors = [1] * len(data)
+
+        # calculate linear regression if required
+        if with_regression_line:
+            slopes = df.rdd.map(lambda row: sf.lr(*row)[1]).collect()
+            intercepts = df.rdd.map(lambda row: sf.lr(*row)[2]).collect()
+            x_seq = np.linspace(1800, 2000, num=1000)
+
+        # plot each row
+        fig, ax = plt.subplots()
         for i in range(len(data)):
-            plt.scatter(years, data[i])
-            plt.plot(x_seq, intercepts[i] + slopes[i] * x_seq)
+            ax.scatter(years, data[i] * scaling_factors[i], label=words[i])
+            if with_regression_line:
+                ax.plot(x_seq, intercepts[i] + slopes[i] * x_seq)
+        ax.legend()
+        plt.show()
 
         # check if the directory output already exists, if not, create it
         if not os.path.exists("output"):
