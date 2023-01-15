@@ -39,8 +39,6 @@ class SparkController:
             self.__spark, self.__db_url, self.__properties
         )
 
-        self.__functions: Optional[StatFunctions] = StatFunctions()
-
         self.__visualiser: Visualiser = Visualiser()
 
         # TODO: this should not be necessary with @udf notation
@@ -205,5 +203,5 @@ class SparkController:
                 .sum("freq")
                 .na.fill(0)
             )
+            # draws no regression line, has no scaling
             self.__visualiser.plot_scatter_all(schema_f_df)
-
