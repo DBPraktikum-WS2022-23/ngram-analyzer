@@ -98,7 +98,9 @@ class Prompt(Cmd):
                 print("Invalid query.")
 
     def do_plot_kde(self, arg):
-        self.spark_controller.plot_kde()
+        word: str = input("Please enter word:")
+        bandwidth_str: str = input("Please enter bandwidth:")
+        self.spark_controller.plot_kde(word, float(bandwidth_str))
 
     def do_plot_boxplot(self, arg):
         self.spark_controller.plot_box()

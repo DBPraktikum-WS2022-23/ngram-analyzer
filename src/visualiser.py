@@ -15,38 +15,41 @@ class Visualiser:
         pass
 
     def plot_boxplot_all(self, df: DataFrame, start_year: int, end_year: int) -> None:
+        """Boxplot of all words in certain years"""
 
-        # TODO: limit the rows of dataframe because the size figure is limited
+        # get data of boxplot
         words = df.rdd.map(lambda row: row['str_rep']).collect()
         data = df.rdd.map(lambda row: sf.get_freqs(row, start_year, end_year)).collect()
 
+        # set size of the figure
         leftmargin = 0.5  # inches
         rightmargin = 0.3  # inches
         categorysize = 1  # inches
         n = len(data)
         figwidth = leftmargin + rightmargin + (n + 1) * categorysize
-
-        fig = plt.figure(figsize=(figwidth, 4))
+        fig = plt.figure(figsize=(figwidth, figwidth * 0.75))
         fig.subplots_adjust(left=leftmargin / figwidth, right=1 - rightmargin / figwidth,
                             top=0.94, bottom=0.1)
         ax = fig.add_subplot(111)
-        ax.boxplot(data, labels=words, positions=np.arange(n))
         ax.set_xlim(-0.5, n - 0.5)
+        ax.boxplot(data, labels=words, positions=np.arange(n))
+
+        # save to output
         if not os.path.exists("output"):
             os.mkdir("output")
         plt_name: str = f"output/boxplot.png"
         plt.savefig(plt_name, bbox_inches='tight', dpi=100)
         print(f"Saved {plt_name} to output directory")
-        pass
 
-    def plot_scatter_all(self, df: DataFrame) -> None:
+    def plot_scatter_all(self, df: DataFrame, start_year: int, end_year: int) -> None:
         """Plot the frequency as scatter of all words in certain years and the regression line of each word"""
 
-        years = list(range(1800, 2000))
-        data = df.rdd.map(lambda row: sf.get_freqs(row, 1800, 2000)).collect()
+        # TODO: group the data and set colors
+        years = list(range(start_year, end_year))
+        data = df.rdd.map(lambda row: sf.get_freqs(row, start_year, end_year)).collect()
         slopes = df.rdd.map(lambda row: sf.lr(*row)[1]).collect()
         intercepts = df.rdd.map(lambda row: sf.lr(*row)[2]).collect()
-        x_seq = np.linspace(1800, 2000, num=1000)
+        x_seq = np.linspace(start_year, end_year, num=1000)
 
         for i in range(len(data)):
             plt.scatter(years, data[i])
@@ -59,18 +62,22 @@ class Visualiser:
         plt.savefig(plt_name)
         print(f"Saved {plt_name} to output directory")
 
-    def plot_kde(self) -> None:
+    def plot_kde(self, df: DataFrame, start_year: int, end_year: int, word: str, bandwidth: float) -> None:
         """Plot the Kernel Density Estimation with Gauss-Kernel of a word"""
 
-        # TODO: these are inputs from info.py
-        bandwidth: float = 0.25
         word: str = "Aekerund"
-        years = [1832, 1854, 1863, 1868, 1887, 1888, 1890]
-        freqs = [1, 1, 1, 1, 3, 2, 1]
+        bandwidth: float = 0.25
 
-        # TODO: set axis and legend
+        years = list(range(start_year, end_year))
+        temp = df.rdd.map(lambda row: sf.get_freqs(row, start_year, end_year) if row['str_rep'] == word else None)\
+            .collect()
+        freqs = None
+        for item in temp:
+            if item != None:
+                freqs = item
+
         _, axis = plt.subplots()
-        axis.set_title("Kernel Density Estimation with Gauss-Kernel")
+        axis.set_title(f"Kernel Density Estimation of \"{word}\" with Gauss-Kernel")
         axis.set_xlabel("year")
         axis.set_ylabel("density")
 
@@ -82,13 +89,9 @@ class Visualiser:
         kde.set_bandwidth(bw_method=kde.factor * bandwidth)
         plt.hist(data, density=True)
         plt.plot(xs, kde(xs))
-        plt.show()
-
-        axis.legend()
-        plt.show()
 
         if not os.path.exists("output"):
             os.mkdir("output")
-        plt_name: str = f"output/kde_plot_{word}.png"
+        plt_name: str = f"output/kde_plot_{word}_{bandwidth}.png"
         plt.savefig(plt_name)
         print(f"Saved {plt_name} to output directory")
