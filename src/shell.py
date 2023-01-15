@@ -103,6 +103,9 @@ class Prompt(Cmd):
     def do_plot_boxplot(self, arg):
         self.spark_controller.plot_box()
 
+    def do_plot_scatter(self, arg):
+        self.spark_controller.plot_scatter()
+
     def do_exit(self, arg):
         """Leave shell"""
         return True

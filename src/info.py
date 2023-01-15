@@ -384,13 +384,15 @@ class StatFunctions:
 
         return  hrc_year, hrc_max, cov, spearman_corr, pearson_corr
 
-    def lr(self, *f_tuple) -> Tuple[str, float, float, float, float, float]:
+    @staticmethod
+    def lr(*f_tuple) -> Tuple[str, float, float, float, float, float]:
         """Returns the linear regression coefficient of a time series."""
         """ Example usage: select lr(*) lr from (select * from schema_f limit 1)"""
-
         # remove data type from tuple
         tp = f_tuple[0]
-        f_tuple = f_tuple[1:]
+        if tp is None:
+            tp = 'None'
+        f_tuple = f_tuple[2:]
 
         # F-tuple format: frq_1800, ..., frq_2000
         # generate years from 1800 to 2000
@@ -404,7 +406,13 @@ class StatFunctions:
         # calculate linear regression
         result = linregress(years, freq)
 
-        return tp, float(result.slope), float(result.intercept), float(result.rvalue), float(result.pvalue), float(result.stderr)
+        return tp, float(result.slope), float(result.intercept), float(result.rvalue), \
+            float(result.pvalue), float(result.stderr)
 
-
+    @staticmethod
+    def get_freqs(row, start_year: int, end_year: int) -> List[int]:
+        freqs = []
+        for year in range(start_year, end_year):
+            freqs.append(row[year - start_year + 2])
+        return freqs
     # select lr(*) lr from (select * from schema_f limit 1)
