@@ -11,7 +11,9 @@ from src.info import DatabaseToSparkDF
 class Visualiser:
     """Module for visualise statistics"""
 
-    def __init__(self):
+    def __init__(
+        self, spark: SparkSession, db_url: str, properties: Dict[str, str]
+    ) -> None:
         pass
 
     def plot_boxplot_all(self) -> None:

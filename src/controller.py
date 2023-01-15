@@ -39,9 +39,13 @@ class SparkController:
             self.__spark, self.__db_url, self.__properties
         )
 
-        self.__functions: Optional[StatFunctions] = StatFunctions()
+        self.__functions: Optional[StatFunctions] = StatFunctions(
+            self.__spark, self.__db_url, self.__properties
+        )
 
-        self.__visualiser: Visualiser = Visualiser()
+        self.__visualiser: Visualiser = Visualiser(
+            self.__spark, self.__db_url, self.__properties
+        )
 
         # TODO: this should not be necessary with @udf notation
         self.__spark.udf.register("hrc", StatFunctions.hrc, StatFunctions.schema_s)

@@ -155,7 +155,7 @@ class WordFrequencies:
 
 
 class StatFunctions:
-    def __init__(self) -> None:
+    def __init__() -> None:
         pass
 
     """Return type for calculations on time interval of one word."""
