@@ -37,7 +37,7 @@ class Cli:
             prog="main.py",
             description="A program to store ngrams in a database and analyse "
             "them. To start interactive shell call program without parameters",
-            epilog="Text at the bottom of help",
+            epilog="Enjoy using our program!",
         )
 
         psr.add_argument(
@@ -50,9 +50,10 @@ class Cli:
         psr.add_argument(
             "-t",
             "--transfer",
-            metavar="PATH",
-            help="Reads raw data from supplied file or folder and imports it into"
-            " database, directories are processed recursively.",
+            action="store_true",
+            help="Reads raw data from supplied file or folder via --defefault_path "
+            "or from the default path (found in user configuration) "
+            "and imports it into database, directories are processed recursively.",
         )
 
         psr.add_argument(
@@ -67,6 +68,13 @@ class Cli:
             "--config_path",
             metavar="PATH",
             help="Path to the config file",
+        )
+
+        psr.add_argument(
+            "-dp",
+            "--data_path",
+            metavar="PATH",
+            help="Path to the data folder",
         )
 
         psr.add_argument(
@@ -113,12 +121,15 @@ class Cli:
                     args["config_path"]
                 ).get_conn_settings()
             else:
-                conn_settings: dict[str, str] = ConfigCreator(
+                config_path = ConfigCreator(
                     args["username"], args["password"], args["dbname"]
-                ).generate_new_conn_settings()
+                ).generate_new_config()
+                conn_settings = ConfigConverter(
+                    config_path
+                ).get_conn_settings()
             NgramDBBuilder(conn_settings).create_ngram_db()  # create database
 
-        if args["transfer"] is not None:
+        if args["transfer"]:
             if (
                 args["username"] is None
                 or args["password"] is None
@@ -129,10 +140,33 @@ class Cli:
                     "Please rerun the program providing a user, a password and a dbname"
                     " or a config file"
                 )
-            path = os.path.abspath(args["transfer"])
 
-            if not os.path.exists(path):
-                self.__exit_error(f"path '{path}' does not exist")
+            # use SparkController to transfer files
+            if args["config_path"] is not None:
+                converter = ConfigConverter(
+                    args["config_path"]
+                )             
+            else:
+                config_path = ConfigCreator(
+                    args["username"], args["password"], args["dbname"]
+                ).generate_new_config()
+                converter = ConfigConverter(config_path)
+
+            conn_settings = converter.get_conn_settings()
+            default_path = converter.get_data_path()   
+
+            # no path has been given so use the default path from the sample configuration
+            if args["data_path"] is not None:
+                path = os.path.abspath(args["data_path"])
+                if not os.path.exists(path):
+                    self.__exit_error(f"data path '{path}' does not exist")
+            else:
+                path = default_path
+
+            # check if db with db_name exists (necessary because a new configuration can be generated above)
+            db_builder = NgramDBBuilder(conn_settings)
+            if not db_builder.exists_db():
+                self.__exit_error(f"Database {args['dbname']} does not exist. Please use the --db_create option")
 
             data_files = []  # list of files to process
 
@@ -144,18 +178,6 @@ class Cli:
                     for file in files:
                         data_files.append(os.path.join(cur_path, file))
 
-            # use SparkController to transfer files
-            if args["config_path"] is not None:
-                # TODO: duplicate code, reading config in create_db and transfer
-                conn_settings = ConfigConverter(
-                    args["config_path"]
-                ).get_conn_settings()
-            else:
-                conn_settings: dict[str, str] = ConfigCreator(
-                    args["username"], args["password"], args["dbname"]
-                ).generate_new_conn_settings()
-
-            # TODO: check if db exists here
             spark_controller: SparkController = SparkController(conn_settings)
             spark_controller.transfer(data_files)
 

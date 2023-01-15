@@ -5,6 +5,7 @@ from typing import List
 
 from src.config_converter import ConfigConverter
 from src.controller import SparkController
+from src.database_creation import NgramDBBuilder
 
 
 class Prompt(Cmd):
@@ -38,8 +39,15 @@ class Prompt(Cmd):
             self.__config_dir + "/" + os.listdir(self.__config_dir)[choice]
         )
         # TODO: check if db exists here
+        conn_settings = config.get_conn_settings()
+
+        db_builder = NgramDBBuilder(conn_settings)
+        if not db_builder.exists_db():
+            print("Invalid input. DB does not exist. Please use --db_create and restart shell.")
+            return
+
         self.spark_controller: SparkController = SparkController(
-            config.get_conn_settings(), log_level="OFF"
+            conn_settings, log_level="OFF"
         )
         print("Connection settings loaded.")
 
@@ -86,10 +94,14 @@ class Prompt(Cmd):
             try:
                 self.spark_controller.execute_sql(sql_query).show()
             except Exception as e:
-                print(e)  # TODO: invalid sql query
+                print(e)
+                print("Invalid query.")
 
     def do_plot_kde(self, arg):
         self.spark_controller.plot_kde()
+
+    def do_plot_boxplot(self, arg):
+        self.spark_controller.plot_box()
 
     def do_exit(self, arg):
         """Leave shell"""
