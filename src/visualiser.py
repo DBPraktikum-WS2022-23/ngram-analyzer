@@ -1,6 +1,6 @@
 import os
 from typing import Any, Dict, List
-
+from src.info import StatFunctions as sf
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 from scipy.stats import gaussian_kde
@@ -11,15 +11,14 @@ from src.info import DatabaseToSparkDF
 class Visualiser:
     """Module for visualise statistics"""
 
-
     def __init__(self):
         pass
 
     def plot_boxplot_all(self, df: DataFrame, start_year: int, end_year: int) -> None:
-        # TODO: limit the rows of dataframe because the size figure is limited
 
+        # TODO: limit the rows of dataframe because the size figure is limited
         words = df.rdd.map(lambda row: row['str_rep']).collect()
-        data = df.rdd.map(lambda row: self.get_freqs(row, start_year, end_year)).collect()
+        data = df.rdd.map(lambda row: sf.get_freqs(row, start_year, end_year)).collect()
 
         leftmargin = 0.5  # inches
         rightmargin = 0.3  # inches
@@ -40,44 +39,18 @@ class Visualiser:
         print(f"Saved {plt_name} to output directory")
         pass
 
-    @staticmethod
-    def get_freqs(row, start_year: int, end_year: int) -> List[int]:
-        freqs = []
-        for year in range(start_year, end_year):
-            freqs.append(row[year - start_year + 2])
-        return freqs
-
     def plot_scatter_all(self, df: DataFrame) -> None:
-        """Plot the frequency of all words in certain years"""
+        """Plot the frequency as scatter of all words in certain years and the regression line of each word"""
+
         years = list(range(1800, 2000))
+        data = df.rdd.map(lambda row: sf.get_freqs(row, 1800, 2000)).collect()
+        slopes = df.rdd.map(lambda row: sf.lr(*row)[1]).collect()
+        intercepts = df.rdd.map(lambda row: sf.lr(*row)[2]).collect()
+        x_seq = np.linspace(1800, 2000, num=1000)
 
-        _, axis = plt.subplots()
-        axis.set_title("Frequency of words in years")
-        axis.set_xlabel("year")
-        axis.set_xticks(range(min(years), max(years) + 1))
-        axis.set_ylabel("frequency")
-
-        for row in df.collect():
-            axis.scatter(
-                years,
-                row.select([c for c in df.columns if c in str(list(range(1800, 2000)))]).collect(),
-                label=row.select("str_rep", "type").collect(),
-            )
-            # TODO: Regression, get a, b from Aufgabe 1
-            # TODO: How to differ the plots from different 1-Gramm
-            """# Fit linear regression via least squares with numpy.polyfit
-            # It returns an slope (b) and intercept (a)
-            # deg=1 means linear fit (i.e. polynomial of degree 1)
-            b, a = np.polyfit(x, y, deg=1)
-
-            # Create sequence of 100 numbers from 0 to 100 
-            xseq = np.linspace(0, 10, num=100)
-
-            # Plot regression line
-            ax.plot(xseq, a + b * xseq, color="k", lw=2.5);"""
-
-        axis.legend()
-        plt.show()
+        for i in range(len(data)):
+            plt.scatter(years, data[i])
+            plt.plot(x_seq, intercepts[i] + slopes[i] * x_seq)
 
         # check if the directory output already exists, if not, create it
         if not os.path.exists("output"):
