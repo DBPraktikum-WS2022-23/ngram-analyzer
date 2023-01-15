@@ -190,8 +190,8 @@ class StatFunctions:
             StructField("mean", FloatType(), False),
             StructField("median", FloatType(), False),
             StructField("var", FloatType(), False),
-            StructField("min", FloatType(), False),
-            StructField("max", FloatType(), False),
+            StructField("min", IntegerType(), False),
+            StructField("max", IntegerType(), False),
             StructField("q_25", FloatType(), False),
             StructField("q_75", FloatType(), False),
             StructField("hrc", FloatType(), False),
@@ -372,8 +372,8 @@ class StatFunctions:
         q_25 = numpy.percentile(f_array, 25).item()
         q_75 = numpy.percentile(f_array, 75).item()
         var = numpy.var(f_array).item()
-        min = numpy.min(f_array).item()
-        max = numpy.max(f_array).item()
+        min = numpy.amin(f_array).item()
+        max = numpy.amax(f_array).item()
         hrc = StatFunctions.hrc(1, str_rep, type, *years)[-1]
 
         return str_rep, type, mean, median, var, min, max, q_25, q_75, hrc
@@ -411,7 +411,7 @@ class StatFunctions:
         hrc_l = numpy.divide(numpy.subtract(freq2, freq1), freq1)
         hrc_l = numpy.nan_to_num(numpy.absolute(hrc_l), nan=0.0, posinf=0.0, neginf=0.0)
         hrc_year = numpy.argmax(hrc_l).item() + 1800
-        hrc_max = numpy.max(hrc_l).item()
+        hrc_max = numpy.amax(hrc_l).item()
         cov = numpy.cov(freq1, freq2)[0][1].item()
         pearson_corr = StatFunctions.pc(1800, 2000, *fxf_tuple)[-1]
         spearman_corr = cov / (numpy.std(freq1).item() * numpy.std(freq2).item())
