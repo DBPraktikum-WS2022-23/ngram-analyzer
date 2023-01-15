@@ -48,14 +48,17 @@ class Visualiser:
         words = df.rdd.map(lambda row: row['str_rep'] + '_' + row['type']).collect()
         slopes, intercepts, x_seq = [], [], []
 
+        # set all factors to 1 if none are given. 
         if not scaling_factors:
             scaling_factors = [1] * len(data)
 
+        # calculate linear regression if required
         if with_regression_line:
             slopes = df.rdd.map(lambda row: sf.lr(*row)[1]).collect()
             intercepts = df.rdd.map(lambda row: sf.lr(*row)[2]).collect()
             x_seq = np.linspace(1800, 2000, num=1000)
 
+        # plot each row 
         fig, ax = plt.subplots()
         for i in range(len(data)):
             ax.scatter(years, data[i] * scaling_factors[i], label=words[i])
@@ -63,7 +66,7 @@ class Visualiser:
                 ax.plot(x_seq, intercepts[i] + slopes[i] * x_seq)
         ax.legend()
         plt.show()
-        
+
         # check if the directory output already exists, if not, create it
         if not os.path.exists("output"):
             os.mkdir("output")
