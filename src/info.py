@@ -15,50 +15,12 @@ from pyspark.sql.types import (
     StructType,
 )
 
-
-class DatabaseToSparkDF:
-    """Module which reads data from the database into spark dataframes"""
-
-    def __init__(self, spark: SparkSession, db_url: str, properties: Dict[str, str]):
-        self.__spark = spark
-        self.__db_url = db_url
-        self.__properties = properties
-        self.__set_up()
-
-    def __set_up(self) -> None:
-        """Set up the spark session and the dataframes"""
-        self.df_word: DataFrame = self.__spark.read.jdbc(
-            self.__db_url, "word", properties=self.__properties
-        )
-
-        self.df_occurence: DataFrame = self.__spark.read.jdbc(
-            self.__db_url, "occurence", properties=self.__properties
-        )
-
-        years = []
-        for i in range(1800, 2001, 1):
-            years.append(i)
-
-        self.df_schema_f = (
-            self.df_occurence.select("id", "year", "freq")
-            .join(self.df_word, "id")
-            .select("str_rep", "type", "year", "freq")
-            .groupBy("str_rep", "type")
-            .pivot("year", years)
-            .sum("freq")
-            .na.fill(0)
-        )
-
-
 class DataBaseStatistics:
     """Module which creates statistics from the database"""
 
-    def __init__(
-        self, spark: SparkSession, db_url: str, properties: Dict[str, str]
-    ) -> None:
-        self.db2df: DatabaseToSparkDF = DatabaseToSparkDF(spark, db_url, properties)
-        self.df_word: DataFrame = self.db2df.df_word
-        self.df_occurence: DataFrame = self.db2df.df_occurence
+    def __init__(self, word_df: DataFrame, occurence_df: DataFrame) -> None:
+        self.word_df: DataFrame = word_df
+        self.occurence_df: DataFrame = occurence_df
 
     def print_statistics(self) -> None:
         """Print the info about the database"""
@@ -69,37 +31,33 @@ class DataBaseStatistics:
 
     def get_number_of_words(self) -> int:
         """Get the number of words in the database"""
-        return self.df_word.count()
+        return self.word_df.count()
 
     def get_number_of_occurences(self) -> int:
         """Get the number of occurences in the database"""
-        return self.df_occurence.count()
+        return self.occurence_df.count()
 
     def get_highest_frequency(self) -> Any:
         """Get the highest frequency of a word"""
-        return self.df_occurence.agg(f.max("freq")).collect()[0][0]
+        return self.occurence_df.agg(f.max("freq")).collect()[0][0]
 
     def get_number_of_years(self) -> int:
         """Get the number of years in the database"""
-        return self.df_occurence.select("year").distinct().count()
+        return self.occurence_df.select("year").distinct().count()
 
 
 class WordFrequencies:
     """Module for creating statistics about word frequencies"""
 
-    def __init__(
-        self, spark: SparkSession, db_url: str, properties: Dict[str, str]
-    ) -> None:
-        """Set uo Word Frequency Object"""
-        self.db2df: DatabaseToSparkDF = DatabaseToSparkDF(spark, db_url, properties)
-        self.df_word: DataFrame = self.db2df.df_word
-        self.df_occurence: DataFrame = self.db2df.df_occurence
+    def __init__(self, word_df: DataFrame, occurence_df: DataFrame) -> None:
+        self.word_df: DataFrame = word_df
+        self.occurence_df: DataFrame = occurence_df
 
     def _get_string_representations(self, words: List[str]) -> List[Row]:
         """Set up the spark session and the dataframes"""
         # create a spark dataframe with the words and years
         return (
-            self.df_word.filter(self.df_word.str_rep.isin(words))
+            self.word_df.filter(self.word_df.str_rep.isin(words))
             .select("id", "str_rep")
             .distinct()
             .collect()
@@ -119,9 +77,9 @@ class WordFrequencies:
         axis.set_ylabel("frequency")
 
         for row in string_representations:
-            dataframe: DataFrame = self.df_occurence.filter(
-                self.df_occurence.id == row.id
-            ).filter(self.df_occurence.year.isin(years))
+            dataframe: DataFrame = self.occurence_df.filter(
+                self.occurence_df.id == row.id
+            ).filter(self.occurence_df.year.isin(years))
             axis.scatter(
                 dataframe.select("year").collect(),
                 dataframe.select("freq").collect(),
@@ -147,17 +105,14 @@ class WordFrequencies:
         for row in string_representations:
             print(f"{row.str_rep}: ")
             dataframe: DataFrame = (
-                self.df_occurence.filter(self.df_occurence.id == row.id)
-                .filter(self.df_occurence.year.isin(years))
+                self.occurence_df.filter(self.occurence_df.id == row.id)
+                .filter(self.occurence_df.year.isin(years))
                 .select("year", "freq")
             )
             dataframe.show()
 
 
 class StatFunctions:
-    def __init__(self) -> None:
-        pass
-
     """Return type for calculations on time interval of one word."""
     schema_s = StructType(
         [
