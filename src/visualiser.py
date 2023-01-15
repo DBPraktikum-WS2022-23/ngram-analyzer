@@ -11,19 +11,41 @@ from src.info import DatabaseToSparkDF
 class Visualiser:
     """Module for visualise statistics"""
 
+
     def __init__(self):
         pass
 
-    def plot_boxplot_all(self) -> None:
-        word: str = "Aekerund"
-        years = [1832, 1854, 1863, 1868, 1887, 1888, 1890]
-        freqs = [1, 1, 1, 1, 3, 2, 1]
-        plt.boxplot([list(freqs)], labels=[word])
+    def plot_boxplot_all(self, df: DataFrame, start_year: int, end_year: int) -> None:
+        # TODO: limit the rows of dataframe because the size figure is limited
+
+        words = df.rdd.map(lambda row: row['str_rep']).collect()
+        data = df.rdd.map(lambda row: self.get_freqs(row, start_year, end_year)).collect()
+
+        leftmargin = 0.5  # inches
+        rightmargin = 0.3  # inches
+        categorysize = 1  # inches
+        n = len(data)
+        figwidth = leftmargin + rightmargin + (n + 1) * categorysize
+
+        fig = plt.figure(figsize=(figwidth, 4))
+        fig.subplots_adjust(left=leftmargin / figwidth, right=1 - rightmargin / figwidth,
+                            top=0.94, bottom=0.1)
+        ax = fig.add_subplot(111)
+        ax.boxplot(data, labels=words, positions=np.arange(n))
+        ax.set_xlim(-0.5, n - 0.5)
         if not os.path.exists("output"):
             os.mkdir("output")
-        plt_name: str = f"output/boxplot_{word}.png"
-        plt.savefig(plt_name)
+        plt_name: str = f"output/boxplot.png"
+        plt.savefig(plt_name, bbox_inches='tight', dpi=100)
         print(f"Saved {plt_name} to output directory")
+        pass
+
+    @staticmethod
+    def get_freqs(row, start_year: int, end_year: int) -> List[int]:
+        freqs = []
+        for year in range(start_year, end_year):
+            freqs.append(row[year - start_year + 2])
+        return freqs
 
     def plot_scatter_all(self, df: DataFrame) -> None:
         """Plot the frequency of all words in certain years"""
