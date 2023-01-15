@@ -123,4 +123,31 @@ class SparkController:
         self.__visualiser.plot_kde()
 
     def plot_box(self) -> None:
-        self.__visualiser.plot_boxplot_all()
+        # TODO: read schema_f from somewhere
+
+        if self.__spark is not None:
+            word_df = self.__spark.read.jdbc(
+                url=self.__db_url,
+                table="word",
+                properties=self.__properties,
+            )
+            occurence_df = self.__spark.read.jdbc(
+                url=self.__db_url,
+                table="occurence",
+                properties=self.__properties,
+            )
+
+            years = []
+            for i in range(1800, 2001, 1):
+                years.append(i)
+
+            schema_f_df = (
+                occurence_df.select("id", "year", "freq")
+                .join(word_df, "id")
+                .select("str_rep", "type", "year", "freq")
+                .groupBy("str_rep", "type")
+                .pivot("year", years)
+                .sum("freq")
+                .na.fill(0)
+            )
+            self.__visualiser.plot_boxplot_all(schema_f_df, 1800, 2000)
