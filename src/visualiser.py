@@ -4,14 +4,11 @@ from src.info import StatFunctions as sf
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 from scipy.stats import gaussian_kde
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, Row, SparkSession
 
 
 class Visualiser:
     """Module for visualise statistics"""
-
-    def __init__(self):
-        pass
 
     def plot_boxplot_all(self, df: DataFrame, start_year: int, end_year: int) -> None:
         """Boxplot of all words in certain years"""
