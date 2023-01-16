@@ -45,7 +45,10 @@ The following commands are available within the ngram_analyzer shell:
       select rel.str_rep1, rel.type1, rel.str_rep2, rel.type2, rel.hrc_year, rel.hrc_max, rel.cov, rel.spearman_corr, rel.pearson_corr from (select rel(*) rel from schema_f a cross join schema_f b where a.str_rep != b.str_rep)
       ```
       - Calculates the relations between pairs of time series from schema fxf
-    - linear regression for a given time series: `select lr(*) lr from (select * from schema_f limit 1)`
+    - linear regression for a given time series: 
+      ```sql
+      select lr(*) lr from (select * from schema_f limit 1)
+      ```
       - Calculates the linear regression for a given time series from schema f
 - ```plot_word_frequencies``` plotting frequency of words against each other for a set of years
 - ```print_db_statistics``` prints count for each table, highest frequency and number of years
