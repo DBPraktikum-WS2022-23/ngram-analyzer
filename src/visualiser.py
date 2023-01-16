@@ -82,7 +82,7 @@ class Visualiser:
                     if distance > max_distance[0]:
                         max_distance = (distance, [data[i][j - start_year]], [j])
                 axis.plot(x_seq, intercepts[i] + slopes[i] * x_seq)
-                axis.plot(max_distance[2], max_distance[1], marker="D")
+                axis.plot(max_distance[2], max_distance[1], marker="D", label="farthest point from " + words[i])
         axis.legend()
 
         # check if the directory output already exists, if not, create it
