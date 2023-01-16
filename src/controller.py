@@ -135,18 +135,23 @@ class SparkController:
     # def pc(self, start_year: int, end_year: int) -> DataFrame:
     #     return self.__functions.pc(start_year, end_year)
 
-    def plot_kde(self, word: str, bandwidth: float) -> None:
+    def plot_kde(self, word: str, bandwidth: float, bins: int) -> None:
+        schema_f_df = self.__get_schema_f_df()
+        self.__visualiser.plot_kde(schema_f_df, 1800, 2000, word, bandwidth, bins)
+
+    def plot_box(self, scaling_factor: float) -> None:
         schema_f_df = self.__get_schema_f_df()
 
-        self.__visualiser.plot_kde(schema_f_df, 1800, 2000, word, bandwidth)
-
-    def plot_box(self) -> None:
-        schema_f_df = self.__get_schema_f_df()
-
-        self.__visualiser.plot_boxplot_all(schema_f_df, 1800, 2000)
+        self.__visualiser.plot_boxplot_all(schema_f_df, 1800, 2000, scaling_factor)
 
     def plot_scatter(self) -> None:
         schema_f_df = self.__get_schema_f_df()
 
-        # draws no regression line, has no scaling
-        self.__visualiser.plot_scatter_all(schema_f_df)
+        # draws without regression line, scaling optional
+        self.__visualiser.plot_scatter(schema_f_df, 1800, 2000)
+
+    def plot_scatter_with_regression(self) -> None:
+        schema_f_df = self.__get_schema_f_df()
+
+        # draws with regression line, has no scaling
+        self.__visualiser.plot_scatter(schema_f_df, 1800, 2000, with_regression_line=True)
