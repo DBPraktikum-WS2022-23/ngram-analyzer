@@ -41,3 +41,7 @@ The following commands are available within the ngram_analyzer shell:
 - ```print_db_statistics``` prints count for each table, highest frequency and number of years
 - ```print_word_frequencies``` prints a table of the word frequencies in different years for different words
     - user is prompted to give the words and years
+- ```plot_scatter``` plotting the frequency as scatter of all words in certain years
+- ```plot_boxplot``` plotting boxplot of all words in certain years
+- ```plot_scatter_with_regression``` plotting the frequency as scatter of all words in certain years and the regression line of each word
+- ```plot_kde``` plotting the Kernel Density Estimation with Gauss-Kernel of a word
