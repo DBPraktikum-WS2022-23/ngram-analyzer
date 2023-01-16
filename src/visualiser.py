@@ -21,11 +21,10 @@ class Visualiser:
         n = len(data)
         size = max(6.4, n * 1.5)
         fig, axis = plt.subplots(figsize=(size, size * 0.75))
-        axis.set_title("Boxplot")
+        axis.set_title("Boxplot", size=size)
         axis.set_ylabel(f"frequency, scale={scaling_factor}")
         axis.set_xlim(-0.5, n - 0.5)
         axis.boxplot(data, labels=words, positions=np.arange(n))
-
         # save to output
         if not os.path.exists("output"):
             os.mkdir("output")
@@ -66,7 +65,7 @@ class Visualiser:
         # plot each row
         size = max(6.4, len(data))
         fig, axis = plt.subplots(figsize=(size, size * 0.75))
-        axis.set_title("Scatter plots")
+        axis.set_title("Scatter plots", size=size)
         axis.set_xlabel("year")
         axis.set_ylabel("frequency")
         for i in range(len(data)):
