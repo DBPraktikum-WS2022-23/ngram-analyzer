@@ -97,6 +97,38 @@ class Prompt(Cmd):
                 print(e)
                 print("Invalid query.")
 
+    def do_plot_scatter(self, arg):
+        """Plot the frequency as scatter of all words in certain years"""
+        self.spark_controller.plot_scatter()
+
+    def do_plot_boxplot(self, arg):
+        """Plot boxplot of all words in certain years"""
+        scaling_factor: float = 1.0
+        try:
+            scaling_factor = float(input("Please enter scaling_factor (default=1.0):"))
+        except:
+            print("Invalid input. Set to default scaling_factor = 1.0")
+        self.spark_controller.plot_box(scaling_factor)
+
+    def do_plot_scatter_with_regression(self, arg):
+        """Plot the frequency as scatter of all words in certain years and the regression line of each word"""
+        self.spark_controller.plot_scatter_with_regression()
+
+    def do_plot_kde(self, arg):
+        """Plot the Kernel Density Estimation with Gauss-Kernel of a word"""
+        word: str = input("Please enter word:")
+        bandwidth: float = 0.25
+        bins: int = 30
+        try:
+            bandwidth = float(input("Please enter bandwidth for Kernel Density Estimation (default=0.25):"))
+        except:
+            print("Invalid input. Set to default bandwidth = 0.25")
+        try:
+            bins = int(input("Please enter bins for Histogram (default=30):"))
+        except:
+            print("Invalid input. Set to default bins = 30")
+        self.spark_controller.plot_kde(word, bandwidth, bins)
+
     def do_exit(self, arg):
         """Leave shell"""
         return True

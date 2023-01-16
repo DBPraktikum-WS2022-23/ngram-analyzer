@@ -73,7 +73,7 @@ class NgramDBBuilder:
         con = self.__open_connection(dbname="postgres")
         if con is None:
             return False
-        
+
         try:
             with con.cursor() as cur:
                 cur.execute(f"CREATE DATABASE {name};")
