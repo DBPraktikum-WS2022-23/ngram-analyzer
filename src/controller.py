@@ -8,7 +8,6 @@ from pyspark.sql import DataFrame, SparkSession
 from src.info import DataBaseStatistics, StatFunctions, WordFrequencies
 from src.transfer import Transferer
 from src.visualiser import Visualiser
-from src.plugins.base_plugin import BasePlugin
 
 class DatabaseToSparkDF:
     """Module which reads data from the database into spark dataframes"""

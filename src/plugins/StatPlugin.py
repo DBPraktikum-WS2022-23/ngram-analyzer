@@ -14,13 +14,19 @@ from pyspark.sql.types import (
 
 class StatPlugin(BasePlugin):
     def __init__(self, **kwargs) -> None:
-        BasePlugin.__init__(self, **kwargs)
-        self.__spark = kwargs["spark"]
-        self.__spark.udf.register("hrc", StatFunctions.hrc, StatFunctions.schema_s)
-        self.__spark.udf.register("pc", StatFunctions.pc, StatFunctions.schema_d)
-        self.__spark.udf.register("sf", StatFunctions.stat_feature, StatFunctions.schema_sf)
-        self.__spark.udf.register("rel", StatFunctions.relations, StatFunctions.schema_rel)
-        self.__spark.udf.register("lr", StatFunctions.lr, StatFunctions.schema_r)
+        super().__init__(**kwargs)
+        # self.__spark.udf.register("hrc", StatFunctions.hrc, StatFunctions.schema_s)
+        # self.__spark.udf.register("pc", StatFunctions.pc, StatFunctions.schema_d)
+        # self.__spark.udf.register("sf", StatFunctions.stat_feature, StatFunctions.schema_sf)
+        # self.__spark.udf.register("rel", StatFunctions.relations, StatFunctions.schema_rel)
+        # self.__spark.udf.register("lr", StatFunctions.lr, StatFunctions.schema_r)
+
+    def register_udfs(self) -> None:
+        super().register_udf("hrc", StatFunctions.hrc, StatFunctions.schema_s)
+        super().register_udf("pc", StatFunctions.pc, StatFunctions.schema_d)
+        super().register_udf("sf", StatFunctions.stat_feature, StatFunctions.schema_sf)
+        super().register_udf("rel", StatFunctions.relations, StatFunctions.schema_rel)
+        super().register_udf("lr", StatFunctions.lr, StatFunctions.schema_r)
 
     @staticmethod
     def _rm_direction(rel_change: float) -> float:
