@@ -1,6 +1,5 @@
 from src.plugins.base_plugin import BasePlugin
 from typing import List, Tuple
-from src.info import StatFunctions
 
 import numpy
 from scipy.stats import linregress
@@ -22,11 +21,77 @@ class StatPlugin(BasePlugin):
         # self.__spark.udf.register("lr", StatFunctions.lr, StatFunctions.schema_r)
 
     def register_udfs(self) -> None:
-        super().register_udf("hrc", StatFunctions.hrc, StatFunctions.schema_s)
-        super().register_udf("pc", StatFunctions.pc, StatFunctions.schema_d)
-        super().register_udf("sf", StatFunctions.stat_feature, StatFunctions.schema_sf)
-        super().register_udf("rel", StatFunctions.relations, StatFunctions.schema_rel)
-        super().register_udf("lr", StatFunctions.lr, StatFunctions.schema_r)
+        super().register_udf("hrc", StatPlugin.hrc, StatPlugin.schema_s)
+        super().register_udf("pc", StatPlugin.pc, StatPlugin.schema_d)
+        super().register_udf("sf", StatPlugin.stat_feature, StatPlugin.schema_sf)
+        super().register_udf("rel", StatPlugin.relations, StatPlugin.schema_rel)
+        super().register_udf("lr", StatPlugin.lr, StatPlugin.schema_r)
+
+    schema_s = StructType(
+        [
+            StructField("str_rep", StringType(), False),
+            StructField("type", StringType(), False),
+            StructField("start_year", IntegerType(), False),
+            StructField("end_year", IntegerType(), False),
+            StructField("result", FloatType(), False),
+        ]
+    )
+
+    """Return type for calculations on time intervals of two words."""
+    schema_d = StructType(
+        [
+            StructField("str_rep_1", StringType(), False),
+            StructField("type_1", StringType(), False),
+            StructField("str_rep_2", StringType(), False),
+            StructField("type_2", StringType(), False),
+            StructField("start_year", IntegerType(), False),
+            StructField("end_year", IntegerType(), False),
+            StructField("result", FloatType(), False),
+        ]
+    )
+
+    """Return type for calculations of statistical features of a word."""
+    schema_sf = StructType(
+        [
+            StructField("str_rep", StringType(), False),
+            StructField("type", StringType(), False),
+            StructField("mean", FloatType(), False),
+            StructField("median", FloatType(), False),
+            StructField("var", FloatType(), False),
+            StructField("min", IntegerType(), False),
+            StructField("max", IntegerType(), False),
+            StructField("q_25", FloatType(), False),
+            StructField("q_75", FloatType(), False),
+            StructField("hrc", FloatType(), False),
+        ]
+    )
+
+    """Return type for calculations of relations between two words."""
+    schema_rel = StructType(
+        [
+            StructField("str_rep1", StringType(), False),
+            StructField("type1", StringType(), False),
+            StructField("str_rep2", StringType(), False),
+            StructField("type2", StringType(), False),
+            StructField("hrc_year", IntegerType(), False),
+            StructField("hrc_max", FloatType(), False),
+            StructField("cov", FloatType(), False),
+            StructField("spearman_corr", FloatType(), False),
+            StructField("pearson_corr", FloatType(), False),
+        ]
+    )
+
+    """ Returns type for calculations of a linear regression given a time series """
+    schema_r = StructType(
+        [
+            StructField("type", StringType(), False),
+            StructField("slope", FloatType(), False),
+            StructField("intercept", FloatType(), False),
+            StructField("r_value", FloatType(), False),
+            StructField("p_value", FloatType(), False),
+            StructField("std_err", FloatType(), False),
+        ]
+    )
 
     @staticmethod
     def _rm_direction(rel_change: float) -> float:

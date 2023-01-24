@@ -8,6 +8,7 @@ from pyspark.sql import DataFrame, SparkSession
 from src.info import DataBaseStatistics, StatFunctions, WordFrequencies
 from src.transfer import Transferer
 from src.visualiser import Visualiser
+from src.plugins.base_plugin import BasePlugin
 
 class DatabaseToSparkDF:
     """Module which reads data from the database into spark dataframes"""
@@ -43,20 +44,21 @@ class PluginController:
         mod_plugin_path = mod_plugin_path.replace("\\", ".")
 
 
-        discovered_plugins = [f"{mod_plugin_path}.{name}"
+        discovered_plugins: List[str] = [f"{mod_plugin_path}.{name}"
                               for _, name, _
                               in pkgutil.iter_modules(path=[plugins_path])
                               if name.endswith('Plugin')]
 
         print("Discovered plugins: ", discovered_plugins)
 
-        for plugin in discovered_plugins:
-            module = importlib.import_module(plugin)
-            getattr(module, plugin.split(".")[-1])
-            print("Successfully loaded plugin: ", plugin.split(".")[-1])
+        for plugin_path in discovered_plugins:
+            module = importlib.import_module(plugin_path)
+            current_plugin = plugin_path.split(".")[-1]
+            plugin = getattr(module, current_plugin)
+            if issubclass(plugin, BasePlugin):
+                plugin(spark=self.__spark, ).register_udfs()
+                print("Successfully loaded plugin: ", current_plugin)
 
-        #for plugin in discovered_plugins:
-        #    plugin(spark, )
 
 class SparkController:
     """Wrapper for the pyspark class"""
