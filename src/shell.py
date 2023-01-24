@@ -4,7 +4,7 @@ from cmd import Cmd
 from typing import List
 
 from src.config_converter import ConfigConverter
-from src.controller import SparkController
+from src.controller import SparkController, PluginController
 from src.database_creation import NgramDBBuilder
 
 
@@ -46,10 +46,24 @@ class Prompt(Cmd):
             print("Invalid input. DB does not exist. Please use --db_create and restart shell.")
             return
 
+        print("Successfully connected to database.")
         self.spark_controller: SparkController = SparkController(
             conn_settings, log_level="OFF"
         )
-        print("Connection settings loaded.")
+        plugins = input("Would you like to:\n"
+              "[0] Provide your own plugins\n"
+              "[1] Load avaivable ones?\n")
+
+        plugin_controller: PluginController = PluginController(self.spark_controller.get_spark_session())
+        if plugins == "0":
+            plugin_controller.register_plugins(plugins_path=input("Please enter path to plugins:"))
+        elif plugins == "1":
+            plugin_controller.register_plugins()
+        else:
+            print("Invalid input. Please restart the shell and try again.")
+            return
+
+        print("You can now use the shell.")
 
     def do_print_word_frequencies(self, arg) -> None:
         """Print the frequency of selected words for selected years."""

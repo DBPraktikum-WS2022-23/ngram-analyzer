@@ -1,12 +1,14 @@
 """ Simple controller class for pyspark """
 from typing import Dict, List, Optional
+import importlib
+import pkgutil
 
 from pyspark.sql import DataFrame, SparkSession
 
 from src.info import DataBaseStatistics, StatFunctions, WordFrequencies
 from src.transfer import Transferer
 from src.visualiser import Visualiser
-
+from src.plugins.base_plugin import BasePlugin
 
 class DatabaseToSparkDF:
     """Module which reads data from the database into spark dataframes"""
@@ -32,6 +34,30 @@ class DatabaseToSparkDF:
 
     def get_df_occurence(self) -> DataFrame:
         return self.df_occurence
+
+class PluginController:
+    def __init__(self, spark: SparkSession) -> None:
+        self.__spark = spark
+
+    def register_plugins(self, plugins_path: str = "src/plugins"):
+        mod_plugin_path = plugins_path.replace("/", ".")
+        mod_plugin_path = mod_plugin_path.replace("\\", ".")
+
+
+        discovered_plugins = [f"{mod_plugin_path}.{name}"
+                              for _, name, _
+                              in pkgutil.iter_modules(path=[plugins_path])
+                              if name.endswith('Plugin')]
+
+        print("Discovered plugins: ", discovered_plugins)
+
+        for plugin in discovered_plugins:
+            module = importlib.import_module(plugin)
+            getattr(module, plugin.split(".")[-1])
+            print("Successfully loaded plugin: ", plugin.split(".")[-1])
+
+        #for plugin in discovered_plugins:
+        #    plugin(spark, )
 
 class SparkController:
     """Wrapper for the pyspark class"""
