@@ -30,3 +30,11 @@ class MedianDistanceOD(InternalOutlierDetector):
                 outliers.append(time_series[0])
 
         return outliers
+
+
+class StaticalOD(InternalOutlierDetector):
+    def __int__(self) -> None:
+        pass
+
+    def detect_outliers(self, time_series_list: List[Tuple[int, int]]) -> List[int]:
+        pass
