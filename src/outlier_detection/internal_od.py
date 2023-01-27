@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Any, Tuple
-
+import numpy
 
 class InternalOutlierDetector(ABC):
     def __init__(self) -> None:
@@ -32,9 +32,13 @@ class MedianDistanceOD(InternalOutlierDetector):
         return outliers
 
 
-class StaticalOD(InternalOutlierDetector):
+class ZScoreOD(InternalOutlierDetector):
     def __int__(self) -> None:
         pass
 
     def detect_outliers(self, time_series_list: List[Tuple[int, int]]) -> List[int]:
+
+        std = numpy.std()
+
+
         pass
