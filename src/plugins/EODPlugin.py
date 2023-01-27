@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import List, Any, Optional, Tuple
+from typing import List
 
 from scipy.spatial import distance
+from pyspark.sql.types import StructType, StructField, ArrayType
+
+from src.plugins.base_plugin import BasePlugin
 
 class ExternalOutlierDetector(ABC):
     def __init__(self) -> None:
@@ -60,3 +63,27 @@ if __name__ == "__main__":
     #knns = lof.get_knns(ts, ts_list)
     #print(ts, '\n', ts_list, '\n', knns)
     print(ts_list, '\n', lof.detect_outliers(ts_list))
+
+class LOFPlugin(BasePlugin):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    def register_udfs(self) -> None:
+        super().register_udf("lof", self.lof, self.schema_lof)
+
+    schema_lof = StructType(
+        [
+            StructField("outlier", ArrayType(), False)
+        ]
+    )
+
+    @staticmethod
+    def lof(k: int, delta: float, *time_series) -> List[(str, str)]:
+        lofod = LOFOutlierDetector(k, delta)
+        time_series_list = []
+        index_list = []
+        for i in range (0, len(time_series), 203):
+            index_list.append((time_series[i], time_series[i + 1]))
+            time_series_list.append(list(time_series[(i + 2):(i + 203)]))
+        result = lofod.detect_outliers(time_series_list)
+        return [index_list[i] for i in result]
