@@ -15,7 +15,7 @@ class ExternalOutlierDetector(ABC):
         pass
 
 class LOFOutlierDetector(ExternalOutlierDetector):
-    def __init__(self, k: int, delta: float, data: List[List[int]]) -> None:
+    def __init__(self, k: int, delta: float) -> None:
         super().__init__()
         self.__k = k
         self.__delta = delta
@@ -59,7 +59,7 @@ class LOFOutlierDetector(ExternalOutlierDetector):
 if __name__ == "__main__":
     ts = [2,3,10,0]
     ts_list = [[2,3,1,0], [1,3,4,2], [3,4,5,0], [2,10,10,10], [3,4,5,10]]
-    lof = LOFOutlierDetector(2, 0.1, [])
+    lof = LOFOutlierDetector(2, 0.1)
     #knns = lof.get_knns(ts, ts_list)
     #print(ts, '\n', ts_list, '\n', knns)
     print(ts_list, '\n', lof.detect_outliers(ts_list))
@@ -73,18 +73,18 @@ class LOFPlugin(BasePlugin):
 
     schema_lof = StructType(
         [
-            StructField("outlier", ArrayType(IntegerType()), False)
+            StructField("outlier", ArrayType(IntegerType(), False), False)
         ]
     )
 
     @staticmethod
-    def lof(k: int, delta: float, *time_series) -> List[int]:
+    def lof(k: int, delta: float, *time_series):
         lofod = LOFOutlierDetector(k, delta)
         time_series_list = []
-        index_list = []
+        # index_list = []
 
         for i in range (0, len(time_series), 203):
             # index_list.append((time_series[i], time_series[i + 1]))
             time_series_list.append(list(time_series[(i + 2):(i + 203)]))
 
-        return lofod.detect_outliers(time_series_list)
+        return [lofod.detect_outliers(time_series_list)]
