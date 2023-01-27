@@ -97,14 +97,14 @@ class SparkController:
         )
 
         self.__visualiser: Visualiser = Visualiser()
-
+        """
         # TODO: this should not be necessary with @udf notation
         self.__spark.udf.register("hrc", StatFunctions.hrc, StatFunctions.schema_s)
         self.__spark.udf.register("pc", StatFunctions.pc, StatFunctions.schema_d)
         self.__spark.udf.register("sf", StatFunctions.stat_feature, StatFunctions.schema_sf)
         self.__spark.udf.register("rel", StatFunctions.relations, StatFunctions.schema_rel)
         self.__spark.udf.register("lr", StatFunctions.lr, StatFunctions.schema_r)
-
+        """
     def get_spark_session(self) -> Optional[SparkSession]:
         """Returns the spark session"""
         return self.__spark
