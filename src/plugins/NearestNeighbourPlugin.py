@@ -83,7 +83,10 @@ class NearestNeighbourPlugin(BasePlugin):
             first_line = fxf_tuple[:mid]
             other_line = fxf_tuple[mid:]
 
+            # word of the second tuple
             other_word = other_line[0]
+
+            # remove str_rep and type
             first_line = first_line[2:]
             other_line = other_line[2:]
 
@@ -102,15 +105,5 @@ class NearestNeighbourPlugin(BasePlugin):
 
             # calculate euclidean distance
             dist = float(norm(np.array(first_line) - np.array(other_line)))
-            # dist = float(norm(np.array([1, 2, 3]) - np.array([2, 2, 3])))
 
             return other_word, dist
-
-
-
-
-
-
-
-
-
