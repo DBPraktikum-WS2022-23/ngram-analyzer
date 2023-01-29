@@ -1,7 +1,8 @@
-from base_plugin import BasePlugin
-from InternalOD import ZScoreOD
+from src.plugins.base_plugin import BasePlugin
+from src.plugins.InternalOD import ZScoreOD
 from typing import List
-from pyspark.sql.types import StructType, StructField, ArrayType, StringType
+from pyspark.sql.types import StructType, StructField, ArrayType, IntegerType
+import numpy as np
 
 
 class ZScorePlugin(BasePlugin):
@@ -13,16 +14,17 @@ class ZScorePlugin(BasePlugin):
 
     schema_zscore = StructType(
         [
-            StructField("outlier", StringType(), False)
+            StructField("outlier", ArrayType(IntegerType(), False), False)
         ]
     )
 
     @staticmethod
-    def zscore(time_series: List[int], *data_row) -> List[str]:
-        assert len(time_series) == len(data_row)
+    def zscore(threshold: float, *data_row):
+        time_series = list(range(1800, 2000))
         data_list = list()
-        for data in data_row:
+        for data in data_row[2:203]:
             data_list.append(data)
-        zscore_od = ZScoreOD(data_list=data_list)
+        zscore_od = ZScoreOD(threshold=threshold, data_list=data_list)
 
-        return zscore_od.detect_outliers(time_series)
+        return [zscore_od.detect_outliers(time_series)]
+        #select zscore(3, *) zscore from (select * from schema_f)
