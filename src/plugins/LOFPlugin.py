@@ -55,6 +55,8 @@ class LOFOutlierDetector(ExternalOutlierDetector):
 
             lrd_x = self.__local_reachability_density(time_series, knns)
             print("lrd_x:", lrd_x, "for time series", time_series)
+            if lrd_x == 0:
+                continue
             for neighbor in knns:
                 lrd_n = self.__local_reachability_density(neighbor, knns)
                 print("lrd_n:", lrd_n, "for neighbor", neighbor)
@@ -97,6 +99,8 @@ class LOFPlugin(BasePlugin):
 if __name__ == "__main__":
     ts = [2,3,10,0]
     ts_list = [
-        [0,0,0,0], [0,0,0,0], [1,3,4,2], [3,4,5,0], [2,10,10,10], [3,4,5,10]]
+        [0,0,0,0], [0,0,0,0], [1,3,4,2], [3,4,5,0], [2,10,10,10], [3,4,5,10],
+        [0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0], 
+        ]
     lof = LOFOutlierDetector(2, 1.5)
     print(ts_list, "\n",  lof.detect_outliers(ts_list))
