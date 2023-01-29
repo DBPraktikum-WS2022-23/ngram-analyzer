@@ -22,13 +22,13 @@ class LOFOutlierDetector(ExternalOutlierDetector):
 
     def __reachability_distance(self, a: List[int], b: List[int], knn: List[int]) -> float:
         reach_distance = max(distance.euclidean(a, b), distance.euclidean(a, knn))
-        print("reachability_distance:", reach_distance, ) 
+        # print("reachability_distance:", reach_distance, ) 
         return reach_distance    
 
     def __local_reachability_density(self, a: List[int], knns: List[List[int]]) -> float:
         knn: List[int] = knns[self.__k - 1] # k-nearest neighbour
         mean_reach_distance = sum(self.__reachability_distance(a, n, knn) for n in knns) / len(knns)
-        print("mean reachability distance", mean_reach_distance)
+        # print("mean reachability distance", mean_reach_distance)
         return 1 / mean_reach_distance if mean_reach_distance != 0 else mean_reach_distance
 
     def __get_knns(self, time_series: List[int], time_series_list: List[List[int]]) -> List[List[int]]:
@@ -44,24 +44,24 @@ class LOFOutlierDetector(ExternalOutlierDetector):
     def detect_outliers(self, time_series_list: List[List[int]]) -> List[int]:
         lof_list = []
         for id, time_series in enumerate(time_series_list):
-            print("---------------------------------")
-            print("current time series:", time_series)
+            # print("---------------------------------")
+            # print("current time series:", time_series)
             lof = 0
 
             possible_knns = time_series_list.copy()
             possible_knns.pop(id)
             knns = self.__get_knns(time_series, possible_knns)
-            print("neighbors of current time series:", knns)
+            # print("neighbors of current time series:", knns)
 
             lrd_x = self.__local_reachability_density(time_series, knns)
-            print("lrd_x:", lrd_x, "for time series", time_series)
+            # print("lrd_x:", lrd_x, "for time series", time_series)
             if lrd_x == 0:
                 continue
             for neighbor in knns:
                 lrd_n = self.__local_reachability_density(neighbor, knns)
-                print("lrd_n:", lrd_n, "for neighbor", neighbor)
+                # print("lrd_n:", lrd_n, "for neighbor", neighbor)
                 lof += lrd_n / lrd_x
-            print("lof:", lof)
+            # print("lof:", lof)
             lof = lof / len(knns)
             lof_list.append(lof)
 
