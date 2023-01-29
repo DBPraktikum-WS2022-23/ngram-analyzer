@@ -62,6 +62,16 @@ The following commands are available within the ngram_analyzer shell:
       order by result limit k
       ```
       - replace `word_of_interest` and `k` with own parameters
+    - Median distance: (via MedianDistancePlugin): 
+      ```sql
+      select median_distance(0.1, *) median_distance from (select * from schema_f)
+      ```
+      - recognize the point as outlier which is deviate from the median in a curtain threshold
+    - Zscore: (via ZScorePlugin): 
+      ```sql
+      select zscore(3, *) zscore from (select * from schema_f)
+      ```
+      - recognize the point as outlier which has low probability in current distribution
 - ```plot_word_frequencies``` plotting frequency of words against each other for a set of years
 - ```print_db_statistics``` prints count for each table, highest frequency and number of years
 - ```print_word_frequencies``` prints a table of the word frequencies in different years for different words
