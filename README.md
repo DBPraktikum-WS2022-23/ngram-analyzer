@@ -50,6 +50,10 @@ The following commands are available within the ngram_analyzer shell:
       select lr(*) lr from (select * from schema_f limit 1)
       ```
       - Calculates the linear regression for a given time series from schema f
+    - Local outlier factor
+      ```sql
+      select lof.outlier from (select lof(2,2,*) lof from (select * from schema_f where str_rep = "Archivarsverband") cross join (select * from schema_f where str_rep = "Akaza") cross join (select * from schema_f where str_rep = "Balantiopteryx") cross join (select * from schema_f where str_rep = "Ankömmlinge"))
+      ```
     - Euclidean distance: calculate k nearest neighbours for a word (via NearestNeighbourPlugin): 
       ```sql
       select ed.str_rep, ed.result from
