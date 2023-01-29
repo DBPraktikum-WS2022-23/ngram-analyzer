@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Any, Tuple, Optional
 import numpy as np
-import decimal
 
 
 class InternalOutlierDetector(ABC):

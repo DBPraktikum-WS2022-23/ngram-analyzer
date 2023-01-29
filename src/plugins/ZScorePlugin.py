@@ -1,8 +1,6 @@
 from src.plugins.base_plugin import BasePlugin
 from src.plugins.InternalOD import ZScoreOD
-from typing import List
 from pyspark.sql.types import StructType, StructField, ArrayType, IntegerType
-import numpy as np
 
 
 class ZScorePlugin(BasePlugin):
