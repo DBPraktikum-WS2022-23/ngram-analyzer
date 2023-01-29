@@ -70,7 +70,7 @@ class NearestNeighbourPlugin(BasePlugin):
             """Returns the euclidean distance for two timeseries from schema f."""
             """Example usage: select ed.str_rep, ed.result from (select euclidean_dist(*) ed from 
             schema_f a cross join schema_f b where a.str_rep = 'word_of_interest' and 
-            b.str_rep != 'word_of_interest' limit 20) order by result limit <k>"""
+            b.str_rep != 'word_of_interest') order by result limit k"""
 
             # FxF format: w1, t1, frq1_1800, ..., frq1_2000, w2, t2, frq2_1800, ..., frq2_2000
 
