@@ -5,7 +5,6 @@ from pyspark.sql.types import StructType, StructField, ArrayType, StringType
 from src.plugins.base_plugin import BasePlugin
 
 
-
 class InternalOutlierDetector(ABC):
     def __init__(self) -> None:
         super().__init__()
@@ -16,9 +15,10 @@ class InternalOutlierDetector(ABC):
 
 
 class MedianDistanceOD(InternalOutlierDetector):
-    def __init__(self, threshold: float) -> None:
+    def __init__(self, threshold: float, data_list: List[Any]) -> None:
         super().__init__()
         self.threshold = threshold
+        self.__data_list = data_list
 
     def detect_outliers(self, time_series_list: List[Any]) -> Optional[List[Any]]:
         # TODO: where do I get the median?
@@ -54,29 +54,9 @@ class ZScoreOD(InternalOutlierDetector):
                 outliers.append(time_series_list[i])
         return outliers
 
+    @staticmethod
     def __compute_zscore(self, occurence: int, std: float, mean: float) -> float:
         return (occurence - mean) / std
 
 
-class ZScorePlugin(BasePlugin):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
 
-    def register_udfs(self) -> None:
-        super().register_udf("zscore", self.zscore, self.schema_zscore)
-
-    schema_zscore = StructType(
-        [
-            StructField("outlier", StringType(), False)
-        ]
-    )
-
-    @staticmethod
-    def zscore(time_series: List[int], *data_row) -> List[str]:
-        assert len(time_series) == len(data_row)
-        data_list = list()
-        for data in data_row:
-            data_list.append(data)
-        zscoreod = ZScoreOD(data_list=data_list)
-
-        return zscoreod.detect_outliers(time_series)
