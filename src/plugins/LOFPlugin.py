@@ -79,10 +79,8 @@ class LOFPlugin(BasePlugin):
     def lof(k: int, delta: float, *time_series):
         lofod = LOFOutlierDetector(k, delta)
         time_series_list = []
-        # index_list = []
 
         for i in range (0, len(time_series), 203):
-            # index_list.append((time_series[i], time_series[i + 1]))
             time_series_list.append(list(time_series[(i + 2):(i + 203)]))
 
         return [lofod.detect_outliers(time_series_list)]
