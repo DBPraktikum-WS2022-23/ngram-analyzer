@@ -136,12 +136,23 @@ class SparkController:
         )
         return schema_f_df
 
+    # TODO: for NearestNeighbourPlugin, but does not work
+    # def __get_schema_knn_input(self) -> DataFrame:
+    #
+    #     schema_f_df = self.__get_schema_f_df()
+    #
+    #     knn_data = [schema_f_df.limit(4).collect()]
+    #     knn_head = ["table"]
+    #
+    #     return self.__spark.createDataFrame(knn_data, knn_head)
+
     def execute_sql(self, sql: str) -> Optional[DataFrame]:
         """Executes a SQL query"""
         if self.__spark is not None:
             self.__word_df.createOrReplaceTempView("word")
             self.__occurence_df.createOrReplaceTempView("occurence")
             self.__get_schema_f_df().createOrReplaceTempView("schema_f")
+            # self.__get_schema_knn_input().createOrReplaceTempView("schema_knn_input")
             return self.__spark.sql(sql)
         return None
 
