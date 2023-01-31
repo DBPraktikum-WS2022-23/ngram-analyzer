@@ -56,12 +56,10 @@ The following commands are available within the ngram_analyzer shell:
       ```
     - Euclidean distance: calculate k nearest neighbours for a word (via NearestNeighbourPlugin): 
       ```sql
-      select ed.str_rep, ed.result from
-        (select euclidean_dist(*) ed from schema_f a cross join schema_f b 
-        where a.str_rep = 'word_of_interest' and b.str_rep != 'word_of_interest')
-      order by result limit k
+      select ed.str_rep, ed.result from (select euclidean_dist(*) ed from schema_f a cross join schema_f b where a.str_rep = 'word_of_interest' and b.str_rep != 'word_of_interest' limit 100) order by 2 limit k
       ```
       - replace `word_of_interest` and `k` with own parameters
+      - remove inner limit to seach all words
     - Median distance: (via MedianDistancePlugin): 
       ```sql
       select median_distance(0.1, *) median_distance from (select * from schema_f)
