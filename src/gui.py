@@ -1,6 +1,23 @@
 import tkinter as tk
 import tkinter.font as fnt
 
+class CenterFrame(tk.Frame):
+    def __init__(self, master, relief) -> None:
+        super().__init__(master=master, relief=relief)
+        
+        plot_output = tk.Label(self, text="Placeholder_Plot")
+        console_output = tk.Label(self, text="Placeholder_Console_Output")
+        sql_input = tk.Entry(self)
+        sql_button = tk.Button(self, text="Run")
+        plot_output.grid(row=0, column=0)
+        console_output.grid(row=1, column=0)
+        sql_input.grid(row=2, column=0)
+        sql_button.grid(row=2, column=1)
+
+    # TODO: link button fct
+    # TODO: replace placeholder in labels
+
+
 class GUI():
     def __init__(self) -> None:
         self.window = tk.Tk()
@@ -9,8 +26,6 @@ class GUI():
 
         self.window.rowconfigure(0, minsize=600, weight=1)
         self.window.columnconfigure([0, 1, 2], minsize=200, weight=1)
-
-
 
         frm_buttons = tk.Frame(self.window, relief=tk.RAISED, bd=2)
 
@@ -31,8 +46,12 @@ class GUI():
         for widget in frm_buttons.winfo_children():
             widget.grid(padx=3, pady=5)
 
+        frm_center = CenterFrame(self.window, relief=tk.FLAT)
+        frm_center.grid(row=0, column=1)
+
     def show(self):
         self.window.mainloop()
+
 
 
 if __name__ == "__main__":
