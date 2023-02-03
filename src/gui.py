@@ -59,7 +59,7 @@ class GUI():
 
         btn_deselect.grid(row=0, column=2, sticky="ew")
 
-        frm_buttons.grid(row=0, column=0, sticky="ns")
+        frm_buttons.grid(row=0, column=0, sticky="nws")
 
         for widget in frm_buttons.winfo_children():
             widget.grid(padx=3, pady=5)
