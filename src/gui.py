@@ -2,20 +2,38 @@ import tkinter as tk
 import tkinter.font as fnt
 
 class CenterFrame(tk.Frame):
-    def __init__(self, master, relief) -> None:
-        super().__init__(master=master, relief=relief)
+    def __init__(self, master, relief, height = None, width = None) -> None:
+        super().__init__(master=master, relief=relief, height=height, width=width)
         
-        plot_output = tk.Label(self, text="Placeholder_Plot")
-        console_output = tk.Label(self, text="Placeholder_Console_Output")
-        sql_input = tk.Entry(self)
-        sql_button = tk.Button(self, text="Run")
-        plot_output.grid(row=0, column=0)
-        console_output.grid(row=1, column=0)
-        sql_input.grid(row=2, column=0)
-        sql_button.grid(row=2, column=1)
+        plot_output = self.PlotOutput(self)
+        console_output = self.ConsoleOutput(self)
+        console_output.print_output('tessst')
 
-    # TODO: link button fct
-    # TODO: replace placeholder in labels
+        sql_input = self.ConsoleInput(self)
+
+    class ConsoleInput:
+        def __init__(self, master) -> None:
+            self.master = master
+            self.entry = tk.Entry(self.master, width=70)
+            self.button = tk.Button(self.master, text="Run")
+            self.entry.grid(row=2, column=0)
+            self.button.grid(row=2, column=1)
+
+    class ConsoleOutput:
+        def __init__(self, master) -> None:
+            self.master = master
+            self.text = tk.Text(self.master)
+            self.text.grid(row=1, column=0)
+
+        def print_output(self, output):
+            self.text.insert('end', output + "\n")
+            self.text.config(state='disabled')
+
+    class PlotOutput:
+        def __init__(self, master) -> None:
+            self.master = master
+            self.plot = tk.Label(self.master, text="Placeholder_Plot")
+            self.plot.grid(row=0, column=0)
 
 
 class GUI():
@@ -46,7 +64,7 @@ class GUI():
         for widget in frm_buttons.winfo_children():
             widget.grid(padx=3, pady=5)
 
-        frm_center = CenterFrame(self.window, relief=tk.FLAT)
+        frm_center = CenterFrame(self.window, relief=tk.FLAT, height = 400, width= 400)
         frm_center.grid(row=0, column=1)
 
     def show(self):
