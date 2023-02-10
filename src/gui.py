@@ -1,29 +1,79 @@
 import tkinter as tk
+from tkinter import ttk
 import tkinter.font as fnt
 
+from typing import Type, List
+
+class GUI(tk.Tk):
+    """Wrapper for tkinter root object"""
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.title("NGram Visualizer")
+
+        self.rowconfigure(0, minsize=200, weight=1)
+        self.columnconfigure([0, 1, 2], minsize=200, weight=1)
+
+        self.__word_list = ["word liste aus GUI"]
+        frm_functions = NgramFrame(self, relief=tk.RAISED, bd=2)
+        frm_functions.grid(row=0, column=0, sticky="nws")
+
+        frm_center = CenterFrame(self, relief=tk.FLAT, height=400, width=400)
+        frm_center.grid(row=0, column=1)
+
+        frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2)
+        frm_functions.grid(row=0, column=2, sticky="nes")
+
+    def set_word_list(self, words) -> None:
+        self.__word_list = words
+
+    def get_word_list(self) -> List[str]:
+        return self.__word_list
+
+    def show(self):
+        self.mainloop()
 
 class CenterFrame(tk.Frame):
-    def __init__(self, master, relief, height = None, width = None) -> None:
-        super().__init__(master=master, relief=relief, height=height, width=width) 
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs) 
         self.__add_plot_output()
-        self.__add_console_output()
-        self.__add_console_input()
-
-    def __add_console_input(self) -> None:
-        self.entry = tk.Entry(self, width=70)
-        self.button = tk.Button(self, text="Run", command=self.__execute)
-        self.entry.grid(row=2, column=0)
-        self.button.grid(row=2, column=1)
-
-    def __add_console_output(self) -> None:
-        self.text = tk.Text(self)
-        self.text.grid(row=1, column=0)
+        self.__add_tabs_notebook()
 
     def __add_plot_output(self) -> None:
         self.plot = tk.Label(self, text="Placeholder_Plot")
-        self.plot.grid(row=0, column=0)
+        self.plot.grid(row=0, column=0, columnspan=2)
+
+    def __add_tabs_notebook(self) -> None:
+        self.notebook = ttk.Notebook(self)
+
+        self.console_tab = ttk.Frame(self.notebook)
+        self.sql_tab = ttk.Frame(self.notebook)
+
+        self.notebook.add(self.console_tab, text="Console")
+        self.notebook.add(self.sql_tab, text="SQL")
+        self.notebook.grid(row=1, column=0)
+        
+        self.__add_sql_output(self.sql_tab)
+        self.__add_sql_input(self.sql_tab)
+
+        self.__add_console(self.console_tab)
+
+    def __add_console(self, master) -> None:
+        self.console = tk.Label(master, text="Placeholder_Console")
+        self.console.grid(row=0, column=0)
+
+    def __add_sql_output(self, master) -> None:
+        self.text = tk.Text(master)
+        self.text.grid(row=0, column=0, columnspan=2, rowspan=1)
+        
+    def __add_sql_input(self, master) -> None:
+        self.entry = tk.Entry(master, width=70)
+        self.button = tk.Button(master, text="Run", command=self.__execute, font=fnt.Font(size=8))
+        self.entry.grid(row=1, column=0, sticky=tk.W+tk.E)
+        self.button.grid(row=1, column=1, sticky=tk.W+tk.E)
 
     def __execute(self):
+        print(self.master.get_word_list()) # wird in terminal ausgegeben nicht in GUI
         self.__print_output("Test")
 
     def __print_output(self, output) -> None:
@@ -184,29 +234,6 @@ class NgramFrame(tk.Frame):
         selected_langs = ",".join([self.__listbox.get(i) for i in selected_indices])
         self.selected_str = selected_langs
         print(selected_langs)
-
-
-
-class GUI():
-    def __init__(self) -> None:
-        self.window = tk.Tk()
-
-        self.window.title("NGram Visualizer")
-
-        self.window.rowconfigure(0, minsize=600, weight=1)
-        self.window.columnconfigure([0, 1, 2], minsize=200, weight=1)
-
-        frm_functions = NgramFrame(self.window, relief=tk.RAISED, bd=2)
-        frm_functions.grid(row=0, column=0, sticky="nws")
-
-        frm_center = CenterFrame(self.window, relief=tk.FLAT, height=400, width=400)
-        frm_center.grid(row=0, column=1)
-
-        frm_functions = FunctionFrame(self.window, relief=tk.RAISED, bd=2)
-        frm_functions.grid(row=0, column=2, sticky="nes")
-
-    def show(self):
-        self.window.mainloop()
 
 if __name__ == "__main__":
     GUI().show()
