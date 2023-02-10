@@ -1,7 +1,7 @@
 from pyspark.sql.types import StructType, StructField, ArrayType, IntegerType
 
-from src.plugins.base_plugin import BasePlugin
-from src.plugins.ExternalOD import LOFOutlierDetector
+from plugins.base_plugin import BasePlugin
+from plugins.ExternalOD import LOFOutlierDetector
 
 class LOFPlugin(BasePlugin):
     def __init__(self, **kwargs) -> None:

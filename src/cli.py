@@ -17,17 +17,17 @@ class Cli:
 
     def __init__(self) -> None:
         self.conn_settings: Dict[str, str] = {}
-        self.spark_controller = None
+        self.spark_controller: SparkController = None
 
     def __exit(self) -> None:
-        if self.spark:
-            self.spark.stop()
+        if self.spark_controller:
+            self.spark_controller.get_spark_session().stop()
 
         sys.exit()
 
     def __exit_error(self, message) -> None:
-        if self.spark:
-            self.spark.stop()
+        if self.spark_controller:
+            self.spark_controller.get_spark_session().stop()
 
         sys.exit(f"Error: {message}.")
 

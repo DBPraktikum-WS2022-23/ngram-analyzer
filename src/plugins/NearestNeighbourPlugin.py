@@ -12,7 +12,7 @@ from pyspark.sql.types import (
     StructType,
 )
 
-from src.plugins.base_plugin import BasePlugin
+from plugins.base_plugin import BasePlugin
 
 
 class NearestNeighbourPlugin(BasePlugin):

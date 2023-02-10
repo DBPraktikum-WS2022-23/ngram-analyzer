@@ -1,5 +1,12 @@
+import os
 import tkinter as tk
 import tkinter.font as fnt
+from typing import List
+
+from controller import SparkController
+from config_converter import ConfigConverter
+from controller import PluginController
+from database_creation import NgramDBBuilder
 
 class CenterFrame(tk.Frame):
     def __init__(self, master, relief, height = None, width = None) -> None:
@@ -202,6 +209,20 @@ class GUI():
         self.window.mainloop()
 
 
+class SparkConnection():
+    # TODO: don't need this class when shell is initialized
+    def __init__(self) -> None:
+        config: ConfigConverter = ConfigConverter(
+            "settings/" + os.listdir("settings")[0] # temporary
+        )
+        conn_settings = config.get_conn_settings()
+        db_builder = NgramDBBuilder(conn_settings)
+        self.spark_controller: SparkController = SparkController(
+            conn_settings, log_level="OFF"
+        )
+
+        self.plugin_controller: PluginController = PluginController(self.spark_controller.get_spark_session())
+        self.plugin_controller.register_plugins()
 
 if __name__ == "__main__":
     GUI().show()
