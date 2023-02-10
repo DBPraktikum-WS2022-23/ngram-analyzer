@@ -90,7 +90,7 @@ class FunctionFrame(tk.Frame):
         func2_end_input.grid(row=2, column=1, sticky="ew")
 
         func2_btn_execute = tk.Button(frm_func2, text="Generate query", font=fnt.Font(size=8))
-        func2_btn_execute.config(command=lambda: self.hrc(func2_end_input.get()))
+        func2_btn_execute.config(command=lambda: self.hrc(func2_end_input.get()))  # TODO: duration or start and end?
         func2_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_func2.winfo_children():
@@ -167,8 +167,8 @@ class FunctionFrame(tk.Frame):
 
     def hrc(self, duration: int) -> None:
         query = f"""
-        select hrc['str_rep'] word, hrc['type'] type, hrc['start_year'] start, hrc['end_year'] end, hrc['result'] hrc
-        from (select hrc({duration}) as hrc from schema_f limit 1)
+        select hrc.str_rep word, hrc.type type, hrc.start_year start, hrc.end_year end, hrc.result hrc
+        from (select hrc({duration},*) as hrc from schema_f limit 1)
         """
         # TODO: pass query to CenterFrame
 
