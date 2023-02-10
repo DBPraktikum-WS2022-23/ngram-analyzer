@@ -27,12 +27,12 @@ The following commands are available within the ngram_analyzer shell:
   -  Example usage for user defined functions:
     - Highest relative change
       ```sql
-      select hrc['str_rep'] word, hrc['type'] type, hrc['start_year'] start, hrc['end_year'] end, hrc['result'] hrc from (select hrc(3, *) hrc from schema_f)
+      select hrc.str_rep word, hrc.type type, hrc.start_year start, hrc.end_year end, hrc.result hrc from (select hrc(3, *) hrc from schema_f)
       ```
-      - Calculates the strongest relative change between any two years that duration (3 in above example) years apart
+      - Calculates the strongest relative change between any two years that are duration years (3 in above example) apart
     - Pearson correlation coefficient of two time series
       ```sql
-      select pc['str_rep_1'] word_1, pc['type_1'] type_1, pc['str_rep_2'] word_2, pc['type_2'] type_2, pc['start_year'] start, pc['end_year'] end, pc['result'] pearson_corr from (select pc(1990, 2000, *) pc from schema_f a cross join schema_f b where a.str_rep != b.str_rep)
+      select pc.str_rep_1 word_1, pc.type_1 type_1, pc.str_rep_2 word_2, pc.type_2 type_2, pc.start_year start, pc.end_year end, pc.result pearson_corr from (select pc(1990, 2000, *) pc from schema_f a cross join schema_f b where a.str_rep != b.str_rep)
       ```
       - Calculates the Pearson correlation coefficient of two time series (limited to the time period of [start year, end year])
     - Statistical features for time series
