@@ -52,7 +52,7 @@ class Prompt(Cmd):
         )
         plugins = input("Would you like to:\n"
               "[0] Provide your own plugins\n"
-              "[1] Load avaivable ones?\n")
+              "[1] Load available ones?\n")
 
         self.plugin_controller: PluginController = PluginController(self.spark_controller.get_spark_session())
         if plugins == "0":

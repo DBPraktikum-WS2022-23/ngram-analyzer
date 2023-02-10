@@ -4,10 +4,10 @@ import os
 import sys
 from typing import Dict, Optional
 
-from src.config_converter import ConfigConverter, ConfigCreator
-from src.controller import SparkController, PluginController
-from src.database_creation import NgramDBBuilder
-from src.shell import Prompt
+from config_converter import ConfigConverter, ConfigCreator
+from controller import SparkController, PluginController
+from database_creation import NgramDBBuilder
+from shell import Prompt
 
 
 class Cli:
