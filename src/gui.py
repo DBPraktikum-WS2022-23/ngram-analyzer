@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.font as fnt
 
+
 class CenterFrame(tk.Frame):
     def __init__(self, master, relief, height = None, width = None) -> None:
         super().__init__(master=master, relief=relief, height=height, width=width) 
@@ -31,6 +32,7 @@ class CenterFrame(tk.Frame):
 
 class FunctionFrame(tk.Frame):
     """Frame on the right side with function to generate queries"""
+
     def __init__(self, master, relief, bd) -> None:
         super().__init__(master=master, relief=relief, bd=bd)
 
@@ -59,7 +61,6 @@ class FunctionFrame(tk.Frame):
 
         frm_func1.grid(row=0, column=0, sticky="new")
 
-
         # Function 2: Highes relative change
         frm_func2 = tk.Frame(self, relief=tk.RAISED, bd=2)
 
@@ -83,7 +84,6 @@ class FunctionFrame(tk.Frame):
             widget.grid(padx=1, pady=1)
 
         frm_func2.grid(row=1, column=0, sticky="nsew")
-
 
         # Function 3: Pearson correlation coefficient
         frm_func3 = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -109,7 +109,6 @@ class FunctionFrame(tk.Frame):
 
         frm_func3.grid(row=2, column=0, sticky="ew")
 
-
         # Function 4: Euclidean distance of nearest neighbours
         frm_func4 = tk.Frame(self, relief=tk.RAISED, bd=2)
 
@@ -128,7 +127,6 @@ class FunctionFrame(tk.Frame):
             widget.grid(padx=1, pady=1)
 
         frm_func4.grid(row=3, column=0, sticky="ew")
-
 
         # Function Template
         frm_funcn = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -154,6 +152,40 @@ class FunctionFrame(tk.Frame):
 
         frm_funcn.grid(row=99, column=0, sticky="nsew")  # TODO: change row!
 
+class NgramFrame(tk.Frame):
+    """Frame on the left side listing N-grams"""
+    def __init__(self, master, relief, bd) -> None:
+        super().__init__(master=master, relief=relief, bd=bd)
+
+        frm_buttons = tk.Frame(self, relief=tk.RAISED, bd=2)
+        btn_open = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=8))
+        btn_save = tk.Button(frm_buttons, text="Remove Ngram", font=fnt.Font(size=8))
+        btn_deselect = tk.Button(frm_buttons, text="Deselect All", font=fnt.Font(size=8))
+        btn_open.grid(row=0, column=0, sticky="ew")
+        btn_save.grid(row=0, column=1, sticky="ew")
+        btn_deselect.grid(row=0, column=2, sticky="ew")
+
+        frm_buttons.grid(row=0, column=0, sticky="nws")
+
+        for widget in frm_buttons.winfo_children():
+            widget.grid(padx=1, pady=5)
+        items = ["aaa", "bbb", "ccc"]
+        list_items = tk.Variable(value=items)
+        self.__listbox = tk.Listbox(self, listvariable=list_items, height=100)
+        self.__listbox.grid(row=1, column=0, sticky="ew")#
+        self.__listbox.bind('<<ListboxSelect>>', self.items_selected)
+
+        self.selected_str = []
+
+    def items_selected(self, event):
+        # get all selected indices
+        selected_indices = self.__listbox.curselection()
+        # get selected items
+        selected_langs = ",".join([self.__listbox.get(i) for i in selected_indices])
+        self.selected_str = selected_langs
+        print(selected_langs)
+
+
 
 class GUI():
     def __init__(self) -> None:
@@ -164,28 +196,10 @@ class GUI():
         self.window.rowconfigure(0, minsize=600, weight=1)
         self.window.columnconfigure([0, 1, 2], minsize=200, weight=1)
 
-        frm_buttons = tk.Frame(self.window, relief=tk.RAISED, bd=2)
+        frm_functions = NgramFrame(self.window, relief=tk.RAISED, bd=2)
+        frm_functions.grid(row=0, column=0, sticky="nws")
 
-
-        btn_open = tk.Button(frm_buttons, text="Add Ngram", font = fnt.Font(size = 8))
-
-        btn_save = tk.Button(frm_buttons, text="Remove Ngram", font = fnt.Font(size = 8))
-
-        btn_deselect = tk.Button(frm_buttons, text="Deselect All", font = fnt.Font(size = 8))
-
-        btn_open.grid(row=0, column=0, sticky="ew")
-
-        btn_save.grid(row=0, column=1, sticky="ew")
-
-        btn_deselect.grid(row=0, column=2, sticky="ew")
-
-        frm_buttons.grid(row=0, column=0, sticky="nws")
-
-        for widget in frm_buttons.winfo_children():
-            widget.grid(padx=1, pady=5)
-
-        
-        frm_center = CenterFrame(self.window, relief=tk.FLAT, height = 400, width= 400)
+        frm_center = CenterFrame(self.window, relief=tk.FLAT, height=400, width=400)
         frm_center.grid(row=0, column=1)
 
         frm_functions = FunctionFrame(self.window, relief=tk.RAISED, bd=2)
