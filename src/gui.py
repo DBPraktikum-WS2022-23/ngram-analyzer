@@ -3,37 +3,31 @@ import tkinter.font as fnt
 
 class CenterFrame(tk.Frame):
     def __init__(self, master, relief, height = None, width = None) -> None:
-        super().__init__(master=master, relief=relief, height=height, width=width)
-        
-        plot_output = self.PlotOutput(self)
-        console_output = self.ConsoleOutput(self)
-        console_output.print_output('tessst')
+        super().__init__(master=master, relief=relief, height=height, width=width) 
+        self.__add_plot_output()
+        self.__add_console_output()
+        self.__add_console_input()
 
-        sql_input = self.ConsoleInput(self)
+    def __add_console_input(self) -> None:
+        self.entry = tk.Entry(self, width=70)
+        self.button = tk.Button(self, text="Run", command=self.__execute)
+        self.entry.grid(row=2, column=0)
+        self.button.grid(row=2, column=1)
 
-    class ConsoleInput:
-        def __init__(self, master) -> None:
-            self.master = master
-            self.entry = tk.Entry(self.master, width=70)
-            self.button = tk.Button(self.master, text="Run")
-            self.entry.grid(row=2, column=0)
-            self.button.grid(row=2, column=1)
+    def __add_console_output(self) -> None:
+        self.text = tk.Text(self)
+        self.text.grid(row=1, column=0)
 
-    class ConsoleOutput:
-        def __init__(self, master) -> None:
-            self.master = master
-            self.text = tk.Text(self.master)
-            self.text.grid(row=1, column=0)
+    def __add_plot_output(self) -> None:
+        self.plot = tk.Label(self, text="Placeholder_Plot")
+        self.plot.grid(row=0, column=0)
 
-        def print_output(self, output):
-            self.text.insert('end', output + "\n")
-            self.text.config(state='disabled')
+    def __execute(self):
+        self.__print_output("Test")
 
-    class PlotOutput:
-        def __init__(self, master) -> None:
-            self.master = master
-            self.plot = tk.Label(self.master, text="Placeholder_Plot")
-            self.plot.grid(row=0, column=0)
+    def __print_output(self, output) -> None:
+        self.text.insert('end', output + "\n")
+        self.text.config(state='disabled')
 
 class FunctionFrame(tk.Frame):
     """Frame on the right side with function to generate queries"""
@@ -190,8 +184,7 @@ class GUI():
         for widget in frm_buttons.winfo_children():
             widget.grid(padx=1, pady=5)
 
-
-
+        
         frm_center = CenterFrame(self.window, relief=tk.FLAT, height = 400, width= 400)
         frm_center.grid(row=0, column=1)
 
@@ -200,8 +193,6 @@ class GUI():
 
     def show(self):
         self.window.mainloop()
-
-
 
 if __name__ == "__main__":
     GUI().show()
