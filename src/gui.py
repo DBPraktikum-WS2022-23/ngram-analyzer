@@ -21,6 +21,7 @@ class GUI(tk.Tk):
         self.columnconfigure([0, 1, 2], minsize=200, weight=1)
 
         self.__word_list = ["word liste aus GUI"]
+        self.__selected_word_list = []
         frm_functions = NgramFrame(self, relief=tk.RAISED, bd=2)
         frm_functions.grid(row=0, column=0, sticky="nws")
 
@@ -32,9 +33,16 @@ class GUI(tk.Tk):
 
     def set_word_list(self, words) -> None:
         self.__word_list = words
+        print(self.__word_list)
 
     def get_word_list(self) -> List[str]:
         return self.__word_list
+
+    def set_selected_word_list(self, words) -> None:
+        self.__selected_word_list = words
+
+    def get_selected_word_list(self) -> List[str]:
+        return self.__selected_word_list
 
     def show(self):
         self.mainloop()
@@ -245,17 +253,19 @@ class NgramFrame(tk.Frame):
         list_items = tk.Variable(value=items)
         self.__listbox = tk.Listbox(self, listvariable=list_items, height=100)
         self.__listbox.grid(row=1, column=0, sticky="ew")#
-        self.__listbox.bind('<<ListboxSelect>>', self.items_selected)
+        self.__listbox.bind('<<ListboxSelect>>', self.__items_selected)
 
-        self.selected_str = []
-
-    def items_selected(self, event):
+    def __items_selected(self, event):
         # get all selected indices
         selected_indices = self.__listbox.curselection()
         # get selected items
-        selected_langs = ",".join([self.__listbox.get(i) for i in selected_indices])
-        self.selected_str = selected_langs
-        print(selected_langs)
+        selected_items = [self.__listbox.get(i) for i in selected_indices]
+        self.master.set_selected_word_list(selected_items)
+        self.__update_itemlist()
+
+    def __update_itemlist(self):
+        self.master.set_word_list([self.__listbox.get(i) for i in range(self.__listbox.size())])
+
 
     def __update_ngrams(self, ngrams: list):
         self.spark_controller.create_ngram_view(ngrams)
