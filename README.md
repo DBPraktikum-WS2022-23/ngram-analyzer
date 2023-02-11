@@ -47,7 +47,7 @@ The following commands are available within the ngram_analyzer shell:
       - Calculates the relations between pairs of time series from schema fxf
     - linear regression for a given time series: 
       ```sql
-      select lr(*) lr from (select * from schema_f limit 1)
+      select lr.type type, lr.slope slope, lr.intercept intercept, lr.r_value r_value, lr.p_value p_value, lr.std_err std_err from (select lr(*) lr from schema_f limit 1)
       ```
       - Calculates the linear regression for a given time series from schema f
     - Local outlier factor

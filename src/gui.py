@@ -227,7 +227,7 @@ class FunctionFrame(tk.Frame):
         # Function 5: Linear regression
         def gen_query_f5():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            query = f"select lr(*) lr from (select * from schema_f where str_rep in {word_list_str})"
+            query = f"select lr.type type, lr.slope slope, lr.intercept intercept, lr.r_value r_value, lr.p_value p_value, lr.std_err std_err from (select lr(*) lr from schema_f where str_rep in ({word_list_str}))"
             test_output.config(text=query)
             center_frame.update_input(query)
 
