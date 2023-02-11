@@ -15,6 +15,8 @@ class GUI(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
 
+        self.spark_controller: SparkController = SparkConnection().spark_controller
+
         self.title("NGram Visualizer")
 
         self.rowconfigure(0, minsize=200, weight=1)
@@ -44,13 +46,16 @@ class GUI(tk.Tk):
     def get_selected_word_list(self) -> List[str]:
         return self.__selected_word_list
 
+    def get_spark_controller(self) -> SparkController:
+        return self.spark_controller
+
     def show(self):
         self.mainloop()
 
 class CenterFrame(tk.Frame):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs) 
-        self.spark_controller = SparkConnection().spark_controller
+    def __init__(self, master, relief, height, width) -> None:
+        super().__init__(master=master, relief=relief, height=height, width=width)
+        self.__spark_ctrl = master.get_spark_controller()  # master is the GUI object
         self.__add_plot_output()
         self.__add_tabs_notebook()
 
@@ -88,7 +93,8 @@ class CenterFrame(tk.Frame):
         self.button.grid(row=1, column=1, sticky=tk.W+tk.E)
 
     def __execute(self):
-        output = self.spark_controller.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
+        self.__spark_ctrl.create_ngram_view(self.master.get_word_list())
+        output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
 
     def __print_output(self, output) -> None:
@@ -105,6 +111,7 @@ class FunctionFrame(tk.Frame):
     def __init__(self, master, relief, bd, center_frame: CenterFrame) -> None:
         center_frame = center_frame
         word_list = ["Fehlerlos", "Fallschirmzubehör", "Dokumentation"]
+        spark_ctrl = master.get_spark_controller()
         super().__init__(master=master, relief=relief, bd=bd)
 
         # Function 1: Highest Relative Change
@@ -252,8 +259,9 @@ class FunctionFrame(tk.Frame):
         def gen_query_f6():
             k = f6_k_input.get()
             delta = f6_delta_input.get()
-            word_subqueries = " cross join ".join("(select * from schema_f where str_rep = '" + word + "')" for word in word_list) + ")"
-            query = f"select lof.outlier from (select lof({k},{delta},*) lof from {word_subqueries}"
+            spark_ctrl.create_join_view(word_list)
+            # word_subqueries = " cross join ".join("(select * from schema_f where str_rep = '" + word + "')" for word in word_list) + ")"
+            query = f"select lof.outlier from (select lof({k},{delta},*) lof from joins)"
             test_output.config(text=query)
             center_frame.update_input(query)
 
@@ -423,7 +431,7 @@ class NgramFrame(tk.Frame):
     def __init__(self, master, relief, bd) -> None:
         super().__init__(master=master, relief=relief, bd=bd)
 
-        self.spark_controller = SparkConnection().spark_controller
+        self.spark_controller = master.get_spark_controller()
 
         frm_buttons = tk.Frame(self, relief=tk.RAISED, bd=2)
         btn_open = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=8))
@@ -455,7 +463,7 @@ class NgramFrame(tk.Frame):
         self.master.set_word_list([self.__listbox.get(i) for i in range(self.__listbox.size())])
 
 
-    def __update_ngrams(self, ngrams: list):
+    def update_ngrams(self, ngrams: list):
         self.spark_controller.create_ngram_view(ngrams)
 
 class SparkConnection():

@@ -148,8 +148,9 @@ class SparkController:
 
     def create_join_view(self, words: List[str]) -> None:
         """Creates a view for selected ngrams joint in a line"""
+        # TODO: should from ngrams
         query = "select * from " + "cross join ".join(
-            [f"(select * from ngram where str_rep = '{word}'" for word in words]
+            [f"(select * from schema_f where str_rep = '{word}')" for word in words]
         )
         self.execute_sql(query).createOrReplaceTempView("joins")
 
