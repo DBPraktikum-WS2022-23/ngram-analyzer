@@ -144,7 +144,14 @@ class SparkController:
         query = "select * from schema_f where str_rep in (" + ",".join(
             [f"'{word}'" for word in words]
         ) + ")"
-        self.execute_sql(query).createOrReplaceTempView("ngram")
+        self.execute_sql(query).createOrReplaceTempView("ngrams")
+
+    def create_join_view(self, words: List[str]) -> None:
+        """Creates a view for selected ngrams joint in a line"""
+        query = "select * from " + "cross join ".join(
+            [f"(select * from ngram where str_rep = '{word}'" for word in words]
+        )
+        self.execute_sql(query).createOrReplaceTempView("joins")
 
     def print_word_frequencies(self, words: List[str], years: List[int]) -> None:
         self.__wf.print_word_frequencies(words, years)
