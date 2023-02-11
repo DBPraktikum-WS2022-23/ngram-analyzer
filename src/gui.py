@@ -46,132 +46,275 @@ class FunctionFrame(tk.Frame):
     """Frame on the right side with function to generate queries"""
 
     def __init__(self, master, relief, bd) -> None:
+        word_list = ["Fehlerlos", "Fallschirmzubehör", "Dokumentation"]
         super().__init__(master=master, relief=relief, bd=bd)
 
-        # Function 1: Plot word frequencies
-        frm_func1 = tk.Frame(self, relief=tk.RAISED, bd=2)
-        frm_func1.pack(fill="both", expand=True)
+        # Function 1: Highest Relative Change
+        @staticmethod
+        def gen_query_f1():
+            dur = f1_dur_input.get()
+            word_list_str = ", ".join("'" + word + "'" for word in word_list)
+            test_output.config(text=f"select hrc.str_rep word, hrc.type type, hrc.start_year start, hrc.end_year end, hrc.result hrc from (select hrc({dur}, *) hrc from schema_f where str_rep in ({word_list_str}))")
+        frm_f1 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        frm_f1.columnconfigure(0, weight=0)
+        frm_f1.columnconfigure(1, weight=0)
+        frm_f1.columnconfigure(2, weight=1)
+        frm_f1.columnconfigure(3, weight=0)
 
-        func1_title = tk.Label(frm_func1, text="Plot word frequencies                                        ")
-        func1_title.grid(row=0, column=0, columnspan=3, sticky="w")
+        f1_title = tk.Label(frm_f1, text="Highest Relative Change")
+        f1_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        func1_start_label = tk.Label(frm_func1, text="Start")
-        func1_start_label.grid(row=1, column=0, sticky="ew")
-        func1_start_input = tk.Entry(frm_func1, width=4)
-        func1_start_input.grid(row=2, column=0, sticky="ew")
+        f1_dur_label = tk.Label(frm_f1, text="Duration")
+        f1_dur_label.grid(row=1, column=0, sticky="ew")
+        f1_dur_input = tk.Entry(frm_f1, width=8)
+        f1_dur_input.grid(row=2, column=0, sticky="ew")
 
-        func1_end_label = tk.Label(frm_func1, text="End")
-        func1_end_label.grid(row=1, column=1, sticky="ew")
-        func1_end_input = tk.Entry(frm_func1, width=4)
-        func1_end_input.grid(row=2, column=1, sticky="ew")
+        f1_btn_execute = tk.Button(frm_f1, text="Generate query", font=fnt.Font(size=8), command=gen_query_f1, anchor="e")
+        f1_btn_execute.grid(row=2, column=3, sticky="e")
 
-        func1_btn_execute = tk.Button(frm_func1, text="Generate query", font=fnt.Font(size=8), anchor="e")
-        func1_btn_execute.grid(row=2, column=2, sticky="e")
-
-        for widget in frm_func1.winfo_children():
+        for widget in frm_f1.winfo_children():
             widget.grid(padx=1, pady=1)
 
-        frm_func1.grid(row=0, column=0, sticky="new")
+        frm_f1.grid(row=1, column=0, sticky="new")
 
-        # Function 2: Highes relative change
-        frm_func2 = tk.Frame(self, relief=tk.RAISED, bd=2)
 
-        func2_title = tk.Label(frm_func2, text="Highest relative change")
-        func2_title.grid(row=0, column=0, columnspan=3, sticky="w")
+        # Function 2: Pearson correlation coefficient
+        def gen_query_f2():
+            start = f2_start_input.get()
+            end = f2_end_input.get()
+            word_list_str = ", ".join("'" + word + "'" for word in word_list)
+            test_output.config(text=f"with sel_words as (select * from schema_f where str_rep in ({word_list_str})) select pc.str_rep_1 word_1, pc.type_1 type_1, pc.str_rep_2 word_2, pc.type_2 type_2, pc.start_year start, pc.end_year end, pc.result pearson_corr from (select pc({start}, {end}, *) pc from sel_words a cross join sel_words b where a.str_rep != b.str_rep)")
 
-        func2_start_label = tk.Label(frm_func2, text="Start")
-        func2_start_label.grid(row=1, column=0, sticky="ew")
-        func2_start_input = tk.Entry(frm_func2, width=4)
-        func2_start_input.grid(row=2, column=0, sticky="ew")
+        frm_f2 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        frm_f2.columnconfigure(0, weight=0)
+        frm_f2.columnconfigure(1, weight=0)
+        frm_f2.columnconfigure(2, weight=1)
+        frm_f2.columnconfigure(3, weight=0)
 
-        func2_end_label = tk.Label(frm_func2, text="End")
-        func2_end_label.grid(row=1, column=1, sticky="ew")
-        func2_end_input = tk.Entry(frm_func2, width=4)
-        func2_end_input.grid(row=2, column=1, sticky="ew")
+        f2_title = tk.Label(frm_f2, text="Pearson correlation coefficient")
+        f2_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        func2_btn_execute = tk.Button(frm_func2, text="Generate query", font=fnt.Font(size=8))
-        func2_btn_execute.config(command=lambda: self.hrc(func2_end_input.get()))  # TODO: duration or start and end?
-        func2_btn_execute.grid(row=2, column=2, sticky="e")
+        f2_start_label = tk.Label(frm_f2, text="Start")
+        f2_start_label.grid(row=1, column=0, sticky="ew")
+        f2_start_input = tk.Entry(frm_f2, width=6)
+        f2_start_input.grid(row=2, column=0, sticky="ew")
+        f2_end_label = tk.Label(frm_f2, text="End")
+        f2_end_label.grid(row=1, column=1, sticky="ew")
+        f2_end_input = tk.Entry(frm_f2, width=6)
+        f2_end_input.grid(row=2, column=1, sticky="ew")
 
-        for widget in frm_func2.winfo_children():
+        f2_btn_execute = tk.Button(frm_f2, text="Generate query", font=fnt.Font(size=8), command=gen_query_f2)
+        f2_btn_execute.grid(row=2, column=3, sticky="e")
+
+        for widget in frm_f2.winfo_children():
             widget.grid(padx=1, pady=1)
 
-        frm_func2.grid(row=1, column=0, sticky="nsew")
+        frm_f2.grid(row=2, column=0, sticky="nsew")
 
-        # Function 3: Pearson correlation coefficient
-        frm_func3 = tk.Frame(self, relief=tk.RAISED, bd=2)
 
-        func3_title = tk.Label(frm_func3, text="Pearson correlation coefficient")
-        func3_title.grid(row=0, column=0, columnspan=3, sticky="w")
+        # Function 3: Statistical features for time series
+        def gen_query_f3():
+            word_list_str = ", ".join("'" + word + "'" for word in word_list)
+            test_output.config(text=f"with sel_words as (select * from schema_f where str_rep in ({word_list_str})) select sf.str_rep, sf.type, sf.mean, sf.median, sf.q_25, sf.q_75, sf.var, sf.min, sf.max, sf.hrc from (select sf(*) sf from sel_words)")
 
-        func3_start_label = tk.Label(frm_func3, text="Start")
-        func3_start_label.grid(row=1, column=0, sticky="ew")
-        func3_start_input = tk.Entry(frm_func3, width=4)
-        func3_start_input.grid(row=2, column=0, sticky="ew")
+        frm_f3 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        frm_f3.columnconfigure(0, weight=1)
+        frm_f3.columnconfigure(1, weight=1)
+        frm_f3.columnconfigure(2, weight=0)
 
-        func3_end_label = tk.Label(frm_func3, text="End")
-        func3_end_label.grid(row=1, column=1, sticky="ew")
-        func3_end_input = tk.Entry(frm_func3, width=4)
-        func3_end_input.grid(row=2, column=1, sticky="ew")
+        f3_title = tk.Label(frm_f3, text="Statistical features for time series")
+        f3_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        func3_btn_execute = tk.Button(frm_func3, text="Generate query", font=fnt.Font(size=8))
-        func3_btn_execute.grid(row=2, column=2, sticky="e")
+        f3_btn_execute = tk.Button(frm_f3, text="Generate query", font=fnt.Font(size=8), command=gen_query_f3)
+        f3_btn_execute.grid(row=1, column=2, sticky="e")
 
-        for widget in frm_func3.winfo_children():
+        for widget in frm_f3.winfo_children():
             widget.grid(padx=1, pady=1)
 
-        frm_func3.grid(row=2, column=0, sticky="ew")
+        frm_f3.grid(row=3, column=0, sticky="nsew")
 
-        # Function 4: Euclidean distance of nearest neighbours
-        frm_func4 = tk.Frame(self, relief=tk.RAISED, bd=2)
 
-        func4_title = tk.Label(frm_func4, text="Euclidean distance of nearest neighbours")
-        func4_title.grid(row=0, column=0, columnspan=3, sticky="w")
+        # Function 4: Relations between pairs of time series
+        def gen_query_f4():
+            word_list_str = ", ".join("'" + word + "'" for word in word_list)
+            test_output.config(
+                text=f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select rel.str_rep1, rel.type1, rel.str_rep2, rel.type2, rel.hrc_year, rel.hrc_max, rel.cov, rel.spearman_corr, rel.pearson_corr from (select rel(*) rel from sel_words a cross join sel_words b where a.str_rep != b.str_rep)")
 
-        func4_number_label = tk.Label(frm_func4, text="Number of neighbours")
-        func4_number_label.grid(row=1, column=0, columnspan=2, sticky="ew")
-        func4_number_input = tk.Entry(frm_func4, width=15)
-        func4_number_input.grid(row=2, column=0, columnspan=2, sticky="ew")
+        frm_f4 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        frm_f4.columnconfigure(0, weight=1)
+        frm_f4.columnconfigure(1, weight=1)
+        frm_f4.columnconfigure(2, weight=0)
 
-        func4_btn_execute = tk.Button(frm_func4, text="Generate query", font=fnt.Font(size=8))
-        func4_btn_execute.grid(row=2, column=2, sticky="e")
+        f4_title = tk.Label(frm_f4, text="Relations between pairs of time series")
+        f4_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        for widget in frm_func4.winfo_children():
+        f4_btn_execute = tk.Button(frm_f4, text="Generate query", font=fnt.Font(size=8),
+                                   command=gen_query_f4)
+        f4_btn_execute.grid(row=1, column=2, sticky="e")
+
+        for widget in frm_f4.winfo_children():
             widget.grid(padx=1, pady=1)
 
-        frm_func4.grid(row=3, column=0, sticky="ew")
+        frm_f4.grid(row=4, column=0, sticky="nsew")
+
+
+        # Function 5: Linear regression
+        def gen_query_f5():
+            word_list_str = ", ".join("'" + word + "'" for word in word_list)
+            test_output.config(text=f"select lr(*) lr from (select * from schema_f where str_rep in {word_list_str})")
+
+        frm_f5 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        frm_f5.columnconfigure(0, weight=1)
+        frm_f5.columnconfigure(1, weight=1)
+        frm_f5.columnconfigure(2, weight=0)
+
+        f5_title = tk.Label(frm_f5, text="Linear regression")
+        f5_title.grid(row=0, column=0, columnspan=3, sticky="w")
+
+        f5_btn_execute = tk.Button(frm_f5, text="Generate query", font=fnt.Font(size=8), command=gen_query_f5)
+        f5_btn_execute.grid(row=1, column=2, sticky="e")
+
+        for widget in frm_f5.winfo_children():
+            widget.grid(padx=1, pady=1)
+
+        frm_f5.grid(row=5, column=0, sticky="nsew")
+
+
+        # Function 6: Local outlier factor
+        def gen_query_f6():
+            word_subqueries = " cross join ".join("(select * from schema_f where str_rep = '" + word + "')" for word in word_list)
+            test_output.config(text=f"select lof.outlier from (select lof(2,2,*) lof from {word_subqueries}")
+
+        frm_f6 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        frm_f6.columnconfigure(0, weight=1)
+        frm_f6.columnconfigure(1, weight=1)
+        frm_f6.columnconfigure(2, weight=0)
+
+        f6_title = tk.Label(frm_f6, text="Local outlier factor")
+        f6_title.grid(row=0, column=0, columnspan=3, sticky="w")
+
+        f6_btn_execute = tk.Button(frm_f6, text="Generate query", font=fnt.Font(size=8), command=gen_query_f6)
+        f6_btn_execute.grid(row=2, column=2, sticky="e")
+
+        for widget in frm_f6.winfo_children():
+            widget.grid(padx=1, pady=1)
+
+        frm_f6.grid(row=6, column=0, sticky="nsew")
+
+
+        # Function 7: K nearest neighbours (euclidean disctance)
+        def gen_query_f7():
+            k_neighbours = f7_k_neighbours_input.get()
+            word = word_list[0]
+            test_output.config(text=f"select ed.str_rep, ed.result from (select euclidean_dist(*) ed from schema_f a cross join schema_f b where a.str_rep = '{word}' and b.str_rep != '{word}') order by 2 limit {k_neighbours}")
+
+        frm_f7 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        frm_f7.columnconfigure(0, weight=0)
+        frm_f7.columnconfigure(1, weight=1)
+        frm_f7.columnconfigure(2, weight=0)
+
+        f7_title = tk.Label(frm_f7, text="K nearest neighbours (euclidean disctance)")
+        f7_title.grid(row=0, column=0, columnspan=3, sticky="w")
+
+        f7_k_neighbours_label = tk.Label(frm_f7, text="Number of neighbours")
+        f7_k_neighbours_label.grid(row=1, column=0, sticky="ew")
+        f7_k_neighbours_input = tk.Entry(frm_f7)
+        f7_k_neighbours_input.grid(row=2, column=0, sticky="ew")
+
+        f7_btn_execute = tk.Button(frm_f7, text="Generate query", font=fnt.Font(size=8), command=gen_query_f7)
+        f7_btn_execute.grid(row=2, column=2, sticky="e")
+
+        for widget in frm_f7.winfo_children():
+            widget.grid(padx=1, pady=1)
+
+        frm_f7.grid(row=7, column=0, sticky="nsew")
+
+
+        # Function 8: Median distance
+        def gen_query_f8():
+            word_list_str = ", ".join("'" + word + "'" for word in word_list)
+            test_output.config(text=f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select median_distance(0.1, *) median_distance from sel_words")
+
+        frm_f8 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        frm_f8.columnconfigure(0, weight=1)
+        frm_f8.columnconfigure(1, weight=1)
+        frm_f8.columnconfigure(2, weight=0)
+
+        f8_title = tk.Label(frm_f8, text="Median distance")
+        f8_title.grid(row=0, column=0, columnspan=3, sticky="w")
+
+        f8_btn_execute = tk.Button(frm_f8, text="Generate query", font=fnt.Font(size=8), command=gen_query_f8)
+        f8_btn_execute.grid(row=1, column=2, sticky="e")
+
+        for widget in frm_f8.winfo_children():
+            widget.grid(padx=1, pady=1)
+
+        frm_f8.grid(row=8, column=0, sticky="nsew")
+
+
+        # Function 9: Zscore
+        def gen_query_f9():
+            word_list_str = ", ".join("'" + word + "'" for word in word_list)
+            test_output.config(text=f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select zscore(3, *) zscore from sel_words")
+
+        frm_f9 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        frm_f9.columnconfigure(0, weight=1)
+        frm_f9.columnconfigure(1, weight=1)
+        frm_f9.columnconfigure(2, weight=0)
+
+        f9_title = tk.Label(frm_f9, text="Zscore")
+        f9_title.grid(row=0, column=0, columnspan=3, sticky="w")
+
+        f9_btn_execute = tk.Button(frm_f9, text="Generate query", font=fnt.Font(size=8), command=gen_query_f9)
+        f9_btn_execute.grid(row=1, column=2, sticky="e")
+
+        for widget in frm_f9.winfo_children():
+            widget.grid(padx=1, pady=1)
+
+        frm_f9.grid(row=9, column=0, sticky="nsew")
+
 
         # Function Template
+        def gen_query_funcn():
+            start = funcn_start_input.get()
+            end = funcn_end_input.get()
+            test_output.config(text=f"select...")
+
         frm_funcn = tk.Frame(self, relief=tk.RAISED, bd=2)
+        frm_funcn.columnconfigure(0, weight=1)
+        frm_funcn.columnconfigure(1, weight=1)
+        frm_funcn.columnconfigure(2, weight=0)
 
         funcn_title = tk.Label(frm_funcn, text="Example Function")
         funcn_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
         funcn_start_label = tk.Label(frm_funcn, text="Start")
         funcn_start_label.grid(row=1, column=0, sticky="ew")
-        funcn_start_input = tk.Entry(frm_funcn, width=4)
+        funcn_start_input = tk.Entry(frm_funcn, width=5)
         funcn_start_input.grid(row=2, column=0, sticky="ew")
 
         funcn_end_label = tk.Label(frm_funcn, text="End")
         funcn_end_label.grid(row=1, column=1, sticky="ew")
-        funcn_end_input = tk.Entry(frm_funcn, width=4)
+        funcn_end_input = tk.Entry(frm_funcn, width=5)
         funcn_end_input.grid(row=2, column=1, sticky="ew")
 
-        funcn_btn_execute = tk.Button(frm_funcn, text="Generate query", font=fnt.Font(size=8))
+        funcn_btn_execute = tk.Button(frm_funcn, text="Generate query", font=fnt.Font(size=8), command=gen_query_funcn)
         funcn_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_funcn.winfo_children():
             widget.grid(padx=1, pady=1)
 
-        frm_funcn.grid(row=99, column=0, sticky="nsew")  # TODO: change row!
+        frm_funcn.grid(row=99, column=0, sticky="nsew")  # TODO change row
 
-    def hrc(self, duration: int) -> None:
-        query = f"""
-        select hrc.str_rep word, hrc.type type, hrc.start_year start, hrc.end_year end, hrc.result hrc
-        from (select hrc({duration},*) as hrc from schema_f limit 1)
-        """
-        # TODO: pass query to CenterFrame
 
+
+        frm_test = tk.Frame(self, relief=tk.RAISED, bd=2)
+
+        test_output = tk.Label(frm_test, text="Some output", wraplength=400, justify="left")
+        #test_output = tk.Text(frm_test, state="disabled")
+        #test_output.insert(0.0, "Some output")
+        test_output.grid(row=0, column=0, padx=1, pady=1, sticky="nsew")
+        frm_test.grid(row=999, column=0, sticky="nsew")
 
 class NgramFrame(tk.Frame):
     """Frame on the left side listing N-grams"""
