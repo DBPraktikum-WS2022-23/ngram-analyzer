@@ -118,9 +118,9 @@ class FunctionFrame(tk.Frame):
 
         frm_f1 = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_f1.columnconfigure(0, weight=0)
-        frm_f1.columnconfigure(1, weight=0)
-        frm_f1.columnconfigure(2, weight=1)
-        frm_f1.columnconfigure(3, weight=0)
+        frm_f1.columnconfigure(1, weight=1)
+        frm_f1.columnconfigure(2, weight=0)
+
 
         f1_title = tk.Label(frm_f1, text="Highest Relative Change")
         f1_title.grid(row=0, column=0, columnspan=3, sticky="w")
@@ -131,7 +131,7 @@ class FunctionFrame(tk.Frame):
         f1_dur_input.grid(row=2, column=0, sticky="ew")
 
         f1_btn_execute = tk.Button(frm_f1, text="Generate query", font=fnt.Font(size=8), command=gen_query_f1, anchor="e")
-        f1_btn_execute.grid(row=2, column=3, sticky="e")
+        f1_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f1.winfo_children():
             widget.grid(padx=1, pady=1)
@@ -250,21 +250,33 @@ class FunctionFrame(tk.Frame):
 
         # Function 6: Local outlier factor
         def gen_query_f6():
+            k = f6_k_input.get()
+            delta = f6_delta_input.get()
             word_subqueries = " cross join ".join("(select * from schema_f where str_rep = '" + word + "')" for word in word_list) + ")"
-            query = f"select lof.outlier from (select lof(2,2,*) lof from {word_subqueries}"
+            query = f"select lof.outlier from (select lof({k},{delta},*) lof from {word_subqueries}"
             test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f6 = tk.Frame(self, relief=tk.RAISED, bd=2)
-        frm_f6.columnconfigure(0, weight=1)
-        frm_f6.columnconfigure(1, weight=1)
-        frm_f6.columnconfigure(2, weight=0)
+        frm_f6.columnconfigure(0, weight=0)
+        frm_f6.columnconfigure(1, weight=0)
+        frm_f6.columnconfigure(2, weight=1)
+        frm_f6.columnconfigure(3, weight=0)
 
         f6_title = tk.Label(frm_f6, text="Local outlier factor")
         f6_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
+        f6_k_label = tk.Label(frm_f6, text="k")
+        f6_k_label.grid(row=1, column=0, sticky="ew")
+        f6_k_input = tk.Entry(frm_f6, width=6)
+        f6_k_input.grid(row=2, column=0, sticky="ew")
+        f6_delta_label = tk.Label(frm_f6, text="Delta")
+        f6_delta_label.grid(row=1, column=1, sticky="ew")
+        f6_delta_input = tk.Entry(frm_f6, width=6)
+        f6_delta_input.grid(row=2, column=1, sticky="ew")
+
         f6_btn_execute = tk.Button(frm_f6, text="Generate query", font=fnt.Font(size=8), command=gen_query_f6)
-        f6_btn_execute.grid(row=2, column=2, sticky="e")
+        f6_btn_execute.grid(row=2, column=3, sticky="e")
 
         for widget in frm_f6.winfo_children():
             widget.grid(padx=1, pady=1)
@@ -305,20 +317,26 @@ class FunctionFrame(tk.Frame):
         # Function 8: Median distance
         def gen_query_f8():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            query = f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select median_distance(0.1, *) median_distance from sel_words"
+            threshold = f8_threshold_input.get()
+            query = f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select median_distance({threshold}, *) median_distance from sel_words"
             test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f8 = tk.Frame(self, relief=tk.RAISED, bd=2)
-        frm_f8.columnconfigure(0, weight=1)
+        frm_f8.columnconfigure(0, weight=0)
         frm_f8.columnconfigure(1, weight=1)
         frm_f8.columnconfigure(2, weight=0)
 
         f8_title = tk.Label(frm_f8, text="Median distance")
         f8_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
+        f8_threshold_label = tk.Label(frm_f8, text="Threshold")
+        f8_threshold_label.grid(row=1, column=0, sticky="ew")
+        f8_threshold_input = tk.Entry(frm_f8, width=8)
+        f8_threshold_input.grid(row=2, column=0, sticky="ew")
+
         f8_btn_execute = tk.Button(frm_f8, text="Generate query", font=fnt.Font(size=8), command=gen_query_f8)
-        f8_btn_execute.grid(row=1, column=2, sticky="e")
+        f8_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f8.winfo_children():
             widget.grid(padx=1, pady=1)
@@ -329,20 +347,26 @@ class FunctionFrame(tk.Frame):
         # Function 9: Zscore
         def gen_query_f9():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            query = f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select zscore(3, *) zscore from sel_words"
+            threshold = f9_threshold_input.get()
+            query = f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select zscore({threshold}, *) zscore from sel_words"
             test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f9 = tk.Frame(self, relief=tk.RAISED, bd=2)
-        frm_f9.columnconfigure(0, weight=1)
+        frm_f9.columnconfigure(0, weight=0)
         frm_f9.columnconfigure(1, weight=1)
         frm_f9.columnconfigure(2, weight=0)
 
         f9_title = tk.Label(frm_f9, text="Zscore")
         f9_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
+        f9_threshold_label = tk.Label(frm_f9, text="Threshold")
+        f9_threshold_label.grid(row=1, column=0, sticky="ew")
+        f9_threshold_input = tk.Entry(frm_f9, width=8)
+        f9_threshold_input.grid(row=2, column=0, sticky="ew")
+
         f9_btn_execute = tk.Button(frm_f9, text="Generate query", font=fnt.Font(size=8), command=gen_query_f9)
-        f9_btn_execute.grid(row=1, column=2, sticky="e")
+        f9_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f9.winfo_children():
             widget.grid(padx=1, pady=1)
