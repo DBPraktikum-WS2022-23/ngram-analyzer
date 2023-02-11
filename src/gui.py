@@ -102,7 +102,8 @@ class CenterFrame(tk.Frame):
 class FunctionFrame(tk.Frame):
     """Frame on the right side with function to generate queries"""
 
-    def __init__(self, master, relief, bd) -> None:
+    def __init__(self, master, relief, bd, center_frame: CenterFrame) -> None:
+        center_frame = center_frame
         word_list = ["Fehlerlos", "Fallschirmzubehör", "Dokumentation"]
         super().__init__(master=master, relief=relief, bd=bd)
 
@@ -111,7 +112,10 @@ class FunctionFrame(tk.Frame):
         def gen_query_f1():
             dur = f1_dur_input.get()
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            test_output.config(text=f"select hrc.str_rep word, hrc.type type, hrc.start_year start, hrc.end_year end, hrc.result hrc from (select hrc({dur}, *) hrc from schema_f where str_rep in ({word_list_str}))")
+            query = f"select hrc.str_rep word, hrc.type type, hrc.start_year start, hrc.end_year end, hrc.result hrc from (select hrc({dur}, *) hrc from schema_f where str_rep in ({word_list_str}))"
+            test_output.config(text=query)
+            center_frame.update_input(query)
+
         frm_f1 = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_f1.columnconfigure(0, weight=0)
         frm_f1.columnconfigure(1, weight=0)
@@ -140,7 +144,9 @@ class FunctionFrame(tk.Frame):
             start = f2_start_input.get()
             end = f2_end_input.get()
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            test_output.config(text=f"with sel_words as (select * from schema_f where str_rep in ({word_list_str})) select pc.str_rep_1 word_1, pc.type_1 type_1, pc.str_rep_2 word_2, pc.type_2 type_2, pc.start_year start, pc.end_year end, pc.result pearson_corr from (select pc({start}, {end}, *) pc from sel_words a cross join sel_words b where a.str_rep != b.str_rep)")
+            query = f"with sel_words as (select * from schema_f where str_rep in ({word_list_str})) select pc.str_rep_1 word_1, pc.type_1 type_1, pc.str_rep_2 word_2, pc.type_2 type_2, pc.start_year start, pc.end_year end, pc.result pearson_corr from (select pc({start}, {end}, *) pc from sel_words a cross join sel_words b where a.str_rep != b.str_rep)"
+            test_output.config(text=query)
+            center_frame.update_input(query)
 
         frm_f2 = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_f2.columnconfigure(0, weight=0)
@@ -172,7 +178,9 @@ class FunctionFrame(tk.Frame):
         # Function 3: Statistical features for time series
         def gen_query_f3():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            test_output.config(text=f"with sel_words as (select * from schema_f where str_rep in ({word_list_str})) select sf.str_rep, sf.type, sf.mean, sf.median, sf.q_25, sf.q_75, sf.var, sf.min, sf.max, sf.hrc from (select sf(*) sf from sel_words)")
+            query = f"with sel_words as (select * from schema_f where str_rep in ({word_list_str})) select sf.str_rep, sf.type, sf.mean, sf.median, sf.q_25, sf.q_75, sf.var, sf.min, sf.max, sf.hrc from (select sf(*) sf from sel_words)"
+            test_output.config(text=query)
+            center_frame.update_input(query)
 
         frm_f3 = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_f3.columnconfigure(0, weight=1)
@@ -194,8 +202,9 @@ class FunctionFrame(tk.Frame):
         # Function 4: Relations between pairs of time series
         def gen_query_f4():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            test_output.config(
-                text=f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select rel.str_rep1, rel.type1, rel.str_rep2, rel.type2, rel.hrc_year, rel.hrc_max, rel.cov, rel.spearman_corr, rel.pearson_corr from (select rel(*) rel from sel_words a cross join sel_words b where a.str_rep != b.str_rep)")
+            query = f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select rel.str_rep1, rel.type1, rel.str_rep2, rel.type2, rel.hrc_year, rel.hrc_max, rel.cov, rel.spearman_corr, rel.pearson_corr from (select rel(*) rel from sel_words a cross join sel_words b where a.str_rep != b.str_rep)"
+            test_output.config(text=query)
+            center_frame.update_input(query)
 
         frm_f4 = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_f4.columnconfigure(0, weight=1)
@@ -218,7 +227,9 @@ class FunctionFrame(tk.Frame):
         # Function 5: Linear regression
         def gen_query_f5():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            test_output.config(text=f"select lr(*) lr from (select * from schema_f where str_rep in {word_list_str})")
+            query = f"select lr(*) lr from (select * from schema_f where str_rep in {word_list_str})"
+            test_output.config(text=query)
+            center_frame.update_input(query)
 
         frm_f5 = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_f5.columnconfigure(0, weight=1)
@@ -240,7 +251,9 @@ class FunctionFrame(tk.Frame):
         # Function 6: Local outlier factor
         def gen_query_f6():
             word_subqueries = " cross join ".join("(select * from schema_f where str_rep = '" + word + "')" for word in word_list)
-            test_output.config(text=f"select lof.outlier from (select lof(2,2,*) lof from {word_subqueries}")
+            query = f"select lof.outlier from (select lof(2,2,*) lof from {word_subqueries}"
+            test_output.config(text=query)
+            center_frame.update_input(query)
 
         frm_f6 = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_f6.columnconfigure(0, weight=1)
@@ -263,7 +276,9 @@ class FunctionFrame(tk.Frame):
         def gen_query_f7():
             k_neighbours = f7_k_neighbours_input.get()
             word = word_list[0]
-            test_output.config(text=f"select ed.str_rep, ed.result from (select euclidean_dist(*) ed from schema_f a cross join schema_f b where a.str_rep = '{word}' and b.str_rep != '{word}') order by 2 limit {k_neighbours}")
+            query = f"select ed.str_rep, ed.result from (select euclidean_dist(*) ed from schema_f a cross join schema_f b where a.str_rep = '{word}' and b.str_rep != '{word}') order by 2 limit {k_neighbours}"
+            test_output.config(text=query)
+            center_frame.update_input(query)
 
         frm_f7 = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_f7.columnconfigure(0, weight=0)
@@ -290,7 +305,9 @@ class FunctionFrame(tk.Frame):
         # Function 8: Median distance
         def gen_query_f8():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            test_output.config(text=f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select median_distance(0.1, *) median_distance from sel_words")
+            query = f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select median_distance(0.1, *) median_distance from sel_words"
+            test_output.config(text=query)
+            center_frame.update_input(query)
 
         frm_f8 = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_f8.columnconfigure(0, weight=1)
@@ -312,7 +329,9 @@ class FunctionFrame(tk.Frame):
         # Function 9: Zscore
         def gen_query_f9():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            test_output.config(text=f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select zscore(3, *) zscore from sel_words")
+            query = f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select zscore(3, *) zscore from sel_words"
+            test_output.config(text=query)
+            center_frame.update_input(query)
 
         frm_f9 = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_f9.columnconfigure(0, weight=1)
@@ -335,7 +354,9 @@ class FunctionFrame(tk.Frame):
         def gen_query_funcn():
             start = funcn_start_input.get()
             end = funcn_end_input.get()
-            test_output.config(text=f"select...")
+            query = f"select..."
+            test_output.config(text=query)
+            center_frame.update_input(query)
 
         frm_funcn = tk.Frame(self, relief=tk.RAISED, bd=2)
         frm_funcn.columnconfigure(0, weight=1)
