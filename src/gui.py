@@ -250,7 +250,7 @@ class FunctionFrame(tk.Frame):
 
         # Function 6: Local outlier factor
         def gen_query_f6():
-            word_subqueries = " cross join ".join("(select * from schema_f where str_rep = '" + word + "')" for word in word_list)
+            word_subqueries = " cross join ".join("(select * from schema_f where str_rep = '" + word + "')" for word in word_list) + ")"
             query = f"select lof.outlier from (select lof(2,2,*) lof from {word_subqueries}"
             test_output.config(text=query)
             center_frame.update_input(query)
