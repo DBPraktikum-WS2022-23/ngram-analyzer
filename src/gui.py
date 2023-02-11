@@ -28,7 +28,7 @@ class GUI(tk.Tk):
         frm_center = CenterFrame(self, relief=tk.FLAT, height=400, width=400)
         frm_center.grid(row=0, column=1)
 
-        frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2)
+        frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2, center_frame=frm_center)
         frm_functions.grid(row=0, column=2, sticky="nes")
 
     def set_word_list(self, words) -> None:
