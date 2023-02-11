@@ -4,10 +4,10 @@ import os
 import sys
 from typing import Dict, Optional
 
-from src.config_converter import ConfigConverter, ConfigCreator
-from src.controller import SparkController, PluginController
-from src.database_creation import NgramDBBuilder
-from src.shell import Prompt
+from config_converter import ConfigConverter, ConfigCreator
+from controller import SparkController, PluginController
+from database_creation import NgramDBBuilder
+from shell import Prompt
 
 
 class Cli:
@@ -17,17 +17,17 @@ class Cli:
 
     def __init__(self) -> None:
         self.conn_settings: Dict[str, str] = {}
-        self.spark_controller = None
+        self.spark_controller: SparkController = None
 
     def __exit(self) -> None:
-        if self.spark:
-            self.spark.stop()
+        if self.spark_controller:
+            self.spark_controller.get_spark_session().stop()
 
         sys.exit()
 
     def __exit_error(self, message) -> None:
-        if self.spark:
-            self.spark.stop()
+        if self.spark_controller:
+            self.spark_controller.get_spark_session().stop()
 
         sys.exit(f"Error: {message}.")
 

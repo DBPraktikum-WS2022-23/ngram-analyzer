@@ -5,10 +5,10 @@ import pkgutil
 
 from pyspark.sql import DataFrame, SparkSession
 
-from src.info import DataBaseStatistics, StatFunctions, WordFrequencies
-from src.transfer import Transferer
-from src.visualiser import Visualiser
-from src.plugins.base_plugin import BasePlugin
+from info import DataBaseStatistics, WordFrequencies
+from transfer import Transferer
+from visualiser import Visualiser
+from plugins.base_plugin import BasePlugin
 
 class DatabaseToSparkDF:
     """Module which reads data from the database into spark dataframes"""
@@ -42,6 +42,7 @@ class PluginController:
     def register_plugins(self, plugins_path: str = "src/plugins"):
         mod_plugin_path = plugins_path.replace("/", ".")
         mod_plugin_path = mod_plugin_path.replace("\\", ".")
+        mod_plugin_path = mod_plugin_path[4:]
 
 
         discovered_plugins: List[str] = [f"{mod_plugin_path}.{name}"
@@ -155,6 +156,13 @@ class SparkController:
             # self.__get_schema_knn_input().createOrReplaceTempView("schema_knn_input")
             return self.__spark.sql(sql)
         return None
+
+    def create_ngram_view(self, words: List[str]) -> None:
+        """Creates a view for selected ngrams"""
+        query = "select * from schema_f where str_rep in (" + ",".join(
+            [f"'{word}'" for word in words]
+        ) + ")"
+        self.execute_sql(query).createOrReplaceTempView("ngram")
 
     def print_word_frequencies(self, words: List[str], years: List[int]) -> None:
         self.__wf.print_word_frequencies(words, years)

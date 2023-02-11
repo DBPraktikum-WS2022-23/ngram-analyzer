@@ -1,4 +1,4 @@
-from src.plugins.base_plugin import BasePlugin
+from plugins.base_plugin import BasePlugin
 from typing import List, Tuple
 
 import numpy

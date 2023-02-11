@@ -1,5 +1,5 @@
-from src.plugins.base_plugin import BasePlugin
-from src.plugins.InternalOD import ZScoreOD
+from plugins.base_plugin import BasePlugin
+from plugins.InternalOD import ZScoreOD
 from pyspark.sql.types import StructType, StructField, ArrayType, IntegerType
 
 

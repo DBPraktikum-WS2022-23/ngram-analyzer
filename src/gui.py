@@ -1,6 +1,12 @@
+import os
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as fnt
+from typing import List
+from controller import SparkController
+from config_converter import ConfigConverter
+from controller import PluginController
+from database_creation import NgramDBBuilder
 
 from typing import Type, List
 
@@ -36,6 +42,7 @@ class GUI(tk.Tk):
 class CenterFrame(tk.Frame):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs) 
+        self.spark_controller = SparkConnection().spark_controller
         self.__add_plot_output()
         self.__add_tabs_notebook()
 
@@ -73,12 +80,16 @@ class CenterFrame(tk.Frame):
         self.button.grid(row=1, column=1, sticky=tk.W+tk.E)
 
     def __execute(self):
-        print(self.master.get_word_list()) # wird in terminal ausgegeben nicht in GUI
-        self.__print_output("Test")
+        output = self.spark_controller.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
+        self.__print_output(output)
 
     def __print_output(self, output) -> None:
         self.text.insert('end', output + "\n")
         self.text.config(state='disabled')
+
+    def update_input(self, input: str) -> None:
+        self.entry.delete(0, 'end')
+        self.entry.insert(0, input)
 
 class FunctionFrame(tk.Frame):
     """Frame on the right side with function to generate queries"""
@@ -128,6 +139,7 @@ class FunctionFrame(tk.Frame):
         func2_end_input.grid(row=2, column=1, sticky="ew")
 
         func2_btn_execute = tk.Button(frm_func2, text="Generate query", font=fnt.Font(size=8))
+        func2_btn_execute.config(command=lambda: self.hrc(func2_end_input.get()))  # TODO: duration or start and end?
         func2_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_func2.winfo_children():
@@ -202,10 +214,20 @@ class FunctionFrame(tk.Frame):
 
         frm_funcn.grid(row=99, column=0, sticky="nsew")  # TODO: change row!
 
+    def hrc(self, duration: int) -> None:
+        query = f"""
+        select hrc.str_rep word, hrc.type type, hrc.start_year start, hrc.end_year end, hrc.result hrc
+        from (select hrc({duration},*) as hrc from schema_f limit 1)
+        """
+        # TODO: pass query to CenterFrame
+
+
 class NgramFrame(tk.Frame):
     """Frame on the left side listing N-grams"""
     def __init__(self, master, relief, bd) -> None:
         super().__init__(master=master, relief=relief, bd=bd)
+
+        self.spark_controller = SparkConnection().spark_controller
 
         frm_buttons = tk.Frame(self, relief=tk.RAISED, bd=2)
         btn_open = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=8))
@@ -234,6 +256,24 @@ class NgramFrame(tk.Frame):
         selected_langs = ",".join([self.__listbox.get(i) for i in selected_indices])
         self.selected_str = selected_langs
         print(selected_langs)
+
+    def __update_ngrams(self, ngrams: list):
+        self.spark_controller.create_ngram_view(ngrams)
+
+class SparkConnection():
+    # TODO: don't need this class when shell is initialized
+    def __init__(self) -> None:
+        config: ConfigConverter = ConfigConverter(
+            "settings/" + os.listdir("settings")[0] # temporary
+        )
+        conn_settings = config.get_conn_settings()
+        db_builder = NgramDBBuilder(conn_settings)
+        self.spark_controller: SparkController = SparkController(
+            conn_settings, log_level="OFF"
+        )
+
+        self.plugin_controller: PluginController = PluginController(self.spark_controller.get_spark_session())
+        self.plugin_controller.register_plugins()
 
 if __name__ == "__main__":
     GUI().show()
