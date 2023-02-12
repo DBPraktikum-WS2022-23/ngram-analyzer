@@ -107,11 +107,10 @@ class CenterFrame(tk.Frame):
 
     def __execute(self):
         words = self.master.get_word_list()
-        years = range(1800, 2001)
         self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
-        self.__spark_ctrl.plot_word_frequencies(words, years)
+        self.__spark_ctrl.plot_scatter_words(words)
 
     def __print_output(self, output) -> None:
         self.text.insert('end', output + "\n")

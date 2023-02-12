@@ -178,6 +178,10 @@ class SparkController:
         # draws without regression line, scaling optional
         self.__visualizer.plot_scatter(schema_f_df, 1800, 2000)
 
+    def plot_scatter_words(self, words) -> None:
+        ngrams_df = self.create_ngram_view(words)
+        self.__visualizer.plot_scatter(ngrams_df, 1800, 2001)
+
     def plot_scatter_with_regression(self) -> None:
         schema_f_df = self.__get_schema_f_df()
 
