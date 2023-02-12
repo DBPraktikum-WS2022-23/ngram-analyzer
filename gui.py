@@ -42,6 +42,7 @@ class GUI(tk.Tk):
 
     def set_selected_word_list(self, words) -> None:
         self.__selected_word_list = words
+        print(self.__selected_word_list)
 
     def get_selected_word_list(self) -> List[str]:
         return self.__selected_word_list
@@ -431,7 +432,7 @@ class NgramFrame(tk.Frame):
     def __init__(self, master, relief, bd) -> None:
         super().__init__(master=master, relief=relief, bd=bd)
 
-        #self.spark_controller = SparkConnection().spark_controller
+        self.spark_controller = SparkConnection().spark_controller
 
         frm_buttons = tk.Frame(self, relief=tk.RAISED, bd=2)
         self.btn_add = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=8), command=self.__add_clicked)
@@ -446,13 +447,14 @@ class NgramFrame(tk.Frame):
             widget.grid(padx=1, pady=5)
         items = ["aaa", "bbb", "ccc"]
         list_items = tk.Variable(value=items)
-        self.__listbox = tk.Listbox(self, listvariable=list_items, height=100)
-        self.__listbox.grid(row=1, column=0, sticky="ew")#
+        self.__listbox = tk.Listbox(self, listvariable=list_items, height=100, selectmode="multiple")
+        self.__listbox.grid(row=1, column=0, sticky="ew")
         self.__listbox.bind('<<ListboxSelect>>', self.__items_selected)
 
     def __add_clicked(self):
         self.win = AddNgramWindow(self.master, self.insert_item)
         self.master.wait_window(self.win.top)
+        self.__update_itemlist()
 
     def insert_item(self, item):
         self.__listbox.insert(tk.END, item)
@@ -463,7 +465,6 @@ class NgramFrame(tk.Frame):
         # get selected items
         selected_items = [self.__listbox.get(i) for i in selected_indices]
         self.master.set_selected_word_list(selected_items)
-        self.__update_itemlist()
 
     def __update_itemlist(self):
         self.master.set_word_list([self.__listbox.get(i) for i in range(self.__listbox.size())])
