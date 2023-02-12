@@ -10,10 +10,8 @@ from database_creation import NgramDBBuilder
 
 from typing import Type, List
 
-
 class GUI(tk.Tk):
     """Wrapper for tkinter root object"""
-
     def __init__(self) -> None:
         super().__init__()
 
@@ -54,7 +52,6 @@ class GUI(tk.Tk):
     def show(self):
         self.mainloop()
 
-
 class CenterFrame(tk.Frame):
     def __init__(self, master, relief, height, width) -> None:
         super().__init__(master=master, relief=relief, height=height, width=width)
@@ -75,7 +72,7 @@ class CenterFrame(tk.Frame):
         self.notebook.add(self.console_tab, text="Console")
         self.notebook.add(self.sql_tab, text="SQL")
         self.notebook.grid(row=1, column=0)
-
+        
         self.__add_sql_output(self.sql_tab)
         self.__add_sql_input(self.sql_tab)
 
@@ -88,12 +85,12 @@ class CenterFrame(tk.Frame):
     def __add_sql_output(self, master) -> None:
         self.text = tk.Text(master)
         self.text.grid(row=0, column=0, columnspan=2, rowspan=1)
-
+        
     def __add_sql_input(self, master) -> None:
         self.entry = tk.Entry(master, width=70)
         self.button = tk.Button(master, text="Run", command=self.__execute, font=fnt.Font(size=8))
-        self.entry.grid(row=1, column=0, sticky=tk.W + tk.E)
-        self.button.grid(row=1, column=1, sticky=tk.W + tk.E)
+        self.entry.grid(row=1, column=0, sticky=tk.W+tk.E)
+        self.button.grid(row=1, column=1, sticky=tk.W+tk.E)
 
     def __execute(self):
         self.__spark_ctrl.create_ngram_view(self.master.get_word_list())
@@ -107,7 +104,6 @@ class CenterFrame(tk.Frame):
     def update_input(self, input: str) -> None:
         self.entry.delete(0, 'end')
         self.entry.insert(0, input)
-
 
 class FunctionFrame(tk.Frame):
     """Frame on the right side with function to generate queries"""
@@ -132,6 +128,7 @@ class FunctionFrame(tk.Frame):
         frm_f1.columnconfigure(1, weight=1)
         frm_f1.columnconfigure(2, weight=0)
 
+
         f1_title = tk.Label(frm_f1, text="Highest Relative Change")
         f1_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
@@ -140,14 +137,14 @@ class FunctionFrame(tk.Frame):
         f1_dur_input = tk.Entry(frm_f1, width=8)
         f1_dur_input.grid(row=2, column=0, sticky="ew")
 
-        f1_btn_execute = tk.Button(frm_f1, text="Generate query", font=fnt.Font(size=8), command=gen_query_f1,
-                                   anchor="e")
+        f1_btn_execute = tk.Button(frm_f1, text="Generate query", font=fnt.Font(size=8), command=gen_query_f1, anchor="e")
         f1_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f1.winfo_children():
             widget.grid(padx=1, pady=1)
 
         frm_f1.grid(row=1, column=0, sticky="new")
+
 
         # Function 2: Pearson correlation coefficient
         def gen_query_f2():
@@ -184,6 +181,7 @@ class FunctionFrame(tk.Frame):
 
         frm_f2.grid(row=2, column=0, sticky="nsew")
 
+
         # Function 3: Statistical features for time series
         def gen_query_f3():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
@@ -206,6 +204,7 @@ class FunctionFrame(tk.Frame):
             widget.grid(padx=1, pady=1)
 
         frm_f3.grid(row=3, column=0, sticky="nsew")
+
 
         # Function 4: Relations between pairs of time series
         def gen_query_f4():
@@ -231,6 +230,7 @@ class FunctionFrame(tk.Frame):
 
         frm_f4.grid(row=4, column=0, sticky="nsew")
 
+
         # Function 5: Linear regression
         def gen_query_f5():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
@@ -253,6 +253,7 @@ class FunctionFrame(tk.Frame):
             widget.grid(padx=1, pady=1)
 
         frm_f5.grid(row=5, column=0, sticky="nsew")
+
 
         # Function 6: Local outlier factor
         def gen_query_f6():
@@ -290,6 +291,7 @@ class FunctionFrame(tk.Frame):
 
         frm_f6.grid(row=6, column=0, sticky="nsew")
 
+
         # Function 7: K nearest neighbours (euclidean disctance)
         def gen_query_f7():
             k_neighbours = f7_k_neighbours_input.get()
@@ -318,6 +320,7 @@ class FunctionFrame(tk.Frame):
             widget.grid(padx=1, pady=1)
 
         frm_f7.grid(row=7, column=0, sticky="nsew")
+
 
         # Function 8: Median distance
         def gen_query_f8():
@@ -348,6 +351,7 @@ class FunctionFrame(tk.Frame):
 
         frm_f8.grid(row=8, column=0, sticky="nsew")
 
+
         # Function 9: Zscore
         def gen_query_f9():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
@@ -376,6 +380,7 @@ class FunctionFrame(tk.Frame):
             widget.grid(padx=1, pady=1)
 
         frm_f9.grid(row=9, column=0, sticky="nsew")
+
 
         # Function Template
         def gen_query_funcn():
@@ -411,22 +416,22 @@ class FunctionFrame(tk.Frame):
 
         frm_funcn.grid(row=99, column=0, sticky="nsew")  # TODO change row
 
+
+
         frm_test = tk.Frame(self, relief=tk.RAISED, bd=2)
 
         test_output = tk.Label(frm_test, text="Some output", wraplength=400, justify="left")
-        # test_output = tk.Text(frm_test, state="disabled")
-        # test_output.insert(0.0, "Some output")
+        #test_output = tk.Text(frm_test, state="disabled")
+        #test_output.insert(0.0, "Some output")
         test_output.grid(row=0, column=0, padx=1, pady=1, sticky="nsew")
         frm_test.grid(row=999, column=0, sticky="nsew")
 
-
 class NgramFrame(tk.Frame):
     """Frame on the left side listing N-grams"""
-
     def __init__(self, master, relief, bd) -> None:
         super().__init__(master=master, relief=relief, bd=bd)
 
-        # self.spark_controller = SparkConnection().spark_controller
+        #self.spark_controller = SparkConnection().spark_controller
 
         frm_buttons = tk.Frame(self, relief=tk.RAISED, bd=2)
         self.btn_add = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=8), command=self.__add_clicked)
@@ -442,7 +447,7 @@ class NgramFrame(tk.Frame):
         items = ["aaa", "bbb", "ccc"]
         list_items = tk.Variable(value=items)
         self.__listbox = tk.Listbox(self, listvariable=list_items, height=100)
-        self.__listbox.grid(row=1, column=0, sticky="ew")  #
+        self.__listbox.grid(row=1, column=0, sticky="ew")#
         self.__listbox.bind('<<ListboxSelect>>', self.__items_selected)
 
     def __add_clicked(self):
@@ -483,7 +488,6 @@ class AddNgramWindow(object):
         self.func(self.entry.get())
         self.top.destroy()
 
-
 class SparkConnection():
     # TODO: don't need this class when shell is initialized
     def __init__(self) -> None:
@@ -498,7 +502,6 @@ class SparkConnection():
 
         self.plugin_controller: PluginController = PluginController(self.spark_controller.get_spark_session())
         self.plugin_controller.register_plugins()
-
 
 if __name__ == "__main__":
     GUI().show()
