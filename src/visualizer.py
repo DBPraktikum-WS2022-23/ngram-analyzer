@@ -42,7 +42,7 @@ class Visualizer:
         """Plot the frequency as scatter of all words in certain years
         and the regression line of each word"""
 
-        years = list(range(start_year, end_year))
+        years = list(range(start_year, end_year+1))
         data = df.rdd.map(lambda row: sf.get_freqs(row, start_year, end_year)).collect()
         words = df.rdd.map(lambda row:
                            row['str_rep'] + '_' if row['type'] is None else row['str_rep'] + '_' + row['type'])\
@@ -99,7 +99,7 @@ class Visualizer:
     ) -> None:
         """Plot the Kernel Density Estimation with Gauss-Kernel of a word"""
 
-        years = list(range(start_year, end_year))
+        years = list(range(start_year, end_year+1))
         temp = df.rdd.map(lambda row: sf.get_freqs(row, start_year, end_year) if row['str_rep'] == word else None)\
             .collect()
         freqs = None
