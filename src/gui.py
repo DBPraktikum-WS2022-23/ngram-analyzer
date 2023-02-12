@@ -19,23 +19,24 @@ class GUI(tk.Tk):
         self.spark_controller: SparkController = SparkConnection().spark_controller
 
         self.title("NGram Visualizer")
-        self.resizable(False, False)
+        # self.resizable(False, False)
         width, height = self.winfo_screenwidth(), self.winfo_screenheight()
         self.geometry('%dx%d+0+0' % (width,height))
 
         self.rowconfigure(0, minsize=200, weight=1)
-        self.columnconfigure([0, 1, 2], minsize=200, weight=1)
+        self.columnconfigure([0, 2], minsize=200, weight=1)
+        self.columnconfigure(1, minsize=200, weight=0)
 
-        self.__word_list = ["word liste aus GUI"]
+        self.__word_list = ["test"]
         self.__selected_word_list = []
         frm_functions = NgramFrame(self, relief=tk.RAISED, bd=2)
         frm_functions.grid(row=0, column=0, sticky="nws")
 
         logo_img = Image.open("./src/ui_images/NGramVisualizer.png")
-        logo_img = logo_img.resize((200, 200), resample=Image.Resampling.LANCZOS)
+        logo_img = logo_img.resize((350, 350), resample=Image.Resampling.LANCZOS)
         self.logo = ImageTk.PhotoImage(logo_img)
         self.plot = None
-        frm_center = CenterFrame(self, relief=tk.FLAT, height=500, width=500)
+        frm_center = CenterFrame(self, relief=tk.FLAT, height=height, width=width/3)
         frm_center.grid(row=0, column=1, sticky='')
 
         frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2, center_frame=frm_center)
@@ -64,6 +65,7 @@ class CenterFrame(tk.Frame):
     def __init__(self, master, relief, height, width) -> None:
         super().__init__(master=master, relief=relief, height=height, width=width)
         self.__spark_ctrl = master.get_spark_controller()  # master is the GUI object
+        self.scrollbar = tk.Scrollbar(self, orient="vertical")
         self.__add_image_canvas(image=self.master.logo)
         self.__add_tabs_notebook()
 
@@ -73,11 +75,13 @@ class CenterFrame(tk.Frame):
         self.canvas.create_image((0, 0), anchor="nw", image=image)
 
     def __add_tabs_notebook(self) -> None:
-        self.notebook = ttk.Notebook(self, height=300)
-        self.notebook.grid(row=1, column=0)
+        self.notebook = ttk.Notebook(self)
+        self.notebook.grid(row=1, column=0, rowspan=2)
 
         self.console_tab = ttk.Frame(self.notebook)
         self.sql_tab = ttk.Frame(self.notebook)
+        self.sql_tab.rowconfigure(0, minsize=10, weight=2)
+        self.sql_tab.rowconfigure(1, weight=1)
 
         self.notebook.add(self.sql_tab, text="SQL")
         self.notebook.add(self.console_tab, text="Console")
@@ -88,7 +92,7 @@ class CenterFrame(tk.Frame):
         self.__add_console(self.console_tab)
 
     def __add_sql_output(self, master) -> None:
-        self.text = tk.Text(master)
+        self.text = tk.Text(master, height=10)
         self.text.grid(row=0, column=0, sticky=tk.W+tk.E, columnspan=2, rowspan=1)
         self.text.config(state='disabled')
         
@@ -99,10 +103,12 @@ class CenterFrame(tk.Frame):
         self.button.grid(row=1, column=1, sticky=tk.W+tk.E, rowspan=1)
 
     def __execute(self):
-        # TODO: plot frequencies
-        self.__spark_ctrl.create_ngram_view(self.master.get_word_list())
+        words = self.master.get_word_list()
+        years = range(1800, 2001)
+        self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
+        self.__spark_ctrl.plot_word_frequencies(words, years)
 
     def __print_output(self, output) -> None:
         self.text.insert('end', output + "\n")
