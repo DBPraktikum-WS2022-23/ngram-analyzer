@@ -605,13 +605,19 @@ class AddNgramWindow(object):
         self.top.destroy()
 
 class PlotWindow(object):
-    def __init__(self, master, insert_func, check_exist_func, check_dup_func):
+    def __init__(self, master, file_path="output/scatter_plot_all.png"):
         self.top = tk.Toplevel(master)
         self.top.grab_set()
-        plot_img = Image.open("./src/ui_images/NGramVisualizer.png")
-        plot_img = plot_img.resize((350, 350), resample=Image.Resampling.LANCZOS)
+        plot_img = Image.open(file_path)
+        # plot_img = plot_img.resize((350, 350), resample=Image.Resampling.LANCZOS)
         self.plot_image = ImageTk.PhotoImage(plot_img)
+        self.canvas = tk.Canvas(self.top, width=self.plot_image.width(), height=self.plot_image.height())
+        self.canvas.grid(row=0, column=0, sticky='')
+        self.canvas.create_image((0, 0), anchor="nw", image=self.plot_image)
+
         self.button = tk.Button(self.top, text='Close', command=self.__cleanup)
+        self.button.grid(row=2, column=0, sticky='se')
+
         self.button.pack()
 
     def __cleanup(self):
