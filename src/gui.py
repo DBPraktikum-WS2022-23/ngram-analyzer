@@ -29,7 +29,6 @@ class GUI(tk.Tk):
         self.columnconfigure([0, 2], minsize=200, weight=1)
         self.columnconfigure(1, minsize=200, weight=0)
 
-        self.__word_list = ["test"]
         self.__selected_word_list = []
         frm_functions = NgramFrame(self, relief=tk.RAISED, bd=2)
         frm_functions.grid(row=0, column=0, sticky="nws")
@@ -43,12 +42,6 @@ class GUI(tk.Tk):
 
         frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2, center_frame=frm_center)
         frm_functions.grid(row=0, column=2, sticky="nes")
-
-    def set_word_list(self, words) -> None:
-        self.__word_list = words
-
-    def get_word_list(self) -> List[str]:
-        return self.__word_list
 
     def set_selected_word_list(self, words) -> None:
         self.__selected_word_list = words
@@ -153,10 +146,12 @@ class CenterFrame(tk.Frame):
         self.button.grid(row=1, column=1, sticky=tk.W+tk.E, rowspan=1)
 
     def __execute(self):
-        words = self.master.get_word_list()
+        words = self.master.get_selected_word_list()
         self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
+        # self.win = PlotWindow(self)
+        # self.master.wait_window(self.win.top)
 
     def __print_output(self, output) -> None:
         self.text.config(state="normal")
@@ -488,6 +483,7 @@ class FunctionFrame(tk.Frame):
         # frm_funcn.grid(row=funcn, column=0, sticky="nsew")
 
 
+
 class NgramFrame(tk.Frame):
     """Frame on the left side listing N-grams"""
 
@@ -606,6 +602,19 @@ class AddNgramWindow(object):
         else:
             tk.messagebox.showerror(title="Not found!", message="Item is not in the database.")
             return
+        self.top.destroy()
+
+class PlotWindow(object):
+    def __init__(self, master, insert_func, check_exist_func, check_dup_func):
+        self.top = tk.Toplevel(master)
+        self.top.grab_set()
+        plot_img = Image.open("./src/ui_images/NGramVisualizer.png")
+        plot_img = plot_img.resize((350, 350), resample=Image.Resampling.LANCZOS)
+        self.plot_image = ImageTk.PhotoImage(plot_img)
+        self.button = tk.Button(self.top, text='Close', command=self.__cleanup)
+        self.button.pack()
+
+    def __cleanup(self):
         self.top.destroy()
 
 
