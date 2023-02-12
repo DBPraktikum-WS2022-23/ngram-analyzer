@@ -45,6 +45,8 @@ class GUI(tk.Tk):
         frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2, center_frame=frm_center)
         frm_functions.grid(row=0, column=2, sticky="nes")
 
+        print(self.__word_list)
+
     def set_word_list(self, words) -> None:
         self.__word_list = words
 
@@ -533,10 +535,11 @@ class NgramFrame(tk.Frame):
             items = self.__word_df.limit(20).select("str_rep").collect()
         items = [row[0] for row in items]
         list_items = tk.Variable(value=items)
-
         self.__listbox = tk.Listbox(self, listvariable=list_items, height=100, selectmode="multiple")
         self.__listbox.grid(row=1, column=0, sticky="ew")
         self.__listbox.bind('<<ListboxSelect>>', self.__update_selected_items)
+
+        self.__update_wordlist()
 
     def __add_clicked(self):
         self.win = AddNgramWindow(self.master, self.__insert_item, self.__check_exists, self.__check_duplicate)
