@@ -9,8 +9,6 @@ from config_converter import ConfigConverter
 from controller import PluginController
 from database_creation import NgramDBBuilder
 
-from typing import List
-
 
 class GUI(tk.Tk):
     """Wrapper for tkinter root object"""
@@ -82,17 +80,42 @@ class CenterFrame(tk.Frame):
         self.notebook.grid(row=1, column=0, rowspan=2)
 
         self.console_tab = ttk.Frame(self.notebook)
+        self.console_tab.rowconfigure(0, minsize=10, weight=2)
+        self.console_tab.rowconfigure(1, weight=1)
+
         self.sql_tab = ttk.Frame(self.notebook)
         self.sql_tab.rowconfigure(0, minsize=10, weight=2)
         self.sql_tab.rowconfigure(1, weight=1)
 
         self.notebook.add(self.sql_tab, text="SQL")
         self.notebook.add(self.console_tab, text="Console")
-        
+        self.notebook.grid(row=1, column=0)
+
         self.__add_sql_output(self.sql_tab)
         self.__add_sql_input(self.sql_tab)
 
+        self.__add_console_input(self.console_tab)
+        self.__add_console_output(self.console_tab)
+
         self.__add_console(self.console_tab)
+
+    def __add_console(self, master) -> None:
+        self.console = tk.Label(master)
+        self.console.grid(row=0, column=0)
+
+    def __add_console_input(self, master) -> None:
+        self.entry = tk.Entry(master, width=70)
+        self.button = tk.Button(master, text="Run", command=self.__execute_cmd, font=fnt.Font(size=8))
+        self.entry.grid(row=1, column=0, sticky=tk.W+tk.E)
+        self.button.grid(row=1, column=1, sticky=tk.W+tk.E)
+
+    def __add_console_output(self, master) -> None:
+        self.text = tk.Text(master, height=10)
+        self.text.grid(row=0, column=0, columnspan=2, rowspan=1)
+        self.text.config(state='disabled')
+
+    def __execute_cmd(self):
+        pass
 
     def __add_sql_output(self, master) -> None:
         self.text = tk.Text(master, height=10)
@@ -115,10 +138,6 @@ class CenterFrame(tk.Frame):
     def __print_output(self, output) -> None:
         self.text.insert('end', output + "\n")
         self.text.config(state='disabled')
-
-    def __add_console(self, master) -> None:
-        self.console = tk.Label(master, text="Placeholder_Console")
-        self.console.grid(row=0, column=0)
 
     def update_input(self, input: str) -> None:
         self.entry.delete(0, 'end')
