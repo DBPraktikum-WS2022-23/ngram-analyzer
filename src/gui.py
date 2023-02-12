@@ -177,6 +177,8 @@ class FunctionFrame(tk.Frame):
         spark_ctrl: SparkController = master.get_spark_controller()
         super().__init__(master=master, relief=relief, bd=bd)
 
+        btn_w: int = 14  # width for all the buttons in function frame
+
         # Function 1: Highest Relative Change
         @staticmethod
         def gen_query_f1():
@@ -198,7 +200,7 @@ class FunctionFrame(tk.Frame):
         f1_dur_input = tk.Entry(frm_f1, width=8)
         f1_dur_input.grid(row=2, column=0, sticky="ew")
 
-        f1_btn_execute = tk.Button(frm_f1, text="Generate query", font=fnt.Font(size=8), command=gen_query_f1,
+        f1_btn_execute = tk.Button(frm_f1, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f1,
                                    anchor="e")
         f1_btn_execute.grid(row=2, column=2, sticky="e")
 
@@ -233,7 +235,7 @@ class FunctionFrame(tk.Frame):
         f2_end_input = tk.Entry(frm_f2, width=6)
         f2_end_input.grid(row=2, column=1, sticky="ew")
 
-        f2_btn_execute = tk.Button(frm_f2, text="Generate query", font=fnt.Font(size=8), command=gen_query_f2)
+        f2_btn_execute = tk.Button(frm_f2, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f2)
         f2_btn_execute.grid(row=2, column=3, sticky="e")
 
         for widget in frm_f2.winfo_children():
@@ -255,7 +257,7 @@ class FunctionFrame(tk.Frame):
         f3_title = tk.Label(frm_f3, text="Statistical features for time series")
         f3_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        f3_btn_execute = tk.Button(frm_f3, text="Generate query", font=fnt.Font(size=8), command=gen_query_f3)
+        f3_btn_execute = tk.Button(frm_f3, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f3)
         f3_btn_execute.grid(row=1, column=2, sticky="e")
 
         for widget in frm_f3.winfo_children():
@@ -277,7 +279,7 @@ class FunctionFrame(tk.Frame):
         f4_title = tk.Label(frm_f4, text="Relations between pairs of time series")
         f4_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        f4_btn_execute = tk.Button(frm_f4, text="Generate query", font=fnt.Font(size=8),
+        f4_btn_execute = tk.Button(frm_f4, text="Generate query", width=btn_w, font=fnt.Font(size=8),
                                    command=gen_query_f4)
         f4_btn_execute.grid(row=1, column=2, sticky="e")
 
@@ -300,7 +302,7 @@ class FunctionFrame(tk.Frame):
         f5_title = tk.Label(frm_f5, text="Linear regression")
         f5_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        f5_btn_execute = tk.Button(frm_f5, text="Generate query", font=fnt.Font(size=8), command=gen_query_f5)
+        f5_btn_execute = tk.Button(frm_f5, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f5)
         f5_btn_execute.grid(row=1, column=2, sticky="e")
 
         for widget in frm_f5.winfo_children():
@@ -335,7 +337,7 @@ class FunctionFrame(tk.Frame):
         f6_delta_input = tk.Entry(frm_f6, width=6)
         f6_delta_input.grid(row=2, column=1, sticky="ew")
 
-        f6_btn_execute = tk.Button(frm_f6, text="Generate query", font=fnt.Font(size=8), command=gen_query_f6)
+        f6_btn_execute = tk.Button(frm_f6, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f6)
         f6_btn_execute.grid(row=2, column=3, sticky="e")
 
         for widget in frm_f6.winfo_children():
@@ -363,7 +365,7 @@ class FunctionFrame(tk.Frame):
         f7_k_neighbours_input = tk.Entry(frm_f7)
         f7_k_neighbours_input.grid(row=2, column=0, sticky="ew")
 
-        f7_btn_execute = tk.Button(frm_f7, text="Generate query", font=fnt.Font(size=8), command=gen_query_f7)
+        f7_btn_execute = tk.Button(frm_f7, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f7)
         f7_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f7.winfo_children():
@@ -391,7 +393,7 @@ class FunctionFrame(tk.Frame):
         f8_threshold_input = tk.Entry(frm_f8, width=8)
         f8_threshold_input.grid(row=2, column=0, sticky="ew")
 
-        f8_btn_execute = tk.Button(frm_f8, text="Generate query", font=fnt.Font(size=8), command=gen_query_f8)
+        f8_btn_execute = tk.Button(frm_f8, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f8)
         f8_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f8.winfo_children():
@@ -419,13 +421,36 @@ class FunctionFrame(tk.Frame):
         f9_threshold_input = tk.Entry(frm_f9, width=8)
         f9_threshold_input.grid(row=2, column=0, sticky="ew")
 
-        f9_btn_execute = tk.Button(frm_f9, text="Generate query", font=fnt.Font(size=8), command=gen_query_f9)
+        f9_btn_execute = tk.Button(frm_f9, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f9)
         f9_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f9.winfo_children():
             widget.grid(padx=1, pady=1)
 
         frm_f9.grid(row=9, column=0, sticky="nsew")
+
+        # Function 10: Create Scatter Plot
+        def gen_query_f10():
+            pass
+
+        frm_f10 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        #frm_f10.pack(fill="both", expand=True)
+        frm_f10.columnconfigure(0, weight=1)
+        frm_f10.columnconfigure(1, weight=0)
+
+        f10_title = tk.Label(frm_f10, text="Create scatter plot")
+        f10_title.grid(row=0, column=0, columnspan=3, sticky="w")
+
+        f10_btn_execute = tk.Button(frm_f10, text="Create plot", font=fnt.Font(size=8), width=btn_w, command=gen_query_f10)
+        f10_btn_execute.grid(row=1, column=1, sticky="e")
+
+        for widget in frm_f10.winfo_children():
+            widget.grid(padx=1, pady=1)
+
+        frm_f10.grid(row=10, column=0, sticky="nsew")
+
+
+
 
         # TODO remove later
         # # Function Template
