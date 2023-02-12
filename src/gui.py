@@ -29,8 +29,9 @@ class GUI(tk.Tk):
         self.columnconfigure([0, 2], minsize=200, weight=1)
         self.columnconfigure(1, minsize=200, weight=0)
 
-        self.__selected_word_list = []
         self.__word_list = []
+        self.__selected_word_list = []
+
         frm_functions = NgramFrame(self, relief=tk.RAISED, bd=2)
         frm_functions.grid(row=0, column=0, sticky="nws")
 
@@ -43,6 +44,12 @@ class GUI(tk.Tk):
 
         frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2, center_frame=frm_center)
         frm_functions.grid(row=0, column=2, sticky="nes")
+
+    def set_word_list(self, words) -> None:
+        self.__word_list = words
+
+    def get_word_list(self) -> List[str]:
+        return self.__word_list
 
     def set_selected_word_list(self, words) -> None:
         self.__selected_word_list = words
@@ -147,7 +154,7 @@ class CenterFrame(tk.Frame):
         self.button.grid(row=1, column=1, sticky=tk.W+tk.E, rowspan=1)
 
     def __execute(self):
-        words = self.master.get_selected_word_list()
+        words = self.master.get_word_list()
         self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
@@ -307,6 +314,7 @@ class FunctionFrame(tk.Frame):
         def gen_query_f6():
             k = f6_k_input.get()
             delta = f6_delta_input.get()
+            spark_ctrl.create_ngram_view(master.get_word_list())
             spark_ctrl.create_join_view(master.get_selected_word_list())
             # word_subqueries = " cross join ".join("(select * from schema_f where str_rep = '" + word + "')" for word in word_list) + ")"
             query = f"select lof.outlier from (select lof({k},{delta},*) lof from joins)"
