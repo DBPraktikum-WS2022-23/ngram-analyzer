@@ -98,14 +98,7 @@ class SparkController:
         )
 
         self.__visualiser: Visualiser = Visualiser()
-        """
-        # TODO: this should not be necessary with @udf notation
-        self.__spark.udf.register("hrc", StatFunctions.hrc, StatFunctions.schema_s)
-        self.__spark.udf.register("pc", StatFunctions.pc, StatFunctions.schema_d)
-        self.__spark.udf.register("sf", StatFunctions.stat_feature, StatFunctions.schema_sf)
-        self.__spark.udf.register("rel", StatFunctions.relations, StatFunctions.schema_rel)
-        self.__spark.udf.register("lr", StatFunctions.lr, StatFunctions.schema_r)
-        """
+
     def get_spark_session(self) -> Optional[SparkSession]:
         """Returns the spark session"""
         return self.__spark
@@ -137,23 +130,12 @@ class SparkController:
         )
         return schema_f_df
 
-    # TODO: for NearestNeighbourPlugin, but does not work
-    # def __get_schema_knn_input(self) -> DataFrame:
-    #
-    #     schema_f_df = self.__get_schema_f_df()
-    #
-    #     knn_data = [schema_f_df.limit(4).collect()]
-    #     knn_head = ["table"]
-    #
-    #     return self.__spark.createDataFrame(knn_data, knn_head)
-
     def execute_sql(self, sql: str) -> Optional[DataFrame]:
         """Executes a SQL query"""
         if self.__spark is not None:
             self.__word_df.createOrReplaceTempView("word")
             self.__occurence_df.createOrReplaceTempView("occurence")
             self.__get_schema_f_df().createOrReplaceTempView("schema_f")
-            # self.__get_schema_knn_input().createOrReplaceTempView("schema_knn_input")
             return self.__spark.sql(sql)
         return None
 
@@ -162,7 +144,15 @@ class SparkController:
         query = "select * from schema_f where str_rep in (" + ",".join(
             [f"'{word}'" for word in words]
         ) + ")"
-        self.execute_sql(query).createOrReplaceTempView("ngram")
+        self.execute_sql(query).createOrReplaceTempView("ngrams")
+
+    def create_join_view(self, words: List[str]) -> None:
+        """Creates a view for selected ngrams joint in a line"""
+        # TODO: should from ngrams
+        query = "select * from " + "cross join ".join(
+            [f"(select * from schema_f where str_rep = '{word}')" for word in words]
+        )
+        self.execute_sql(query).createOrReplaceTempView("joins")
 
     def print_word_frequencies(self, words: List[str], years: List[int]) -> None:
         self.__wf.print_word_frequencies(words, years)
@@ -172,14 +162,6 @@ class SparkController:
 
     def print_db_statistics(self) -> None:
         self.__dbs.print_statistics()
-
-    # TODO: Does (or should) the user interface offer access to hrc and pc functionality
-    #       other than through spark SQL?
-    # def hrc(self, duration: int) -> DataFrame:
-    #     return self.__functions.hrc(duration)
-
-    # def pc(self, start_year: int, end_year: int) -> DataFrame:
-    #     return self.__functions.pc(start_year, end_year)
 
     def plot_kde(self, word: str, bandwidth: float, bins: int) -> None:
         schema_f_df = self.__get_schema_f_df()
