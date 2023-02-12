@@ -494,14 +494,14 @@ class NgramFrame(tk.Frame):
 
         # initialize buttons
         frm_buttons = tk.Frame(self, relief=tk.RAISED, bd=2)
-        self.btn_add = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=6),
-                                 height=1, width=6, command=self.__add_clicked)
-        self.btn_remove = tk.Button(frm_buttons, text="Remove Ngram", font=fnt.Font(size=6),
-                                    height=1, width=9, command=self.__remove_clicked)
-        self.btn_clear = tk.Button(frm_buttons, text="Clear All", font=fnt.Font(size=6),
-                                   height=1, width=4, command=self.__clear_clicked)
-        self.btn_deselect = tk.Button(frm_buttons, text="Deselect All", font=fnt.Font(size=6),
-                                      height=1, width=5, command=self.__deselect_clicked)
+        self.btn_add = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=8),
+                                 height=1, width=8, command=self.__add_clicked)
+        self.btn_remove = tk.Button(frm_buttons, text="Remove Ngram", font=fnt.Font(size=8),
+                                    height=1, width=11, command=self.__remove_clicked)
+        self.btn_clear = tk.Button(frm_buttons, text="Clear All", font=fnt.Font(size=8),
+                                   height=1, width=6, command=self.__clear_clicked)
+        self.btn_deselect = tk.Button(frm_buttons, text="Deselect All", font=fnt.Font(size=8),
+                                      height=1, width=7, command=self.__deselect_clicked)
         self.btn_add.grid(row=0, column=0, sticky="ew")
         self.btn_remove.grid(row=0, column=1, sticky="ew")
         self.btn_clear.grid(row=0, column=2, sticky="ew")
@@ -545,7 +545,7 @@ class NgramFrame(tk.Frame):
         self.master.set_selected_word_list(self.__selected_items)
 
     def __remove_clicked(self):
-        if self.__selected_items is []:
+        if len(self.__selected_items) == 0:
             return
         if askyesno(title="Remove Ngram",
                     message="Remove selected Ngrams?") is True:
