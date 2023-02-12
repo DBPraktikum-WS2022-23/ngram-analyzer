@@ -106,15 +106,15 @@ class CenterFrame(tk.Frame):
         self.console.grid(row=0, column=0)
 
     def __add_console_input(self, master) -> None:
-        self.entry = tk.Entry(master, width=70)
-        self.button = tk.Button(master, text="Run", command=self.__execute_cmd, font=fnt.Font(size=8))
-        self.entry.grid(row=1, column=0, sticky=tk.W+tk.E)
-        self.button.grid(row=1, column=1, sticky=tk.W+tk.E)
+        self.console_entry = tk.Entry(master, width=70)
+        self.console_button = tk.Button(master, text="Run", command=self.__execute_cmd, font=fnt.Font(size=8))
+        self.console_entry.grid(row=1, column=0, sticky=tk.W+tk.E)
+        self.console_button.grid(row=1, column=1, sticky=tk.W+tk.E)
 
     def __add_console_output(self, master) -> None:
-        self.text = tk.Text(master, height=10)
-        self.text.grid(row=0, column=0, columnspan=2, rowspan=1)
-        self.text.config(state='disabled')
+        self.console_text = tk.Text(master, height=10)
+        self.console_text.grid(row=0, column=0, columnspan=2, rowspan=1)
+        self.console_text.config(state='disabled')
 
     def __execute_cmd(self):
         pass
@@ -135,7 +135,6 @@ class CenterFrame(tk.Frame):
         self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
-        self.__spark_ctrl.plot_scatter_words(words)
 
     def __print_output(self, output) -> None:
         self.text.insert('end', output + "\n")
