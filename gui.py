@@ -1,5 +1,4 @@
 import os
-from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as fnt
@@ -11,35 +10,25 @@ from database_creation import NgramDBBuilder
 
 from typing import Type, List
 
-
 class GUI(tk.Tk):
     """Wrapper for tkinter root object"""
-
     def __init__(self) -> None:
         super().__init__()
 
         self.spark_controller: SparkController = SparkConnection().spark_controller
 
         self.title("NGram Visualizer")
-        # self.resizable(False, False)
-        width, height = self.winfo_screenwidth(), self.winfo_screenheight()
-        self.geometry('%dx%d+0+0' % (width,height))
 
         self.rowconfigure(0, minsize=200, weight=1)
-        self.columnconfigure([0, 2], minsize=200, weight=1)
-        self.columnconfigure(1, minsize=200, weight=0)
+        self.columnconfigure([0, 1, 2], minsize=200, weight=1)
 
-        self.__word_list = ["test"]
+        self.__word_list = ["word liste aus GUI"]
         self.__selected_word_list = []
         frm_functions = NgramFrame(self, relief=tk.RAISED, bd=2)
         frm_functions.grid(row=0, column=0, sticky="nws")
 
-        logo_img = Image.open("./src/ui_images/NGramVisualizer.png")
-        logo_img = logo_img.resize((350, 350), resample=Image.Resampling.LANCZOS)
-        self.logo = ImageTk.PhotoImage(logo_img)
-        self.plot = None
-        frm_center = CenterFrame(self, relief=tk.FLAT, height=height, width=width/3)
-        frm_center.grid(row=0, column=1, sticky='')
+        frm_center = CenterFrame(self, relief=tk.FLAT, height=400, width=400)
+        frm_center.grid(row=0, column=1)
 
         frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2, center_frame=frm_center)
         frm_functions.grid(row=0, column=2, sticky="nes")
@@ -63,68 +52,58 @@ class GUI(tk.Tk):
     def show(self):
         self.mainloop()
 
-
 class CenterFrame(tk.Frame):
     def __init__(self, master, relief, height, width) -> None:
         super().__init__(master=master, relief=relief, height=height, width=width)
         self.__spark_ctrl = master.get_spark_controller()  # master is the GUI object
-        self.scrollbar = tk.Scrollbar(self, orient="vertical")
-        self.__add_image_canvas(image=self.master.logo)
+        self.__add_plot_output()
         self.__add_tabs_notebook()
 
-    def __add_image_canvas(self, image) -> None:
-        self.canvas = tk.Canvas(self, width=image.width(), height=image.height())
-        self.canvas.grid(row=0, column=0, sticky='')
-        self.canvas.create_image((0, 0), anchor="nw", image=image)
+    def __add_plot_output(self) -> None:
+        self.plot = tk.Label(self, text="Placeholder_Plot")
+        self.plot.grid(row=0, column=0, columnspan=2)
 
     def __add_tabs_notebook(self) -> None:
         self.notebook = ttk.Notebook(self)
-        self.notebook.grid(row=1, column=0, rowspan=2)
 
         self.console_tab = ttk.Frame(self.notebook)
         self.sql_tab = ttk.Frame(self.notebook)
-        self.sql_tab.rowconfigure(0, minsize=10, weight=2)
-        self.sql_tab.rowconfigure(1, weight=1)
 
-        self.notebook.add(self.sql_tab, text="SQL")
         self.notebook.add(self.console_tab, text="Console")
+        self.notebook.add(self.sql_tab, text="SQL")
+        self.notebook.grid(row=1, column=0)
         
         self.__add_sql_output(self.sql_tab)
         self.__add_sql_input(self.sql_tab)
 
         self.__add_console(self.console_tab)
 
+    def __add_console(self, master) -> None:
+        self.console = tk.Label(master, text="Placeholder_Console")
+        self.console.grid(row=0, column=0)
+
     def __add_sql_output(self, master) -> None:
-        self.text = tk.Text(master, height=10)
-        self.text.grid(row=0, column=0, sticky=tk.W+tk.E, columnspan=2, rowspan=1)
-        self.text.config(state='disabled')
+        self.text = tk.Text(master)
+        self.text.grid(row=0, column=0, columnspan=2, rowspan=1)
         
     def __add_sql_input(self, master) -> None:
         self.entry = tk.Entry(master, width=70)
         self.button = tk.Button(master, text="Run", command=self.__execute, font=fnt.Font(size=8))
-        self.entry.grid(row=1, column=0, sticky=tk.W+tk.E, rowspan=1)
-        self.button.grid(row=1, column=1, sticky=tk.W+tk.E, rowspan=1)
+        self.entry.grid(row=1, column=0, sticky=tk.W+tk.E)
+        self.button.grid(row=1, column=1, sticky=tk.W+tk.E)
 
     def __execute(self):
-        words = self.master.get_word_list()
-        years = range(1800, 2001)
-        self.__spark_ctrl.create_ngram_view(words)
+        self.__spark_ctrl.create_ngram_view(self.master.get_word_list())
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
-        self.__spark_ctrl.plot_word_frequencies(words, years)
 
     def __print_output(self, output) -> None:
         self.text.insert('end', output + "\n")
         self.text.config(state='disabled')
 
-    def __add_console(self, master) -> None:
-        self.console = tk.Label(master, text="Placeholder_Console")
-        self.console.grid(row=0, column=0)
-
     def update_input(self, input: str) -> None:
         self.entry.delete(0, 'end')
         self.entry.insert(0, input)
-
 
 class FunctionFrame(tk.Frame):
     """Frame on the right side with function to generate queries"""
@@ -149,6 +128,7 @@ class FunctionFrame(tk.Frame):
         frm_f1.columnconfigure(1, weight=1)
         frm_f1.columnconfigure(2, weight=0)
 
+
         f1_title = tk.Label(frm_f1, text="Highest Relative Change")
         f1_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
@@ -157,14 +137,14 @@ class FunctionFrame(tk.Frame):
         f1_dur_input = tk.Entry(frm_f1, width=8)
         f1_dur_input.grid(row=2, column=0, sticky="ew")
 
-        f1_btn_execute = tk.Button(frm_f1, text="Generate query", font=fnt.Font(size=8), command=gen_query_f1,
-                                   anchor="e")
+        f1_btn_execute = tk.Button(frm_f1, text="Generate query", font=fnt.Font(size=8), command=gen_query_f1, anchor="e")
         f1_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f1.winfo_children():
             widget.grid(padx=1, pady=1)
 
         frm_f1.grid(row=1, column=0, sticky="new")
+
 
         # Function 2: Pearson correlation coefficient
         def gen_query_f2():
@@ -201,6 +181,7 @@ class FunctionFrame(tk.Frame):
 
         frm_f2.grid(row=2, column=0, sticky="nsew")
 
+
         # Function 3: Statistical features for time series
         def gen_query_f3():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
@@ -223,6 +204,7 @@ class FunctionFrame(tk.Frame):
             widget.grid(padx=1, pady=1)
 
         frm_f3.grid(row=3, column=0, sticky="nsew")
+
 
         # Function 4: Relations between pairs of time series
         def gen_query_f4():
@@ -248,6 +230,7 @@ class FunctionFrame(tk.Frame):
 
         frm_f4.grid(row=4, column=0, sticky="nsew")
 
+
         # Function 5: Linear regression
         def gen_query_f5():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
@@ -270,6 +253,7 @@ class FunctionFrame(tk.Frame):
             widget.grid(padx=1, pady=1)
 
         frm_f5.grid(row=5, column=0, sticky="nsew")
+
 
         # Function 6: Local outlier factor
         def gen_query_f6():
@@ -307,6 +291,7 @@ class FunctionFrame(tk.Frame):
 
         frm_f6.grid(row=6, column=0, sticky="nsew")
 
+
         # Function 7: K nearest neighbours (euclidean disctance)
         def gen_query_f7():
             k_neighbours = f7_k_neighbours_input.get()
@@ -335,6 +320,7 @@ class FunctionFrame(tk.Frame):
             widget.grid(padx=1, pady=1)
 
         frm_f7.grid(row=7, column=0, sticky="nsew")
+
 
         # Function 8: Median distance
         def gen_query_f8():
@@ -365,6 +351,7 @@ class FunctionFrame(tk.Frame):
 
         frm_f8.grid(row=8, column=0, sticky="nsew")
 
+
         # Function 9: Zscore
         def gen_query_f9():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
@@ -393,6 +380,7 @@ class FunctionFrame(tk.Frame):
             widget.grid(padx=1, pady=1)
 
         frm_f9.grid(row=9, column=0, sticky="nsew")
+
 
         # Function Template
         def gen_query_funcn():
@@ -428,22 +416,22 @@ class FunctionFrame(tk.Frame):
 
         frm_funcn.grid(row=99, column=0, sticky="nsew")  # TODO change row
 
+
+
         frm_test = tk.Frame(self, relief=tk.RAISED, bd=2)
 
         test_output = tk.Label(frm_test, text="Some output", wraplength=400, justify="left")
-        # test_output = tk.Text(frm_test, state="disabled")
-        # test_output.insert(0.0, "Some output")
+        #test_output = tk.Text(frm_test, state="disabled")
+        #test_output.insert(0.0, "Some output")
         test_output.grid(row=0, column=0, padx=1, pady=1, sticky="nsew")
         frm_test.grid(row=999, column=0, sticky="nsew")
 
-
 class NgramFrame(tk.Frame):
     """Frame on the left side listing N-grams"""
-
     def __init__(self, master, relief, bd) -> None:
         super().__init__(master=master, relief=relief, bd=bd)
 
-        # self.spark_controller = SparkConnection().spark_controller
+        #self.spark_controller = SparkConnection().spark_controller
 
         frm_buttons = tk.Frame(self, relief=tk.RAISED, bd=2)
         self.btn_add = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=8), command=self.__add_clicked)
@@ -459,7 +447,7 @@ class NgramFrame(tk.Frame):
         items = ["aaa", "bbb", "ccc"]
         list_items = tk.Variable(value=items)
         self.__listbox = tk.Listbox(self, listvariable=list_items, height=100)
-        self.__listbox.grid(row=1, column=0, sticky="ew")  #
+        self.__listbox.grid(row=1, column=0, sticky="ew")#
         self.__listbox.bind('<<ListboxSelect>>', self.__items_selected)
 
     def __add_clicked(self):
@@ -500,7 +488,6 @@ class AddNgramWindow(object):
         self.func(self.entry.get())
         self.top.destroy()
 
-
 class SparkConnection():
     # TODO: don't need this class when shell is initialized
     def __init__(self) -> None:
@@ -515,7 +502,6 @@ class SparkConnection():
 
         self.plugin_controller: PluginController = PluginController(self.spark_controller.get_spark_session())
         self.plugin_controller.register_plugins()
-
 
 if __name__ == "__main__":
     GUI().show()
