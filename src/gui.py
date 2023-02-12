@@ -151,6 +151,8 @@ class CenterFrame(tk.Frame):
         self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
+        # self.win = PlotWindow(self)
+        # self.master.wait_window(self.win.top)
 
     def __print_output(self, output) -> None:
         self.text.config(state="normal")
@@ -596,6 +598,19 @@ class AddNgramWindow(object):
         else:
             tk.messagebox.showerror(title="Not found!", message="Item is not in the database.")
             return
+        self.top.destroy()
+
+class PlotWindow(object):
+    def __init__(self, master, insert_func, check_exist_func, check_dup_func):
+        self.top = tk.Toplevel(master)
+        self.top.grab_set()
+        plot_img = Image.open("./src/ui_images/NGramVisualizer.png")
+        plot_img = plot_img.resize((350, 350), resample=Image.Resampling.LANCZOS)
+        self.plot_image = ImageTk.PhotoImage(plot_img)
+        self.button = tk.Button(self.top, text='Close', command=self.__cleanup)
+        self.button.pack()
+
+    def __cleanup(self):
         self.top.destroy()
 
 
