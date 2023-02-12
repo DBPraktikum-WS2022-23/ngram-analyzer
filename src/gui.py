@@ -501,7 +501,7 @@ class NgramFrame(tk.Frame):
         self.btn_clear = tk.Button(frm_buttons, text="Clear All", font=fnt.Font(size=8),
                                    height=1, width=6, command=self.__clear_clicked)
         self.btn_deselect = tk.Button(frm_buttons, text="Deselect All", font=fnt.Font(size=8),
-                                      height=1, width=7, command=self.__deselect_clicked)
+                                      height=1, width=8, command=self.__deselect_clicked)
         self.btn_add.grid(row=0, column=0, sticky="ew")
         self.btn_remove.grid(row=0, column=1, sticky="ew")
         self.btn_clear.grid(row=0, column=2, sticky="ew")
