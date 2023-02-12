@@ -65,7 +65,7 @@ class GUI(tk.Tk):
 class CenterFrame(tk.Frame):
     def __init__(self, master, relief, height, width) -> None:
         super().__init__(master=master, relief=relief, height=height, width=width)
-        self.__spark_ctrl = master.get_spark_controller()  # master is the GUI object
+        self.__spark_ctrl: SparkController = master.get_spark_controller()  # master is the GUI object
         self.scrollbar = tk.Scrollbar(self, orient="vertical")
         self.__add_image_canvas(image=self.master.logo)
         self.__add_tabs_notebook()
@@ -148,8 +148,8 @@ class FunctionFrame(tk.Frame):
 
     def __init__(self, master, relief, bd, center_frame: CenterFrame) -> None:
         center_frame = center_frame
-        word_list = ["Fehlerlos", "Fallschirmzubehör", "Dokumentation"]
-        spark_ctrl = master.get_spark_controller()
+        word_list = master.get_selected_word_list()
+        spark_ctrl: SparkController = master.get_spark_controller()
         super().__init__(master=master, relief=relief, bd=bd)
 
         # Function 1: Highest Relative Change
@@ -157,7 +157,7 @@ class FunctionFrame(tk.Frame):
         def gen_query_f1():
             dur = f1_dur_input.get()
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            query = f"select hrc.str_rep word, hrc.type type, hrc.start_year start, hrc.end_year end, hrc.result hrc from (select hrc({dur}, *) hrc from schema_f where str_rep in ({word_list_str}))"
+            query = f"select hrc.str_rep word, hrc.type type, hrc.start_year start, hrc.end_year end, hrc.result hrc from (select hrc({dur}, *) hrc from ngrams where str_rep in ({word_list_str}))"
             test_output.config(text=query)
             center_frame.update_input(query)
 
@@ -188,7 +188,7 @@ class FunctionFrame(tk.Frame):
             start = f2_start_input.get()
             end = f2_end_input.get()
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            query = f"with sel_words as (select * from schema_f where str_rep in ({word_list_str})) select pc.str_rep_1 word_1, pc.type_1 type_1, pc.str_rep_2 word_2, pc.type_2 type_2, pc.start_year start, pc.end_year end, pc.result pearson_corr from (select pc({start}, {end}, *) pc from sel_words a cross join sel_words b where a.str_rep != b.str_rep)"
+            query = f"with sel_words as (select * from ngrams where str_rep in ({word_list_str})) select pc.str_rep_1 word_1, pc.type_1 type_1, pc.str_rep_2 word_2, pc.type_2 type_2, pc.start_year start, pc.end_year end, pc.result pearson_corr from (select pc({start}, {end}, *) pc from sel_words a cross join sel_words b where a.str_rep != b.str_rep)"
             test_output.config(text=query)
             center_frame.update_input(query)
 
@@ -221,7 +221,7 @@ class FunctionFrame(tk.Frame):
         # Function 3: Statistical features for time series
         def gen_query_f3():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            query = f"with sel_words as (select * from schema_f where str_rep in ({word_list_str})) select sf.str_rep, sf.type, sf.mean, sf.median, sf.q_25, sf.q_75, sf.var, sf.min, sf.max, sf.hrc from (select sf(*) sf from sel_words)"
+            query = f"with sel_words as (select * from ngrams where str_rep in ({word_list_str})) select sf.str_rep, sf.type, sf.mean, sf.median, sf.q_25, sf.q_75, sf.var, sf.min, sf.max, sf.hrc from (select sf(*) sf from sel_words)"
             test_output.config(text=query)
             center_frame.update_input(query)
 
@@ -244,7 +244,7 @@ class FunctionFrame(tk.Frame):
         # Function 4: Relations between pairs of time series
         def gen_query_f4():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            query = f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select rel.str_rep1, rel.type1, rel.str_rep2, rel.type2, rel.hrc_year, rel.hrc_max, rel.cov, rel.spearman_corr, rel.pearson_corr from (select rel(*) rel from sel_words a cross join sel_words b where a.str_rep != b.str_rep)"
+            query = f"with sel_words as (select * from ngrams where str_rep in ({word_list_str})) select rel.str_rep1, rel.type1, rel.str_rep2, rel.type2, rel.hrc_year, rel.hrc_max, rel.cov, rel.spearman_corr, rel.pearson_corr from (select rel(*) rel from sel_words a cross join sel_words b where a.str_rep != b.str_rep)"
             test_output.config(text=query)
             center_frame.update_input(query)
 
@@ -268,7 +268,7 @@ class FunctionFrame(tk.Frame):
         # Function 5: Linear regression
         def gen_query_f5():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
-            query = f"select lr.type type, lr.slope slope, lr.intercept intercept, lr.r_value r_value, lr.p_value p_value, lr.std_err std_err from (select lr(*) lr from schema_f where str_rep in ({word_list_str}))"
+            query = f"select lr.type type, lr.slope slope, lr.intercept intercept, lr.r_value r_value, lr.p_value p_value, lr.std_err std_err from (select lr(*) lr from ngrams where str_rep in ({word_list_str}))"
             test_output.config(text=query)
             center_frame.update_input(query)
 
@@ -328,7 +328,7 @@ class FunctionFrame(tk.Frame):
         def gen_query_f7():
             k_neighbours = f7_k_neighbours_input.get()
             word = word_list[0]
-            query = f"select ed.str_rep, ed.result from (select euclidean_dist(*) ed from schema_f a cross join schema_f b where a.str_rep = '{word}' and b.str_rep != '{word}') order by 2 limit {k_neighbours}"
+            query = f"select ed.str_rep, ed.result from (select euclidean_dist(*) ed from ngrams a cross join ngrams b where a.str_rep = '{word}' and b.str_rep != '{word}') order by 2 limit {k_neighbours}"
             test_output.config(text=query)
             center_frame.update_input(query)
 
@@ -357,7 +357,7 @@ class FunctionFrame(tk.Frame):
         def gen_query_f8():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
             threshold = f8_threshold_input.get()
-            query = f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select median_distance({threshold}, *) median_distance from sel_words"
+            query = f"with sel_words as (select * from ngrams where str_rep in ({word_list_str})) select median_distance({threshold}, *) median_distance from sel_words"
             test_output.config(text=query)
             center_frame.update_input(query)
 
@@ -386,7 +386,7 @@ class FunctionFrame(tk.Frame):
         def gen_query_f9():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
             threshold = f9_threshold_input.get()
-            query = f"with sel_words as (select * from sel_words where str_rep in ({word_list_str})) select zscore({threshold}, *) zscore from sel_words"
+            query = f"with sel_words as (select * from ngrams where str_rep in ({word_list_str})) select zscore({threshold}, *) zscore from sel_words"
             test_output.config(text=query)
             center_frame.update_input(query)
 
