@@ -308,6 +308,7 @@ class FunctionFrame(tk.Frame):
         def gen_query_f6():
             k = f6_k_input.get()
             delta = f6_delta_input.get()
+            spark_ctrl.create_ngram_view(master.get_word_list())
             spark_ctrl.create_join_view(master.get_selected_word_list())
             # word_subqueries = " cross join ".join("(select * from schema_f where str_rep = '" + word + "')" for word in word_list) + ")"
             query = f"select lof.outlier from (select lof({k},{delta},*) lof from joins)"
