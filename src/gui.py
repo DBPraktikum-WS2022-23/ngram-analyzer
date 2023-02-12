@@ -154,7 +154,7 @@ class CenterFrame(tk.Frame):
         self.button.grid(row=1, column=1, sticky=tk.W+tk.E, rowspan=1)
 
     def __execute(self):
-        words = self.master.get_selected_word_list()
+        words = self.master.get_word_list()
         self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
