@@ -442,16 +442,15 @@ class NgramFrame(tk.Frame):
     def __init__(self, master, relief, bd) -> None:
         super().__init__(master=master, relief=relief, bd=bd)
 
-        self.spark_controller = master.get_spark_controller()
+        #self.spark_controller = SparkConnection().spark_controller
 
         frm_buttons = tk.Frame(self, relief=tk.RAISED, bd=2)
-        btn_open = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=8))
-        btn_save = tk.Button(frm_buttons, text="Remove Ngram", font=fnt.Font(size=8))
-        btn_deselect = tk.Button(frm_buttons, text="Deselect All", font=fnt.Font(size=8))
-        btn_open.grid(row=0, column=0, sticky="ew")
-        btn_save.grid(row=0, column=1, sticky="ew")
-        btn_deselect.grid(row=0, column=2, sticky="ew")
-
+        self.btn_add = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=8), command=self.__add_clicked)
+        self.btn_remove = tk.Button(frm_buttons, text="Remove Ngram", font=fnt.Font(size=8))
+        self.btn_deselect = tk.Button(frm_buttons, text="Deselect All", font=fnt.Font(size=8))
+        self.btn_add.grid(row=0, column=0, sticky="ew")
+        self.btn_remove.grid(row=0, column=1, sticky="ew")
+        self.btn_deselect.grid(row=0, column=2, sticky="ew")
         frm_buttons.grid(row=0, column=0, sticky="nws")
 
         for widget in frm_buttons.winfo_children():
@@ -461,6 +460,10 @@ class NgramFrame(tk.Frame):
         self.__listbox = tk.Listbox(self, listvariable=list_items, height=100)
         self.__listbox.grid(row=1, column=0, sticky="ew")#
         self.__listbox.bind('<<ListboxSelect>>', self.__items_selected)
+
+    def __add_clicked(self):
+        self.win = AddNgramWindow(self.master)
+        self.master.wait_window(self.win.top)
 
     def __items_selected(self, event):
         # get all selected indices
@@ -473,15 +476,31 @@ class NgramFrame(tk.Frame):
     def __update_itemlist(self):
         self.master.set_word_list([self.__listbox.get(i) for i in range(self.__listbox.size())])
 
-
     def update_ngrams(self, ngrams: list):
         self.spark_controller.create_ngram_view(ngrams)
+
+
+class AddNgramWindow(object):
+    def __init__(self, master):
+        self.top = tk.Toplevel(master)
+        self.top.grab_set()
+        self.label = tk.Label(self.top, text="Add Ngrams")
+        self.label.pack()
+        self.entry = tk.Entry(self.top)
+        self.entry.pack()
+        self.button = tk.Button(self.top, text='Ok', command=self.__cleanup)
+        self.button.pack()
+        self.value = ""
+
+    def __cleanup(self):
+        self.value = self.entry.get()
+        self.top.destroy()
 
 class SparkConnection():
     # TODO: don't need this class when shell is initialized
     def __init__(self) -> None:
         config: ConfigConverter = ConfigConverter(
-            "settings/" + os.listdir("settings")[0] # temporary
+            "settings/" + os.listdir("settings")[0]  # temporary
         )
         conn_settings = config.get_conn_settings()
         db_builder = NgramDBBuilder(conn_settings)
