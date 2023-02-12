@@ -39,14 +39,12 @@ class GUI(tk.Tk):
 
     def set_word_list(self, words) -> None:
         self.__word_list = words
-        print(self.__word_list)
 
     def get_word_list(self) -> List[str]:
         return self.__word_list
 
     def set_selected_word_list(self, words) -> None:
         self.__selected_word_list = words
-        print(self.__selected_word_list)
 
     def get_selected_word_list(self) -> List[str]:
         return self.__selected_word_list
