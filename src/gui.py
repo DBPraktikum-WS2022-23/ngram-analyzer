@@ -426,7 +426,7 @@ class FunctionFrame(tk.Frame):
 
         # Function 10: Create Scatter Plot
         def gen_query_f10():
-            pass
+            spark_ctrl.plot_scatter_words(master.get_selected_word_list())
 
         frm_f10 = tk.Frame(self, relief=tk.RAISED, bd=2)
         #frm_f10.pack(fill="both", expand=True)
