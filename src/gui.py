@@ -9,7 +9,7 @@ from config_converter import ConfigConverter
 from controller import PluginController
 from database_creation import NgramDBBuilder
 
-from typing import Type, List
+from typing import List
 
 
 class GUI(tk.Tk):
@@ -21,7 +21,6 @@ class GUI(tk.Tk):
         self.spark_controller: SparkController = SparkConnection().spark_controller
 
         self.title("NGram Visualizer")
-        # self.resizable(False, False)
         width, height = self.winfo_screenwidth(), self.winfo_screenheight()
         self.geometry('%dx%d+0+0' % (width,height))
 
