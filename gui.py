@@ -8,6 +8,7 @@ from controller import SparkController
 from config_converter import ConfigConverter
 from controller import PluginController
 from database_creation import NgramDBBuilder
+from pyspark.sql.functions import col
 
 from typing import Type, List
 
@@ -435,8 +436,11 @@ class NgramFrame(tk.Frame):
 
         self.spark_controller = SparkConnection().spark_controller
 
+        self.__word_df = self.spark_controller.get_word_df()
+
         self.__selected_items = []
         self.__selected_indices = []
+
         #initialize buttons
         frm_buttons = tk.Frame(self, relief=tk.RAISED, bd=2)
         self.btn_add = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=6),
@@ -457,16 +461,29 @@ class NgramFrame(tk.Frame):
             widget.grid(padx=0, pady=1)
 
         #initialize listbox
-        items = ["aaa", "bbb", "ccc"]
+        items = []
+
+        if self.__word_df.count() < 20:
+            items = self.__word_df.select("str_rep").collect()
+        else:
+            items = self.__word_df.limit(20).select("str_rep").collect()
+        items = [row[0] for row in items]
         list_items = tk.Variable(value=items)
+
         self.__listbox = tk.Listbox(self, listvariable=list_items, height=100, selectmode="multiple")
         self.__listbox.grid(row=1, column=0, sticky="ew")
         self.__listbox.bind('<<ListboxSelect>>', self.__update_selected_items)
 
     def __add_clicked(self):
-        self.win = AddNgramWindow(self.master, self.__insert_item)
+        self.win = AddNgramWindow(self.master, self.__insert_item, self.__check_exists, self.__check_duplicate)
         self.master.wait_window(self.win.top)
         self.__update_wordlist()
+
+    def __check_exists(self, item) -> bool:
+        return bool(self.__word_df.filter(col("str_rep").contains(item)).collect())
+
+    def __check_duplicate(self, item) -> bool:
+        return item in self.__listbox.get(0, tk.END)
 
     def __insert_item(self, item):
         self.__listbox.insert(tk.END, item)
@@ -509,9 +526,11 @@ class NgramFrame(tk.Frame):
 
 
 class AddNgramWindow(object):
-    def __init__(self, master, func):
+    def __init__(self, master, insert_func, check_exist_func, check_dup_func):
         self.top = tk.Toplevel(master)
-        self.func = func
+        self.insert_func = insert_func
+        self.check_exist_func = check_exist_func
+        self.check_dup_func = check_dup_func
         self.top.grab_set()
         self.label = tk.Label(self.top, text="Add Ngrams")
         self.label.pack()
@@ -521,7 +540,15 @@ class AddNgramWindow(object):
         self.button.pack()
 
     def __cleanup(self):
-        self.func(self.entry.get())
+        new_item = self.entry.get()
+        if self.check_dup_func(new_item):
+            tk.messagebox.showerror(title="Already exists!", message="Item already exists!")
+            return
+        if self.check_exist_func(new_item):
+            self.insert_func(new_item)
+        else:
+            tk.messagebox.showerror(title="Not found!", message="Item is not in the database.")
+            return
         self.top.destroy()
 
 class SparkConnection():

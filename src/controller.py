@@ -114,6 +114,9 @@ class SparkController:
             if self.__transferer is not None:
                 self.__transferer.transfer_textFile(path)
 
+    def get_word_df(self) -> DataFrame:
+        return self.__word_df
+
     def __get_schema_f_df(self) -> DataFrame:
         years = []
         for i in range(1800, 2001, 1):
