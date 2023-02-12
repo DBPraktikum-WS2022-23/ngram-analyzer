@@ -7,7 +7,7 @@ from scipy.stats import gaussian_kde
 from pyspark.sql import DataFrame, Row, SparkSession
 
 
-class Visualiser:
+class Visualizer:
     """Module for visualise statistics"""
 
     def plot_boxplot_all(self, df: DataFrame, start_year: int, end_year: int, scaling_factor: float = 1.0) -> None:

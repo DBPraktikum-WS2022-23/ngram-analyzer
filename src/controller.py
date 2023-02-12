@@ -7,7 +7,7 @@ from pyspark.sql import DataFrame, SparkSession
 
 from info import DataBaseStatistics, WordFrequencies
 from transfer import Transferer
-from visualiser import Visualiser
+from visualizer import Visualizer
 from plugins.base_plugin import BasePlugin
 
 class DatabaseToSparkDF:
@@ -97,7 +97,7 @@ class SparkController:
             self.__word_df, self.__occurence_df
         )
 
-        self.__visualiser: Visualiser = Visualiser()
+        self.__visualizer: Visualizer = Visualizer()
 
     def get_spark_session(self) -> Optional[SparkSession]:
         """Returns the spark session"""
@@ -165,21 +165,21 @@ class SparkController:
 
     def plot_kde(self, word: str, bandwidth: float, bins: int) -> None:
         schema_f_df = self.__get_schema_f_df()
-        self.__visualiser.plot_kde(schema_f_df, 1800, 2000, word, bandwidth, bins)
+        self.__visualizer.plot_kde(schema_f_df, 1800, 2000, word, bandwidth, bins)
 
     def plot_box(self, scaling_factor: float) -> None:
         schema_f_df = self.__get_schema_f_df()
 
-        self.__visualiser.plot_boxplot_all(schema_f_df, 1800, 2000, scaling_factor)
+        self.__visualizer.plot_boxplot_all(schema_f_df, 1800, 2000, scaling_factor)
 
     def plot_scatter(self) -> None:
         schema_f_df = self.__get_schema_f_df()
 
         # draws without regression line, scaling optional
-        self.__visualiser.plot_scatter(schema_f_df, 1800, 2000)
+        self.__visualizer.plot_scatter(schema_f_df, 1800, 2000)
 
     def plot_scatter_with_regression(self) -> None:
         schema_f_df = self.__get_schema_f_df()
 
         # draws with regression line, has no scaling
-        self.__visualiser.plot_scatter(schema_f_df, 1800, 2000, with_regression_line=True)
+        self.__visualizer.plot_scatter(schema_f_df, 1800, 2000, with_regression_line=True)
