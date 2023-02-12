@@ -164,6 +164,7 @@ class CenterFrame(tk.Frame):
     def __print_output(self, output) -> None:
         self.text.config(state="normal")
         self.text.insert('end', output + "\n")
+        self.text.see("end")
         self.text.config(state='disabled')
 
     def update_input(self, input: str) -> None:
