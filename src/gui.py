@@ -547,9 +547,6 @@ class NgramFrame(tk.Frame):
     def __update_wordlist(self):
         self.master.set_word_list([self.__listbox.get(i) for i in range(self.__listbox.size())])
 
-    def update_ngrams(self, ngrams: list):
-        self.spark_controller.create_ngram_view(ngrams)
-
 
 class AddNgramWindow(object):
     def __init__(self, master, insert_func, check_exist_func, check_dup_func):
