@@ -30,6 +30,7 @@ class GUI(tk.Tk):
         self.columnconfigure(1, minsize=200, weight=0)
 
         self.__selected_word_list = []
+        self.__word_list = []
         frm_functions = NgramFrame(self, relief=tk.RAISED, bd=2)
         frm_functions.grid(row=0, column=0, sticky="nws")
 
@@ -150,8 +151,6 @@ class CenterFrame(tk.Frame):
         self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
-        # self.win = PlotWindow(self)
-        # self.master.wait_window(self.win.top)
 
     def __print_output(self, output) -> None:
         self.text.config(state="normal")
@@ -426,6 +425,8 @@ class FunctionFrame(tk.Frame):
         # Function 10: Create Scatter Plot
         def gen_query_f10():
             spark_ctrl.plot_scatter_words(master.get_selected_word_list())
+            win = PlotWindow(self)
+            self.master.wait_window(win.top)
 
         frm_f10 = tk.Frame(self, relief=tk.RAISED, bd=2)
         #frm_f10.pack(fill="both", expand=True)
