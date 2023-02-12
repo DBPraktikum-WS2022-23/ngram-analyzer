@@ -147,7 +147,9 @@ class SparkController:
         query = "select * from schema_f where str_rep in (" + ",".join(
             [f"'{word}'" for word in words]
         ) + ")"
-        self.execute_sql(query).createOrReplaceTempView("ngrams")
+        ngrams_df = self.execute_sql(query)
+        ngrams_df.createOrReplaceTempView("ngrams")
+        return ngrams_df
 
     def create_join_view(self, words: List[str]) -> None:
         """Creates a view for selected ngrams joint in a line"""
@@ -183,7 +185,7 @@ class SparkController:
 
     def plot_scatter_words(self, words) -> None:
         ngrams_df = self.create_ngram_view(words)
-        self.__visualizer.plot_scatter(ngrams_df, 1800, 2001)
+        self.__visualizer.plot_scatter(ngrams_df, 1800, 2000)
 
     def plot_scatter_with_regression(self) -> None:
         schema_f_df = self.__get_schema_f_df()
