@@ -156,12 +156,10 @@ class CenterFrame(tk.Frame):
         self.button.grid(row=1, column=1, sticky=tk.W+tk.E, rowspan=1)
 
     def __execute(self):
-        words = self.master.get_selected_word_list()
+        words = self.master.get_word_list()
         self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
-        # self.win = PlotWindow(self)
-        # self.master.wait_window(self.win.top)
 
     def __print_output(self, output) -> None:
         self.text.config(state="normal")
@@ -437,6 +435,8 @@ class FunctionFrame(tk.Frame):
         # Function 10: Create Scatter Plot
         def gen_query_f10():
             spark_ctrl.plot_scatter_words(master.get_selected_word_list())
+            win = PlotWindow(self)
+            self.master.wait_window(win.top)
 
         frm_f10 = tk.Frame(self, relief=tk.RAISED, bd=2)
         #frm_f10.pack(fill="both", expand=True)
@@ -616,13 +616,19 @@ class AddNgramWindow(object):
         self.top.destroy()
 
 class PlotWindow(object):
-    def __init__(self, master, insert_func, check_exist_func, check_dup_func):
+    def __init__(self, master, file_path="output/scatter_plot_all.png"):
         self.top = tk.Toplevel(master)
         self.top.grab_set()
-        plot_img = Image.open("./src/ui_images/NGramVisualizer.png")
-        plot_img = plot_img.resize((350, 350), resample=Image.Resampling.LANCZOS)
+        plot_img = Image.open(file_path)
+        # plot_img = plot_img.resize((350, 350), resample=Image.Resampling.LANCZOS)
         self.plot_image = ImageTk.PhotoImage(plot_img)
+        self.canvas = tk.Canvas(self.top, width=self.plot_image.width(), height=self.plot_image.height())
+        self.canvas.grid(row=0, column=0, sticky='')
+        self.canvas.create_image((0, 0), anchor="nw", image=self.plot_image)
+
         self.button = tk.Button(self.top, text='Close', command=self.__cleanup)
+        self.button.grid(row=2, column=0, sticky='se')
+
         self.button.pack()
 
     def __cleanup(self):
