@@ -29,7 +29,6 @@ class GUI(tk.Tk):
         self.columnconfigure([0, 2], minsize=200, weight=1)
         self.columnconfigure(1, minsize=200, weight=0)
 
-        self.__word_list = ["test"]
         self.__selected_word_list = []
         frm_functions = NgramFrame(self, relief=tk.RAISED, bd=2)
         frm_functions.grid(row=0, column=0, sticky="nws")
@@ -43,13 +42,6 @@ class GUI(tk.Tk):
 
         frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2, center_frame=frm_center)
         frm_functions.grid(row=0, column=2, sticky="nes")
-
-    def set_word_list(self, words) -> None:
-        self.__word_list = words
-        print(self.__word_list)
-
-    def get_word_list(self) -> List[str]:
-        return self.__word_list
 
     def set_selected_word_list(self, words) -> None:
         self.__selected_word_list = words
@@ -155,7 +147,7 @@ class CenterFrame(tk.Frame):
         self.button.grid(row=1, column=1, sticky=tk.W+tk.E, rowspan=1)
 
     def __execute(self):
-        words = self.master.get_word_list()
+        words = self.master.get_selected_word_list()
         self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
@@ -175,6 +167,7 @@ class FunctionFrame(tk.Frame):
 
     def __init__(self, master, relief, bd, center_frame: CenterFrame) -> None:
         center_frame = center_frame
+        
         word_list = ["Fehlerlos", "Fallschirmzubehör", "Dokumentation"]
         spark_ctrl = master.get_spark_controller()
         super().__init__(master=master, relief=relief, bd=bd)
@@ -479,6 +472,7 @@ class FunctionFrame(tk.Frame):
         # test_output.insert(0.0, "Some output")
         test_output.grid(row=0, column=0, padx=1, pady=1, sticky="nsew")
         frm_test.grid(row=999, column=0, sticky="nsew")
+
 
 
 class NgramFrame(tk.Frame):
