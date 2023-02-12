@@ -2,11 +2,13 @@ import os
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as fnt
+from tkinter.messagebox import askyesno
 from typing import List
 from controller import SparkController
 from config_converter import ConfigConverter
 from controller import PluginController
 from database_creation import NgramDBBuilder
+from pyspark.sql.functions import col
 
 from typing import Type, List
 
@@ -434,39 +436,89 @@ class NgramFrame(tk.Frame):
 
         self.spark_controller = SparkConnection().spark_controller
 
+        self.__word_df = self.spark_controller.get_word_df()
+
+        self.__selected_items = []
+        self.__selected_indices = []
+
+        #initialize buttons
         frm_buttons = tk.Frame(self, relief=tk.RAISED, bd=2)
-        self.btn_add = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=8), command=self.__add_clicked)
-        self.btn_remove = tk.Button(frm_buttons, text="Remove Ngram", font=fnt.Font(size=8))
-        self.btn_deselect = tk.Button(frm_buttons, text="Deselect All", font=fnt.Font(size=8))
+        self.btn_add = tk.Button(frm_buttons, text="Add Ngram", font=fnt.Font(size=6),
+                                 height=1, width=6, command=self.__add_clicked)
+        self.btn_remove = tk.Button(frm_buttons, text="Remove Ngram", font=fnt.Font(size=6),
+                                    height=1, width=9, command=self.__remove_clicked)
+        self.btn_clear = tk.Button(frm_buttons, text="Clear All", font=fnt.Font(size=6),
+                                   height=1, width=4, command=self.__clear_clicked)
+        self.btn_deselect = tk.Button(frm_buttons, text="Deselect All", font=fnt.Font(size=6),
+                                      height=1, width=5, command=self.__deselect_clicked)
         self.btn_add.grid(row=0, column=0, sticky="ew")
         self.btn_remove.grid(row=0, column=1, sticky="ew")
-        self.btn_deselect.grid(row=0, column=2, sticky="ew")
+        self.btn_clear.grid(row=0, column=2, sticky="ew")
+        self.btn_deselect.grid(row=0, column=3, sticky="ew")
         frm_buttons.grid(row=0, column=0, sticky="nws")
 
         for widget in frm_buttons.winfo_children():
-            widget.grid(padx=1, pady=5)
-        items = ["aaa", "bbb", "ccc"]
+            widget.grid(padx=0, pady=1)
+
+        #initialize listbox
+        items = []
+
+        if self.__word_df.count() < 20:
+            items = self.__word_df.select("str_rep").collect()
+        else:
+            items = self.__word_df.limit(20).select("str_rep").collect()
+        items = [row[0] for row in items]
         list_items = tk.Variable(value=items)
+
         self.__listbox = tk.Listbox(self, listvariable=list_items, height=100, selectmode="multiple")
         self.__listbox.grid(row=1, column=0, sticky="ew")
-        self.__listbox.bind('<<ListboxSelect>>', self.__items_selected)
+        self.__listbox.bind('<<ListboxSelect>>', self.__update_selected_items)
 
     def __add_clicked(self):
-        self.win = AddNgramWindow(self.master, self.insert_item)
+        self.win = AddNgramWindow(self.master, self.__insert_item, self.__check_exists, self.__check_duplicate)
         self.master.wait_window(self.win.top)
-        self.__update_itemlist()
+        self.__update_wordlist()
 
-    def insert_item(self, item):
+    def __check_exists(self, item) -> bool:
+        return bool(self.__word_df.filter(col("str_rep").contains(item)).collect())
+
+    def __check_duplicate(self, item) -> bool:
+        return item in self.__listbox.get(0, tk.END)
+
+    def __insert_item(self, item):
         self.__listbox.insert(tk.END, item)
 
-    def __items_selected(self, event):
-        # get all selected indices
-        selected_indices = self.__listbox.curselection()
-        # get selected items
-        selected_items = [self.__listbox.get(i) for i in selected_indices]
-        self.master.set_selected_word_list(selected_items)
+    def __update_selected_items(self, event):
+        self.__selected_indices = self.__listbox.curselection()
+        self.__selected_items = [self.__listbox.get(i) for i in self.__selected_indices]
+        self.master.set_selected_word_list(self.__selected_items)
 
-    def __update_itemlist(self):
+    def __remove_clicked(self):
+        if self.__selected_items is []:
+            return
+        if askyesno(title="Remove Ngram",
+                    message="Remove selected Ngrams?") is True:
+            rev_list = list(self.__selected_indices)
+            rev_list.reverse()
+            for i in rev_list:
+                self.__listbox.delete(i)
+            self.__update_wordlist()
+        else:
+            return
+
+    def __clear_clicked(self):
+        if askyesno(title="Clear Ngram List",
+                    message="Clear the whole list?") is True:
+            self.__listbox.delete(0, tk.END)
+            self.__update_wordlist()
+        else:
+            return
+
+    def __deselect_clicked(self):
+        self.__listbox.selection_clear(0, tk.END)
+        self.__update_selected_items(None)
+
+    def __update_wordlist(self):
         self.master.set_word_list([self.__listbox.get(i) for i in range(self.__listbox.size())])
 
     def update_ngrams(self, ngrams: list):
@@ -474,9 +526,11 @@ class NgramFrame(tk.Frame):
 
 
 class AddNgramWindow(object):
-    def __init__(self, master, func):
+    def __init__(self, master, insert_func, check_exist_func, check_dup_func):
         self.top = tk.Toplevel(master)
-        self.func = func
+        self.insert_func = insert_func
+        self.check_exist_func = check_exist_func
+        self.check_dup_func = check_dup_func
         self.top.grab_set()
         self.label = tk.Label(self.top, text="Add Ngrams")
         self.label.pack()
@@ -486,7 +540,15 @@ class AddNgramWindow(object):
         self.button.pack()
 
     def __cleanup(self):
-        self.func(self.entry.get())
+        new_item = self.entry.get()
+        if self.check_dup_func(new_item):
+            tk.messagebox.showerror(title="Already exists!", message="Item already exists!")
+            return
+        if self.check_exist_func(new_item):
+            self.insert_func(new_item)
+        else:
+            tk.messagebox.showerror(title="Not found!", message="Item is not in the database.")
+            return
         self.top.destroy()
 
 class SparkConnection():
