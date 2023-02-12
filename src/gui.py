@@ -29,7 +29,9 @@ class GUI(tk.Tk):
         self.columnconfigure([0, 2], minsize=200, weight=1)
         self.columnconfigure(1, minsize=200, weight=0)
 
+        self.__word_list = []
         self.__selected_word_list = []
+
         frm_functions = NgramFrame(self, relief=tk.RAISED, bd=2)
         frm_functions.grid(row=0, column=0, sticky="nws")
 
@@ -42,6 +44,12 @@ class GUI(tk.Tk):
 
         frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2, center_frame=frm_center)
         frm_functions.grid(row=0, column=2, sticky="nes")
+
+    def set_word_list(self, words) -> None:
+        self.__word_list = words
+
+    def get_word_list(self) -> List[str]:
+        return self.__word_list
 
     def set_selected_word_list(self, words) -> None:
         self.__selected_word_list = words
