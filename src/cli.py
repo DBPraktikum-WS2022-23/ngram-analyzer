@@ -5,7 +5,7 @@ import sys
 from typing import Dict, Optional
 
 from config_converter import ConfigConverter, ConfigCreator
-from controller import SparkController, PluginController
+from controller import SparkController
 from database_creation import NgramDBBuilder
 from shell import Prompt
 
