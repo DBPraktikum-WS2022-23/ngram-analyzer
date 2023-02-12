@@ -29,7 +29,6 @@ class GUI(tk.Tk):
         self.columnconfigure([0, 2], minsize=200, weight=1)
         self.columnconfigure(1, minsize=200, weight=0)
 
-        self.__word_list = ["test"]
         self.__selected_word_list = []
         frm_functions = NgramFrame(self, relief=tk.RAISED, bd=2)
         frm_functions.grid(row=0, column=0, sticky="nws")
@@ -43,12 +42,6 @@ class GUI(tk.Tk):
 
         frm_functions = FunctionFrame(self, relief=tk.RAISED, bd=2, center_frame=frm_center)
         frm_functions.grid(row=0, column=2, sticky="nes")
-
-    def set_word_list(self, words) -> None:
-        self.__word_list = words
-
-    def get_word_list(self) -> List[str]:
-        return self.__word_list
 
     def set_selected_word_list(self, words) -> None:
         self.__selected_word_list = words
@@ -153,10 +146,12 @@ class CenterFrame(tk.Frame):
         self.button.grid(row=1, column=1, sticky=tk.W+tk.E, rowspan=1)
 
     def __execute(self):
-        words = self.master.get_word_list()
+        words = self.master.get_selected_word_list()
         self.__spark_ctrl.create_ngram_view(words)
         output = self.__spark_ctrl.execute_sql(self.entry.get())._jdf.showString(100, 100, False)
         self.__print_output(output)
+        # self.win = PlotWindow(self)
+        # self.master.wait_window(self.win.top)
 
     def __print_output(self, output) -> None:
         self.text.config(state="normal")
@@ -177,13 +172,14 @@ class FunctionFrame(tk.Frame):
         spark_ctrl: SparkController = master.get_spark_controller()
         super().__init__(master=master, relief=relief, bd=bd)
 
+        btn_w: int = 14  # width for all the buttons in function frame
+
         # Function 1: Highest Relative Change
         @staticmethod
         def gen_query_f1():
             dur = f1_dur_input.get()
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
             query = f"select hrc.str_rep word, hrc.type type, hrc.start_year start, hrc.end_year end, hrc.result hrc from (select hrc({dur}, *) hrc from ngrams where str_rep in ({word_list_str}))"
-            test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f1 = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -199,7 +195,7 @@ class FunctionFrame(tk.Frame):
         f1_dur_input = tk.Entry(frm_f1, width=8)
         f1_dur_input.grid(row=2, column=0, sticky="ew")
 
-        f1_btn_execute = tk.Button(frm_f1, text="Generate query", font=fnt.Font(size=8), command=gen_query_f1,
+        f1_btn_execute = tk.Button(frm_f1, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f1,
                                    anchor="e")
         f1_btn_execute.grid(row=2, column=2, sticky="e")
 
@@ -214,7 +210,6 @@ class FunctionFrame(tk.Frame):
             end = f2_end_input.get()
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
             query = f"with sel_words as (select * from ngrams where str_rep in ({word_list_str})) select pc.str_rep_1 word_1, pc.type_1 type_1, pc.str_rep_2 word_2, pc.type_2 type_2, pc.start_year start, pc.end_year end, pc.result pearson_corr from (select pc({start}, {end}, *) pc from sel_words a cross join sel_words b where a.str_rep != b.str_rep)"
-            test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f2 = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -235,7 +230,7 @@ class FunctionFrame(tk.Frame):
         f2_end_input = tk.Entry(frm_f2, width=6)
         f2_end_input.grid(row=2, column=1, sticky="ew")
 
-        f2_btn_execute = tk.Button(frm_f2, text="Generate query", font=fnt.Font(size=8), command=gen_query_f2)
+        f2_btn_execute = tk.Button(frm_f2, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f2)
         f2_btn_execute.grid(row=2, column=3, sticky="e")
 
         for widget in frm_f2.winfo_children():
@@ -247,7 +242,6 @@ class FunctionFrame(tk.Frame):
         def gen_query_f3():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
             query = f"with sel_words as (select * from ngrams where str_rep in ({word_list_str})) select sf.str_rep, sf.type, sf.mean, sf.median, sf.q_25, sf.q_75, sf.var, sf.min, sf.max, sf.hrc from (select sf(*) sf from sel_words)"
-            test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f3 = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -258,7 +252,7 @@ class FunctionFrame(tk.Frame):
         f3_title = tk.Label(frm_f3, text="Statistical features for time series")
         f3_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        f3_btn_execute = tk.Button(frm_f3, text="Generate query", font=fnt.Font(size=8), command=gen_query_f3)
+        f3_btn_execute = tk.Button(frm_f3, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f3)
         f3_btn_execute.grid(row=1, column=2, sticky="e")
 
         for widget in frm_f3.winfo_children():
@@ -270,7 +264,6 @@ class FunctionFrame(tk.Frame):
         def gen_query_f4():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
             query = f"with sel_words as (select * from ngrams where str_rep in ({word_list_str})) select rel.str_rep1, rel.type1, rel.str_rep2, rel.type2, rel.hrc_year, rel.hrc_max, rel.cov, rel.spearman_corr, rel.pearson_corr from (select rel(*) rel from sel_words a cross join sel_words b where a.str_rep != b.str_rep)"
-            test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f4 = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -281,7 +274,7 @@ class FunctionFrame(tk.Frame):
         f4_title = tk.Label(frm_f4, text="Relations between pairs of time series")
         f4_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        f4_btn_execute = tk.Button(frm_f4, text="Generate query", font=fnt.Font(size=8),
+        f4_btn_execute = tk.Button(frm_f4, text="Generate query", width=btn_w, font=fnt.Font(size=8),
                                    command=gen_query_f4)
         f4_btn_execute.grid(row=1, column=2, sticky="e")
 
@@ -294,7 +287,6 @@ class FunctionFrame(tk.Frame):
         def gen_query_f5():
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
             query = f"select lr.type type, lr.slope slope, lr.intercept intercept, lr.r_value r_value, lr.p_value p_value, lr.std_err std_err from (select lr(*) lr from ngrams where str_rep in ({word_list_str}))"
-            test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f5 = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -305,7 +297,7 @@ class FunctionFrame(tk.Frame):
         f5_title = tk.Label(frm_f5, text="Linear regression")
         f5_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        f5_btn_execute = tk.Button(frm_f5, text="Generate query", font=fnt.Font(size=8), command=gen_query_f5)
+        f5_btn_execute = tk.Button(frm_f5, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f5)
         f5_btn_execute.grid(row=1, column=2, sticky="e")
 
         for widget in frm_f5.winfo_children():
@@ -320,7 +312,6 @@ class FunctionFrame(tk.Frame):
             spark_ctrl.create_join_view(word_list)
             # word_subqueries = " cross join ".join("(select * from schema_f where str_rep = '" + word + "')" for word in word_list) + ")"
             query = f"select lof.outlier from (select lof({k},{delta},*) lof from joins)"
-            test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f6 = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -341,7 +332,7 @@ class FunctionFrame(tk.Frame):
         f6_delta_input = tk.Entry(frm_f6, width=6)
         f6_delta_input.grid(row=2, column=1, sticky="ew")
 
-        f6_btn_execute = tk.Button(frm_f6, text="Generate query", font=fnt.Font(size=8), command=gen_query_f6)
+        f6_btn_execute = tk.Button(frm_f6, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f6)
         f6_btn_execute.grid(row=2, column=3, sticky="e")
 
         for widget in frm_f6.winfo_children():
@@ -354,7 +345,6 @@ class FunctionFrame(tk.Frame):
             k_neighbours = f7_k_neighbours_input.get()
             word = word_list[0]
             query = f"select ed.str_rep, ed.result from (select euclidean_dist(*) ed from ngrams a cross join ngrams b where a.str_rep = '{word}' and b.str_rep != '{word}') order by 2 limit {k_neighbours}"
-            test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f7 = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -370,7 +360,7 @@ class FunctionFrame(tk.Frame):
         f7_k_neighbours_input = tk.Entry(frm_f7)
         f7_k_neighbours_input.grid(row=2, column=0, sticky="ew")
 
-        f7_btn_execute = tk.Button(frm_f7, text="Generate query", font=fnt.Font(size=8), command=gen_query_f7)
+        f7_btn_execute = tk.Button(frm_f7, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f7)
         f7_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f7.winfo_children():
@@ -383,7 +373,6 @@ class FunctionFrame(tk.Frame):
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
             threshold = f8_threshold_input.get()
             query = f"with sel_words as (select * from ngrams where str_rep in ({word_list_str})) select median_distance({threshold}, *) median_distance from sel_words"
-            test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f8 = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -399,7 +388,7 @@ class FunctionFrame(tk.Frame):
         f8_threshold_input = tk.Entry(frm_f8, width=8)
         f8_threshold_input.grid(row=2, column=0, sticky="ew")
 
-        f8_btn_execute = tk.Button(frm_f8, text="Generate query", font=fnt.Font(size=8), command=gen_query_f8)
+        f8_btn_execute = tk.Button(frm_f8, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f8)
         f8_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f8.winfo_children():
@@ -412,7 +401,6 @@ class FunctionFrame(tk.Frame):
             word_list_str = ", ".join("'" + word + "'" for word in word_list)
             threshold = f9_threshold_input.get()
             query = f"with sel_words as (select * from ngrams where str_rep in ({word_list_str})) select zscore({threshold}, *) zscore from sel_words"
-            test_output.config(text=query)
             center_frame.update_input(query)
 
         frm_f9 = tk.Frame(self, relief=tk.RAISED, bd=2)
@@ -428,7 +416,7 @@ class FunctionFrame(tk.Frame):
         f9_threshold_input = tk.Entry(frm_f9, width=8)
         f9_threshold_input.grid(row=2, column=0, sticky="ew")
 
-        f9_btn_execute = tk.Button(frm_f9, text="Generate query", font=fnt.Font(size=8), command=gen_query_f9)
+        f9_btn_execute = tk.Button(frm_f9, text="Generate query", font=fnt.Font(size=8), width=btn_w, command=gen_query_f9)
         f9_btn_execute.grid(row=2, column=2, sticky="e")
 
         for widget in frm_f9.winfo_children():
@@ -436,47 +424,64 @@ class FunctionFrame(tk.Frame):
 
         frm_f9.grid(row=9, column=0, sticky="nsew")
 
-        # Function Template
-        def gen_query_funcn():
-            start = funcn_start_input.get()
-            end = funcn_end_input.get()
-            query = f"select..."
-            test_output.config(text=query)
-            center_frame.update_input(query)
+        # Function 10: Create Scatter Plot
+        def gen_query_f10():
+            pass
 
-        frm_funcn = tk.Frame(self, relief=tk.RAISED, bd=2)
-        frm_funcn.columnconfigure(0, weight=1)
-        frm_funcn.columnconfigure(1, weight=1)
-        frm_funcn.columnconfigure(2, weight=0)
+        frm_f10 = tk.Frame(self, relief=tk.RAISED, bd=2)
+        #frm_f10.pack(fill="both", expand=True)
+        frm_f10.columnconfigure(0, weight=1)
+        frm_f10.columnconfigure(1, weight=0)
 
-        funcn_title = tk.Label(frm_funcn, text="Example Function")
-        funcn_title.grid(row=0, column=0, columnspan=3, sticky="w")
+        f10_title = tk.Label(frm_f10, text="Create scatter plot")
+        f10_title.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        funcn_start_label = tk.Label(frm_funcn, text="Start")
-        funcn_start_label.grid(row=1, column=0, sticky="ew")
-        funcn_start_input = tk.Entry(frm_funcn, width=5)
-        funcn_start_input.grid(row=2, column=0, sticky="ew")
+        f10_btn_execute = tk.Button(frm_f10, text="Create plot", font=fnt.Font(size=8), width=btn_w, command=gen_query_f10)
+        f10_btn_execute.grid(row=1, column=1, sticky="e")
 
-        funcn_end_label = tk.Label(frm_funcn, text="End")
-        funcn_end_label.grid(row=1, column=1, sticky="ew")
-        funcn_end_input = tk.Entry(frm_funcn, width=5)
-        funcn_end_input.grid(row=2, column=1, sticky="ew")
-
-        funcn_btn_execute = tk.Button(frm_funcn, text="Generate query", font=fnt.Font(size=8), command=gen_query_funcn)
-        funcn_btn_execute.grid(row=2, column=2, sticky="e")
-
-        for widget in frm_funcn.winfo_children():
+        for widget in frm_f10.winfo_children():
             widget.grid(padx=1, pady=1)
 
-        frm_funcn.grid(row=99, column=0, sticky="nsew")  # TODO change row
+        frm_f10.grid(row=10, column=0, sticky="nsew")
 
-        frm_test = tk.Frame(self, relief=tk.RAISED, bd=2)
 
-        test_output = tk.Label(frm_test, text="Some output", wraplength=400, justify="left")
-        # test_output = tk.Text(frm_test, state="disabled")
-        # test_output.insert(0.0, "Some output")
-        test_output.grid(row=0, column=0, padx=1, pady=1, sticky="nsew")
-        frm_test.grid(row=999, column=0, sticky="nsew")
+
+
+        # TODO remove later
+        # # Function Template
+        # def gen_query_funcn():
+        #     start = funcn_start_input.get()
+        #     end = funcn_end_input.get()
+        #     query = f"select..."
+        #     test_output.config(text=query)
+        #     center_frame.update_input(query)
+        #
+        # frm_funcn = tk.Frame(self, relief=tk.RAISED, bd=2)
+        # frm_funcn.columnconfigure(0, weight=1)
+        # frm_funcn.columnconfigure(1, weight=1)
+        # frm_funcn.columnconfigure(2, weight=0)
+        #
+        # funcn_title = tk.Label(frm_funcn, text="Example Function")
+        # funcn_title.grid(row=0, column=0, columnspan=3, sticky="w")
+        #
+        # funcn_start_label = tk.Label(frm_funcn, text="Start")
+        # funcn_start_label.grid(row=1, column=0, sticky="ew")
+        # funcn_start_input = tk.Entry(frm_funcn, width=5)
+        # funcn_start_input.grid(row=2, column=0, sticky="ew")
+        #
+        # funcn_end_label = tk.Label(frm_funcn, text="End")
+        # funcn_end_label.grid(row=1, column=1, sticky="ew")
+        # funcn_end_input = tk.Entry(frm_funcn, width=5)
+        # funcn_end_input.grid(row=2, column=1, sticky="ew")
+        #
+        # funcn_btn_execute = tk.Button(frm_funcn, text="Generate query", font=fnt.Font(size=8), command=gen_query_funcn)
+        # funcn_btn_execute.grid(row=2, column=2, sticky="e")
+        #
+        # for widget in frm_funcn.winfo_children():
+        #     widget.grid(padx=1, pady=1)
+        #
+        # frm_funcn.grid(row=funcn, column=0, sticky="nsew")
+
 
 
 class NgramFrame(tk.Frame):
@@ -597,6 +602,19 @@ class AddNgramWindow(object):
         else:
             tk.messagebox.showerror(title="Not found!", message="Item is not in the database.")
             return
+        self.top.destroy()
+
+class PlotWindow(object):
+    def __init__(self, master, insert_func, check_exist_func, check_dup_func):
+        self.top = tk.Toplevel(master)
+        self.top.grab_set()
+        plot_img = Image.open("./src/ui_images/NGramVisualizer.png")
+        plot_img = plot_img.resize((350, 350), resample=Image.Resampling.LANCZOS)
+        self.plot_image = ImageTk.PhotoImage(plot_img)
+        self.button = tk.Button(self.top, text='Close', command=self.__cleanup)
+        self.button.pack()
+
+    def __cleanup(self):
         self.top.destroy()
 
 
