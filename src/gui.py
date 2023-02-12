@@ -5,11 +5,12 @@ from tkinter import ttk
 import tkinter.font as fnt
 from tkinter.messagebox import askyesno
 from typing import List
-from controller import SparkController
+from controller import SparkController, PluginController
 from config_converter import ConfigConverter
-from controller import PluginController
 from database_creation import NgramDBBuilder
 from pyspark.sql.functions import col
+
+import subprocess
 
 
 class GUI(tk.Tk):
@@ -94,28 +95,51 @@ class CenterFrame(tk.Frame):
         self.__add_sql_output(self.sql_tab)
         self.__add_sql_input(self.sql_tab)
 
-        self.__add_console_input(self.console_tab)
-        self.__add_console_output(self.console_tab)
-
-        self.__add_console(self.console_tab)
+        # self.__add_console(self.console_tab)
 
     def __add_console(self, master) -> None:
-        self.console = tk.Label(master)
-        self.console.grid(row=0, column=0)
+        self.console_text = tk.Text(master, height=10)
+        self.console_text.grid(row=0, column=0, columnspan=2, rowspan=1)
+        self.console_text.config(state='disabled')
 
-    def __add_console_input(self, master) -> None:
         self.console_entry = tk.Entry(master, width=70)
         self.console_button = tk.Button(master, text="Run", command=self.__execute_cmd, font=fnt.Font(size=8))
         self.console_entry.grid(row=1, column=0, sticky=tk.W+tk.E)
         self.console_button.grid(row=1, column=1, sticky=tk.W+tk.E)
 
-    def __add_console_output(self, master) -> None:
-        self.console_text = tk.Text(master, height=10)
-        self.console_text.grid(row=0, column=0, columnspan=2, rowspan=1)
-        self.console_text.config(state='disabled')
 
     def __execute_cmd(self):
-        pass
+        with subprocess.Popen(
+            [
+                "python",
+                "-u",
+                "main.py",
+                "--shell"
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, 
+            text=True
+        ) as cli_process:
+           
+            cli_process.stdin.write("0\n")
+            cli_process.stdin.flush()
+
+
+            cli_process.stdin.write("y\n")
+            cli_process.stdin.flush()
+
+
+            input_text = self.console_entry.get()
+            cli_process.stdin.write(input_text + '\n')
+            cli_process.stdin.flush()
+            while True:
+                line = cli_process.stdout.readline()
+                if not line:
+                    break
+                output = line
+                self.console_text.config(state="normal")
+                self.console_text.insert(tk.END, output)
+                self.console_text.config(state="disabled")
 
     def __add_sql_output(self, master) -> None:
         self.text = tk.Text(master, height=10)
@@ -135,6 +159,7 @@ class CenterFrame(tk.Frame):
         self.__print_output(output)
 
     def __print_output(self, output) -> None:
+        self.text.config(state="normal")
         self.text.insert('end', output + "\n")
         self.text.config(state='disabled')
 
@@ -460,7 +485,7 @@ class NgramFrame(tk.Frame):
     def __init__(self, master, relief, bd) -> None:
         super().__init__(master=master, relief=relief, bd=bd)
 
-        self.spark_controller = SparkConnection().spark_controller
+        self.spark_controller = master.get_spark_controller()
 
         self.__word_df = self.spark_controller.get_word_df()
 
