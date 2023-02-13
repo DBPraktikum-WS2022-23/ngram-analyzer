@@ -5,10 +5,10 @@ import pkgutil
 
 from pyspark.sql import DataFrame, SparkSession
 
-from src.info import DataBaseStatistics, StatFunctions, WordFrequencies
-from src.transfer import Transferer
-from src.visualiser import Visualiser
-from src.plugins.base_plugin import BasePlugin
+from info import DataBaseStatistics, WordFrequencies
+from transfer import Transferer
+from visualizer import Visualizer
+from plugins.base_plugin import BasePlugin
 
 class DatabaseToSparkDF:
     """Module which reads data from the database into spark dataframes"""
@@ -42,6 +42,7 @@ class PluginController:
     def register_plugins(self, plugins_path: str = "src/plugins"):
         mod_plugin_path = plugins_path.replace("/", ".")
         mod_plugin_path = mod_plugin_path.replace("\\", ".")
+        mod_plugin_path = mod_plugin_path[4:]
 
 
         discovered_plugins: List[str] = [f"{mod_plugin_path}.{name}"
@@ -96,15 +97,8 @@ class SparkController:
             self.__word_df, self.__occurence_df
         )
 
-        self.__visualiser: Visualiser = Visualiser()
-        """
-        # TODO: this should not be necessary with @udf notation
-        self.__spark.udf.register("hrc", StatFunctions.hrc, StatFunctions.schema_s)
-        self.__spark.udf.register("pc", StatFunctions.pc, StatFunctions.schema_d)
-        self.__spark.udf.register("sf", StatFunctions.stat_feature, StatFunctions.schema_sf)
-        self.__spark.udf.register("rel", StatFunctions.relations, StatFunctions.schema_rel)
-        self.__spark.udf.register("lr", StatFunctions.lr, StatFunctions.schema_r)
-        """
+        self.__visualizer: Visualizer = Visualizer()
+
     def get_spark_session(self) -> Optional[SparkSession]:
         """Returns the spark session"""
         return self.__spark
@@ -119,6 +113,9 @@ class SparkController:
         for path in paths:
             if self.__transferer is not None:
                 self.__transferer.transfer_textFile(path)
+
+    def get_word_df(self) -> DataFrame:
+        return self.__word_df
 
     def __get_schema_f_df(self) -> DataFrame:
         years = []
@@ -136,25 +133,30 @@ class SparkController:
         )
         return schema_f_df
 
-    # TODO: for NearestNeighbourPlugin, but does not work
-    # def __get_schema_knn_input(self) -> DataFrame:
-    #
-    #     schema_f_df = self.__get_schema_f_df()
-    #
-    #     knn_data = [schema_f_df.limit(4).collect()]
-    #     knn_head = ["table"]
-    #
-    #     return self.__spark.createDataFrame(knn_data, knn_head)
-
     def execute_sql(self, sql: str) -> Optional[DataFrame]:
         """Executes a SQL query"""
         if self.__spark is not None:
             self.__word_df.createOrReplaceTempView("word")
             self.__occurence_df.createOrReplaceTempView("occurence")
             self.__get_schema_f_df().createOrReplaceTempView("schema_f")
-            # self.__get_schema_knn_input().createOrReplaceTempView("schema_knn_input")
             return self.__spark.sql(sql)
         return None
+
+    def create_ngram_view(self, words: List[str]) -> None:
+        """Creates a view for selected ngrams"""
+        query = "select * from schema_f where str_rep in (" + ",".join(
+            [f"'{word}'" for word in words]
+        ) + ")"
+        ngrams_df = self.execute_sql(query)
+        ngrams_df.createOrReplaceTempView("ngrams")
+        return ngrams_df
+
+    def create_join_view(self, words: List[str]) -> None:
+        """Creates a view for selected ngrams joint in a line"""
+        query = "select * from " + "cross join ".join(
+            [f"(select * from ngrams where str_rep = '{word}')" for word in words]
+        )
+        self.execute_sql(query).createOrReplaceTempView("joins")
 
     def print_word_frequencies(self, words: List[str], years: List[int]) -> None:
         self.__wf.print_word_frequencies(words, years)
@@ -165,31 +167,27 @@ class SparkController:
     def print_db_statistics(self) -> None:
         self.__dbs.print_statistics()
 
-    # TODO: Does (or should) the user interface offer access to hrc and pc functionality
-    #       other than through spark SQL?
-    # def hrc(self, duration: int) -> DataFrame:
-    #     return self.__functions.hrc(duration)
-
-    # def pc(self, start_year: int, end_year: int) -> DataFrame:
-    #     return self.__functions.pc(start_year, end_year)
-
     def plot_kde(self, word: str, bandwidth: float, bins: int) -> None:
         schema_f_df = self.__get_schema_f_df()
-        self.__visualiser.plot_kde(schema_f_df, 1800, 2000, word, bandwidth, bins)
+        self.__visualizer.plot_kde(schema_f_df, 1800, 2000, word, bandwidth, bins)
 
     def plot_box(self, scaling_factor: float) -> None:
         schema_f_df = self.__get_schema_f_df()
 
-        self.__visualiser.plot_boxplot_all(schema_f_df, 1800, 2000, scaling_factor)
+        self.__visualizer.plot_boxplot_all(schema_f_df, 1800, 2000, scaling_factor)
 
     def plot_scatter(self) -> None:
         schema_f_df = self.__get_schema_f_df()
 
         # draws without regression line, scaling optional
-        self.__visualiser.plot_scatter(schema_f_df, 1800, 2000)
+        self.__visualizer.plot_scatter(schema_f_df, 1800, 2000)
+
+    def plot_scatter_words(self, words) -> None:
+        ngrams_df = self.create_ngram_view(words)
+        self.__visualizer.plot_scatter(ngrams_df, 1800, 2000)
 
     def plot_scatter_with_regression(self) -> None:
         schema_f_df = self.__get_schema_f_df()
 
         # draws with regression line, has no scaling
-        self.__visualiser.plot_scatter(schema_f_df, 1800, 2000, with_regression_line=True)
+        self.__visualizer.plot_scatter(schema_f_df, 1800, 2000, with_regression_line=True)

@@ -3,9 +3,9 @@ import os
 from cmd import Cmd
 from typing import List
 
-from src.config_converter import ConfigConverter
-from src.controller import SparkController, PluginController
-from src.database_creation import NgramDBBuilder
+from config_converter import ConfigConverter
+from controller import SparkController, PluginController
+from database_creation import NgramDBBuilder
 
 
 class Prompt(Cmd):
@@ -50,15 +50,13 @@ class Prompt(Cmd):
         self.spark_controller: SparkController = SparkController(
             conn_settings, log_level="OFF"
         )
-        plugins = input("Would you like to:\n"
-              "[0] Provide your own plugins\n"
-              "[1] Load avaivable ones?\n")
+        load_available = input("Would you like to load the plugins available in the src/plugins directory? (y/n) ")
 
-        plugin_controller: PluginController = PluginController(self.spark_controller.get_spark_session())
-        if plugins == "0":
-            plugin_controller.register_plugins(plugins_path=input("Please enter path to plugins:"))
-        elif plugins == "1":
-            plugin_controller.register_plugins()
+        self.plugin_controller: PluginController = PluginController(self.spark_controller.get_spark_session())
+        if load_available in ["n", "no"]:
+            self.plugin_controller.register_plugins(plugins_path=input("Please enter path to plugins:"))
+        elif load_available in ["y", "yes"]:
+            self.plugin_controller.register_plugins()
         else:
             print("Invalid input. Please restart the shell and try again.")
             return

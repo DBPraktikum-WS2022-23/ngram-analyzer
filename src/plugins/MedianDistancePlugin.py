@@ -1,5 +1,5 @@
-from src.plugins.base_plugin import BasePlugin
-from src.plugins.InternalOD import MedianDistanceOD
+from plugins.base_plugin import BasePlugin
+from plugins.InternalOD import MedianDistanceOD
 from pyspark.sql.types import StructType, StructField, ArrayType, IntegerType
 
 
