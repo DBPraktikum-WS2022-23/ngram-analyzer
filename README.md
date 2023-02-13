@@ -79,7 +79,7 @@ The following commands are available within the ngram_analyzer shell:
 - ```plot_scatter_with_regression``` plotting the frequency as scatter of all words in certain years and the regression line of each word
 - ```plot_kde``` plotting the Kernel Density Estimation with Gauss-Kernel of a word
 
-## PlugIns
+### PlugIns
 If you want to create PlugIns yourself, you may do so either directly in the plugin folder or in a new one (has to be a direct subdirectory of src tho)
 
 ## GUI
