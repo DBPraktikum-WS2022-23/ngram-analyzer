@@ -79,8 +79,37 @@ The following commands are available within the ngram_analyzer shell:
 - ```plot_scatter_with_regression``` plotting the frequency as scatter of all words in certain years and the regression line of each word
 - ```plot_kde``` plotting the Kernel Density Estimation with Gauss-Kernel of a word
 
-
-
-
-# Plug Ins
+## PlugIns
 If you want to create PlugIns yourself, you may do so either directly in the plugin folder or in a new one (has to be a direct subdirectory of src tho)
+
+## GUI
+- the graphical user interface can be opened as follows:
+  - open the terminal in the project folder (outside src/):
+    ```cd to /your/path/to/group4```
+  - activate the poetry environment as described in the Setup section
+  - run the gui.py script:
+    ```python src/guy.py```
+
+### Functionality Overview
+![GUI](docs/gui.png)
+- Words Panel (left)
+  - loads a subset of the NGrams in the database from yur configuration
+  - allows adding, removing NGrams
+  - user can select/deselect one or multiple NGrams
+  - the selected NGrams are only used for the functions in the panel on the right
+
+- Functions Panel (right)
+  - creates a SQL query string for the chosen function only on the selected words
+  - the SQL query string is automatically added to the SQL Tab
+  - User is required to click the Run button in order to execute the SQL query
+  - Exception: Scatter plot option directly queries the frequencies of the selected NGrams and displays the resulting scatter plot in a pop-up window
+
+- SQL Panel (Center)
+  - User can run any SQL queries on the entire word list from the words panel on the left
+  - All queries must be run on the "ngrams" relation which is a view on the entire word list
+  - e.g. to print out all the information about all the words in the left panel, use: 
+    ```sql 
+    select * from ngrams
+    ```
+  - The SQL result is printed above the entry field after the Run button is pressed
+  - The Console tab is not available at present time. To use the program shell use the instructions from the previous sections 

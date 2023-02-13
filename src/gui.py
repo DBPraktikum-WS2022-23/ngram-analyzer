@@ -67,6 +67,7 @@ class GUI(tk.Tk):
 
 
 class CenterFrame(tk.Frame):
+    """The Frame widget used for the center panel of the GUI Window."""
     def __init__(self, master, relief, height, width) -> None:
         super().__init__(master=master, relief=relief, height=height, width=width)
         self.__spark_ctrl: SparkController = master.get_spark_controller()  # master is the GUI object
@@ -456,45 +457,6 @@ class FunctionFrame(tk.Frame):
         frm_f10.grid(row=10, column=0, sticky="nsew")
 
 
-
-
-        # TODO remove later
-        # # Function Template
-        # def gen_query_funcn():
-        #     start = funcn_start_input.get()
-        #     end = funcn_end_input.get()
-        #     query = f"select..."
-        #     test_output.config(text=query)
-        #     center_frame.update_input(query)
-        #
-        # frm_funcn = tk.Frame(self, relief=tk.RAISED, bd=2)
-        # frm_funcn.columnconfigure(0, weight=1)
-        # frm_funcn.columnconfigure(1, weight=1)
-        # frm_funcn.columnconfigure(2, weight=0)
-        #
-        # funcn_title = tk.Label(frm_funcn, text="Example Function")
-        # funcn_title.grid(row=0, column=0, columnspan=3, sticky="w")
-        #
-        # funcn_start_label = tk.Label(frm_funcn, text="Start")
-        # funcn_start_label.grid(row=1, column=0, sticky="ew")
-        # funcn_start_input = tk.Entry(frm_funcn, width=5)
-        # funcn_start_input.grid(row=2, column=0, sticky="ew")
-        #
-        # funcn_end_label = tk.Label(frm_funcn, text="End")
-        # funcn_end_label.grid(row=1, column=1, sticky="ew")
-        # funcn_end_input = tk.Entry(frm_funcn, width=5)
-        # funcn_end_input.grid(row=2, column=1, sticky="ew")
-        #
-        # funcn_btn_execute = tk.Button(frm_funcn, text="Generate query", font=fnt.Font(size=8), command=gen_query_funcn)
-        # funcn_btn_execute.grid(row=2, column=2, sticky="e")
-        #
-        # for widget in frm_funcn.winfo_children():
-        #     widget.grid(padx=1, pady=1)
-        #
-        # frm_funcn.grid(row=funcn, column=0, sticky="nsew")
-
-
-
 class NgramFrame(tk.Frame):
     """Frame on the left side listing N-grams"""
 
@@ -591,6 +553,7 @@ class NgramFrame(tk.Frame):
 
 
 class AddNgramWindow(object):
+    """Pop-up window for adding NGrams to the panel on the left"""
     def __init__(self, master, insert_func, check_exist_func, check_dup_func):
         self.top = tk.Toplevel(master)
         self.insert_func = insert_func
@@ -617,11 +580,11 @@ class AddNgramWindow(object):
         self.top.destroy()
 
 class PlotWindow(object):
+    """Pop Up window to display plots"""
     def __init__(self, master, file_path="output/scatter_plot_all.png"):
         self.top = tk.Toplevel(master)
         self.top.grab_set()
         plot_img = Image.open(file_path)
-        # plot_img = plot_img.resize((350, 350), resample=Image.Resampling.LANCZOS)
         self.plot_image = ImageTk.PhotoImage(plot_img)
         self.canvas = tk.Canvas(self.top, width=self.plot_image.width(), height=self.plot_image.height())
         self.canvas.grid(row=0, column=0, sticky='')
@@ -637,7 +600,6 @@ class PlotWindow(object):
 
 
 class SparkConnection():
-    # TODO: don't need this class when shell is initialized
     def __init__(self) -> None:
         config: ConfigConverter = ConfigConverter(
             "settings/" + os.listdir("settings")[0]  # temporary
