@@ -88,7 +88,7 @@ If you want to create PlugIns yourself, you may do so either directly in the plu
     ```cd to /your/path/to/group4```
   - activate the poetry environment as described in the Setup section
   - run the gui.py script:
-    ```python src/guy.py```
+    ```python src/gui.py```
 
 ### Functionality Overview
 ![GUI](docs/gui.png)
